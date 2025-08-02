@@ -14,7 +14,7 @@ export function VideoPlayer({ videoId, onClose }: VideoPlayerProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl p-0 border-0 bg-transparent">
-        <DialogTitle className="sr-only">Video Player</DialogTitle>
+        <DialogTitle className="sr-only">Playing Video</DialogTitle>
         <div className="aspect-video">
           {videoId && (
             <iframe

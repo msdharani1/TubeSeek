@@ -18,9 +18,18 @@ import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Frown } from "lucide-react";
 
+function SearchPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
+            <SearchPageContent />
+        </Suspense>
+    )
+}
+
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,13 +37,13 @@ function SearchPageContent() {
   const query = searchParams.get('q');
   const videoId = searchParams.get('v');
 
-  const { toast } = useToast();
-
   const hasSearched = query !== null;
 
   useEffect(() => {
     if (query) {
       performSearch(query);
+    } else {
+      setResults([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
@@ -65,18 +74,30 @@ function SearchPageContent() {
   };
 
   const handleSearch = (newQuery: string) => {
+    const params = new URLSearchParams();
     if (newQuery) {
-      router.push(`/search?q=${encodeURIComponent(newQuery)}`);
+      params.set('q', newQuery);
+      router.push(`/search?${params.toString()}`);
+    } else {
+        router.push('/search');
     }
   };
 
   const handlePlayVideo = (videoIdToPlay: string) => {
-    router.push(`/search?q=${encodeURIComponent(query || '')}&v=${videoIdToPlay}`);
+    const params = new URLSearchParams(window.location.search);
+    params.set('v', videoIdToPlay);
+    router.push(`/search?${params.toString()}`);
   };
   
   const handleClosePlayer = () => {
-    router.push(`/search?q=${encodeURIComponent(query || '')}`);
+    const params = new URLSearchParams(window.location.search);
+    params.delete('v');
+    router.push(`/search?${params.toString()}`);
   };
+  
+  const handleLogoClick = () => {
+    router.push('/search');
+  }
 
   return (
     <>
@@ -90,9 +111,9 @@ function SearchPageContent() {
           )}
         >
           <div className="flex items-center gap-4">
-            <Link href="/" aria-label="Go to homepage">
+            <button onClick={handleLogoClick} aria-label="Go to homepage">
               <Logo className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
-            </Link>
+            </button>
              <h1 className="text-4xl sm:text-6xl font-bold tracking-tighter text-foreground font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
                 TubeSeek
              </h1>
@@ -128,14 +149,5 @@ function SearchPageContent() {
   );
 }
 
-function SearchPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <SearchPageContent />
-        </Suspense>
-    )
-}
-
 
 export default withAuth(SearchPage);
-

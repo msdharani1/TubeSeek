@@ -24,7 +24,7 @@ export default function LoginPage() {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
       // Don't log an error if the user closes the sign-in popup
-      if (error.code === 'auth/cancelled-popup-request') {
+      if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
         return;
       }
       console.error("Error signing in with Google: ", error);
