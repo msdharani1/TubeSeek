@@ -15,12 +15,12 @@ import { SearchBar } from "@/components/search-bar";
 import { VideoGrid } from "@/components/video-grid";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
-import { Frown } from "lucide-react";
+import { Frown, Loader2 } from "lucide-react";
 import { Header } from "@/components/header";
 
 function SearchPage() {
     return (
-        <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
+        <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
             <SearchPageContent />
         </Suspense>
     )
