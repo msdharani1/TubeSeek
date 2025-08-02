@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
 // IMPORTANT: Replace this with your actual Firebase config
@@ -11,13 +12,15 @@ const firebaseConfig = {
   storageBucket: "tubeseekcom.firebasestorage.app",
   messagingSenderId: "681212933796",
   appId: "1:681212933796:web:82f6540b2b962d8d40d831",
-  measurementId: "G-HCHEJNN1RR"
+  measurementId: "G-HCHEJNN1RR",
+  databaseURL: "https://tubeseekcom.firebaseio.com"
 };
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+const db = getDatabase(app);
 
 
-export { app, auth, googleProvider };
+export { app, auth, googleProvider, db };

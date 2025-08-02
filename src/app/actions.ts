@@ -6,6 +6,8 @@ import {
   YoutubeVideosResponseSchema,
 } from '@/types/youtube';
 import type { SearchResult } from '@/types/youtube';
+import { db } from '@/lib/firebase';
+import { ref, push, set } from 'firebase/database';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -108,3 +110,34 @@ export async function searchAndRefineVideos(
     return { error: 'An unknown error occurred during the search.' };
   }
 }
+
+export async function saveSearchQuery(
+    userId: string,
+    query: string,
+    resultsCount: number
+  ): Promise<{ error?: string }> {
+    if (!userId) {
+      return { error: 'User is not authenticated.' };
+    }
+  
+    try {
+      const searchData = {
+        query: query,
+        resultsCount: resultsCount,
+        timestamp: new Date().toISOString(),
+      };
+  
+      // Use push to create a new unique key for each search entry
+      const searchesRef = ref(db, `user-searches/${userId}`);
+      const newSearchRef = push(searchesRef);
+      await set(newSearchRef, searchData);
+  
+      return {};
+    } catch (error) {
+      console.error('Failed to save search query to Firebase:', error);
+      if (error instanceof Error) {
+        return { error: `Failed to save search history: ${error.message}` };
+      }
+      return { error: 'An unknown error occurred while saving search history.' };
+    }
+  }

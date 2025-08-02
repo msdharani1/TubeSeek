@@ -3,13 +3,12 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from 'next/link';
 
 import type { SearchResult } from "@/types/youtube";
-import { searchAndRefineVideos } from "@/app/actions";
+import { searchAndRefineVideos, saveSearchQuery } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { withAuth } from '@/context/auth-context';
+import { withAuth, useAuth } from '@/context/auth-context';
 
 import { Logo } from "@/components/logo";
 import { SearchBar } from "@/components/search-bar";
@@ -30,6 +29,7 @@ function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +59,17 @@ function SearchPageContent() {
       if (response.error) {
         throw new Error(response.error);
       }
-      setResults(response.data || []);
+      const searchResults = response.data || [];
+      setResults(searchResults);
+      
+      if (user && user.uid) {
+        const saveResult = await saveSearchQuery(user.uid, searchQuery, searchResults.length);
+        if (saveResult.error) {
+            console.warn("Failed to save search history:", saveResult.error)
+            // Not showing a toast for this as it's not critical for the user experience
+        }
+      }
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
