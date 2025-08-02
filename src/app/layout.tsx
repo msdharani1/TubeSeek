@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/context/auth-context';
+import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
   title: 'TubeSeek',
@@ -21,10 +22,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn("font-body antialiased", 'min-h-screen')}>
+      <body className={cn("font-body antialiased", 'flex flex-col min-h-screen')}>
         <AuthProvider>
-          {children}
+          <div className="flex-grow">
+            {children}
+          </div>
         </AuthProvider>
+        <Footer />
         <Toaster />
       </body>
     </html>
