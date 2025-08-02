@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState } from "react";
-import type { SearchResult } from "@/ai/flows/refine-search-results";
+import type { SearchResult } from "@/types/youtube";
 import { searchAndRefineVideos } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";

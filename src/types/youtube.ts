@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const YoutubeSearchResponseSchema = z.object({
@@ -38,3 +39,15 @@ export const YoutubeVideosResponseSchema = z.object({
     }),
   })),
 });
+
+const SearchResultSchema = z.object({
+  videoId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  thumbnail: z.string(),
+  duration: z.string(),
+  viewCount: z.string(),
+  likeCount: z.string(),
+});
+
+export type SearchResult = z.infer<typeof SearchResultSchema>;

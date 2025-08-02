@@ -1,4 +1,5 @@
-import type { SearchResult } from "@/ai/flows/refine-search-results";
+
+import type { SearchResult } from "@/types/youtube";
 import { VideoCard } from "./video-card";
 
 type VideoGridProps = {
