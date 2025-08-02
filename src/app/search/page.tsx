@@ -16,6 +16,7 @@ import { VideoGrid } from "@/components/video-grid";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Frown } from "lucide-react";
+import { Header } from "@/components/header";
 
 function SearchPage() {
     return (
@@ -107,26 +108,20 @@ function SearchPageContent() {
     params.delete('v');
     router.push(`/search?${params.toString()}`);
   };
-  
-  const handleLogoClick = () => {
-    router.push('/search');
-  }
 
   return (
     <>
+      <Header />
       <main className="container mx-auto px-4 py-8">
         <div
           className={cn(
             "w-full transition-all duration-500 ease-in-out",
             hasSearched
-              ? "mb-8"
-              : "flex h-[60vh] flex-col items-center justify-center text-center"
+              ? "mb-8 text-center"
+              : "flex h-[calc(60vh-80px)] flex-col items-center justify-center text-center"
           )}
         >
           <div className="flex items-center gap-4">
-            <button onClick={handleLogoClick} aria-label="Go to homepage">
-              <Logo className="h-12 w-12 sm:h-16 sm:w-16 text-primary" />
-            </button>
              <h1 className="text-4xl sm:text-6xl font-bold tracking-tighter text-foreground font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
                 TubeSeek
              </h1>
