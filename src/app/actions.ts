@@ -5,14 +5,15 @@ import {
   YoutubeSearchResponseSchema,
   YoutubeVideosResponseSchema,
 } from '@/types/youtube';
-import type { SearchResult } from '@/types/youtube';
+import type { SearchResult, SearchQuery } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set } from 'firebase/database';
+import { ref, push, set, get, child } from 'firebase/database';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
 export async function searchAndRefineVideos(
-  query: string
+  query: string,
+  userId?: string // Made optional to handle cases where user might not be logged in
 ): Promise<{ data?: SearchResult[]; error?: string }> {
   const apiKey = process.env.YOUTUBE_API_KEY;
 
@@ -98,6 +99,14 @@ export async function searchAndRefineVideos(
       likeCount: item.statistics.likeCount || '0',
     }));
 
+    // Step 4: Save search query if user is provided
+    if (userId && query) {
+       // Not awaiting this to avoid blocking the UI response
+       saveSearchQuery(userId, query, results.length).catch(error => {
+           console.error("Failed to save search query in background:", error);
+       });
+    }
+
     return { data: results };
   } catch (error) {
     console.error(
@@ -112,32 +121,86 @@ export async function searchAndRefineVideos(
 }
 
 export async function saveSearchQuery(
-    userId: string,
-    query: string,
-    resultsCount: number
-  ): Promise<{ error?: string }> {
-    if (!userId) {
-      return { error: 'User is not authenticated.' };
-    }
-  
-    try {
-      const searchData = {
-        query: query,
-        resultsCount: resultsCount,
-        timestamp: new Date().toISOString(),
-      };
-  
-      // Use push to create a new unique key for each search entry
-      const searchesRef = ref(db, `user-searches/${userId}`);
-      const newSearchRef = push(searchesRef);
-      await set(newSearchRef, searchData);
-  
-      return {};
-    } catch (error) {
-      console.error('Failed to save search query to Firebase:', error);
-      if (error instanceof Error) {
-        return { error: `Failed to save search history: ${error.message}` };
-      }
-      return { error: 'An unknown error occurred while saving search history.' };
-    }
+  userId: string,
+  query: string,
+  resultsCount: number
+): Promise<{ success?: boolean; error?: string }> {
+  if (!userId || !query) {
+    return { error: 'User ID and query are required.' };
   }
+  if (!db) {
+    return { error: 'Database connection is not available.' };
+  }
+
+  try {
+    const searchData = {
+      query: query.trim(),
+      resultsCount: resultsCount,
+      timestamp: new Date().toISOString(),
+    };
+    
+    const userSearchesRef = ref(db, `user-searches/${userId}`);
+    const newSearchRef = push(userSearchesRef);
+    await set(newSearchRef, searchData);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to save search query to Firebase:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { error: `Failed to save search history: ${errorMessage}` };
+  }
+}
+
+export async function getAllUserSearches(adminEmail: string): Promise<{ data?: Record<string, SearchQuery[]>; error?: string }> {
+  if (adminEmail !== 'msdharaniofficial@gmail.com') {
+    return { error: 'Unauthorized access.' };
+  }
+
+  if (!db) {
+    return { error: 'Database connection is not available.' };
+  }
+  
+  try {
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `user-searches`));
+    if (snapshot.exists()) {
+      const allSearches = snapshot.val();
+      const formattedData: Record<string, SearchQuery[]> = {};
+
+      for (const userId in allSearches) {
+          const userHistory = allSearches[userId];
+          const userSearches: SearchQuery[] = Object.values(userHistory);
+          formattedData[userId] = userSearches.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      }
+
+      return { data: formattedData };
+    } else {
+      return { data: {} };
+    }
+  } catch(error) {
+      console.error('Failed to fetch all user searches from Firebase:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+      return { error: `Failed to fetch search history: ${errorMessage}` };
+  }
+}
+
+// Helper function to test Firebase connection
+export async function testFirebaseConnection(): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!db) {
+      return { success: false, error: 'Firebase database is not initialized' };
+    }
+
+    // Try to create a test reference
+    const testRef = ref(db, 'connection-test');
+    await set(testRef, { timestamp: new Date().toISOString() });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Firebase connection test failed:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown connection error' 
+    };
+  }
+}

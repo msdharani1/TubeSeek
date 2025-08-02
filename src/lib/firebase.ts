@@ -13,7 +13,7 @@ const firebaseConfig = {
   messagingSenderId: "681212933796",
   appId: "1:681212933796:web:82f6540b2b962d8d40d831",
   measurementId: "G-HCHEJNN1RR",
-  databaseURL: "https://tubeseekcom.firebaseio.com"
+  databaseURL: "https://tubeseekcom-default-rtdb.firebaseio.com/"
 };
 
 // Initialize Firebase

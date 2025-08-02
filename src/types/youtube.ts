@@ -51,3 +51,12 @@ const SearchResultSchema = z.object({
 });
 
 export type SearchResult = z.infer<typeof SearchResultSchema>;
+
+
+const SearchQuerySchema = z.object({
+  query: z.string(),
+  resultsCount: z.number(),
+  timestamp: z.string(),
+});
+
+export type SearchQuery = z.infer<typeof SearchQuerySchema>;

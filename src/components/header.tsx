@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, Shield } from "lucide-react";
 import { Logo } from "./logo";
 
 export function Header() {
@@ -27,6 +27,12 @@ export function Header() {
   const handleLogoClick = () => {
     router.push('/search');
   }
+
+  const handleManageClick = () => {
+    router.push('/admin');
+  }
+  
+  const isAdmin = user?.email === "msdharaniofficial@gmail.com";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
@@ -60,6 +66,12 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {isAdmin && (
+                <DropdownMenuItem onClick={handleManageClick}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Manage</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
