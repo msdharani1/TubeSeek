@@ -60,3 +60,13 @@ const SearchQuerySchema = z.object({
 });
 
 export type SearchQuery = z.infer<typeof SearchQuerySchema>;
+
+
+export const UserInfoSchema = z.object({
+  uid: z.string(),
+  email: z.string().nullable(),
+  displayName: z.string().nullable(),
+  photoURL: z.string().nullable(),
+});
+
+export type UserInfo = z.infer<typeof UserInfoSchema>;

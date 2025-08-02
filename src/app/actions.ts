@@ -5,15 +5,14 @@ import {
   YoutubeSearchResponseSchema,
   YoutubeVideosResponseSchema,
 } from '@/types/youtube';
-import type { SearchResult, SearchQuery } from '@/types/youtube';
+import type { SearchResult, SearchQuery, UserInfo } from '@/types/youtube';
 import { db } from '@/lib/firebase';
 import { ref, push, set, get, child } from 'firebase/database';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
 export async function searchAndRefineVideos(
-  query: string,
-  userId?: string // Made optional to handle cases where user might not be logged in
+  query: string
 ): Promise<{ data?: SearchResult[]; error?: string }> {
   const apiKey = process.env.YOUTUBE_API_KEY;
 
@@ -99,14 +98,6 @@ export async function searchAndRefineVideos(
       likeCount: item.statistics.likeCount || '0',
     }));
 
-    // Step 4: Save search query if user is provided
-    if (userId && query) {
-       // Not awaiting this to avoid blocking the UI response
-       saveSearchQuery(userId, query, results.length).catch(error => {
-           console.error("Failed to save search query in background:", error);
-       });
-    }
-
     return { data: results };
   } catch (error) {
     console.error(
@@ -121,11 +112,11 @@ export async function searchAndRefineVideos(
 }
 
 export async function saveSearchQuery(
-  userId: string,
+  user: UserInfo,
   query: string,
   resultsCount: number
 ): Promise<{ success?: boolean; error?: string }> {
-  if (!userId || !query) {
+  if (!user || !user.uid || !query) {
     return { error: 'User ID and query are required.' };
   }
   if (!db) {
@@ -139,9 +130,17 @@ export async function saveSearchQuery(
       timestamp: new Date().toISOString(),
     };
     
-    const userSearchesRef = ref(db, `user-searches/${userId}`);
-    const newSearchRef = push(userSearchesRef);
-    await set(newSearchRef, searchData);
+    // Save user info and the search query
+    const userSearchesRef = ref(db, `user-searches/${user.uid}/searches`);
+    const newUserSearchRef = push(userSearchesRef);
+    await set(newUserSearchRef, searchData);
+    
+    const userInfoRef = ref(db, `user-searches/${user.uid}/profile`);
+    await set(userInfoRef, {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+    });
 
     return { success: true };
   } catch (error) {
@@ -151,7 +150,7 @@ export async function saveSearchQuery(
   }
 }
 
-export async function getAllUserSearches(adminEmail: string): Promise<{ data?: Record<string, SearchQuery[]>; error?: string }> {
+export async function getAllUserSearches(adminEmail: string): Promise<{ data?: Record<string, { profile: UserInfo; searches: SearchQuery[] }>; error?: string }> {
   if (adminEmail !== 'msdharaniofficial@gmail.com') {
     return { error: 'Unauthorized access.' };
   }
@@ -165,12 +164,16 @@ export async function getAllUserSearches(adminEmail: string): Promise<{ data?: R
     const snapshot = await get(child(dbRef, `user-searches`));
     if (snapshot.exists()) {
       const allSearches = snapshot.val();
-      const formattedData: Record<string, SearchQuery[]> = {};
+      const formattedData: Record<string, { profile: UserInfo; searches: SearchQuery[] }> = {};
 
       for (const userId in allSearches) {
-          const userHistory = allSearches[userId];
-          const userSearches: SearchQuery[] = Object.values(userHistory);
-          formattedData[userId] = userSearches.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          const userData = allSearches[userId];
+          const userSearches: SearchQuery[] = userData.searches ? Object.values(userData.searches) : [];
+          
+          formattedData[userId] = {
+            profile: userData.profile || { email: 'Unknown User', uid: userId },
+            searches: userSearches.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          };
       }
 
       return { data: formattedData };

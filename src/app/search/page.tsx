@@ -63,9 +63,16 @@ function SearchPageContent() {
       const searchResults = response.data || [];
       setResults(searchResults);
       
-      if (user && user.uid) {
+      if (user) {
+        const userInfo = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL
+        };
+
         // Don't await this, let it run in the background
-        saveSearchQuery(user.uid, searchQuery, searchResults.length)
+        saveSearchQuery(userInfo, searchQuery, searchResults.length)
           .then(saveResult => {
             if (saveResult.error) {
                 console.warn("Failed to save search history:", saveResult.error);
