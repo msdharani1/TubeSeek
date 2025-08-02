@@ -63,11 +63,14 @@ function SearchPageContent() {
       setResults(searchResults);
       
       if (user && user.uid) {
-        const saveResult = await saveSearchQuery(user.uid, searchQuery, searchResults.length);
-        if (saveResult.error) {
-            console.warn("Failed to save search history:", saveResult.error)
-            // Not showing a toast for this as it's not critical for the user experience
-        }
+        // Don't await this, let it run in the background
+        saveSearchQuery(user.uid, searchQuery, searchResults.length)
+          .then(saveResult => {
+            if (saveResult.error) {
+                console.warn("Failed to save search history:", saveResult.error);
+                // Not showing a toast for this as it's not critical for the user experience
+            }
+          });
       }
 
     } catch (error) {

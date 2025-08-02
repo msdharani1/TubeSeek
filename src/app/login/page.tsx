@@ -27,6 +27,8 @@ export default function LoginPage() {
       if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
         return;
       }
+          // auth/popup-blocked error is caused by browser settings.
+          // The user needs to allow popups for this site.
       console.error("Error signing in with Google: ", error);
     }
   };
