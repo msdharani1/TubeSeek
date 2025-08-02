@@ -5,12 +5,13 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // Your web app's Firebase configuration
 // IMPORTANT: Replace this with your actual Firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBkgIYVEj5nB8ygwiRXeyk0cPj9YWjrNR4",
+  authDomain: "tubeseekcom.firebaseapp.com",
+  projectId: "tubeseekcom",
+  storageBucket: "tubeseekcom.firebasestorage.app",
+  messagingSenderId: "681212933796",
+  appId: "1:681212933796:web:82f6540b2b962d8d40d831",
+  measurementId: "G-HCHEJNN1RR"
 };
 
 // Initialize Firebase

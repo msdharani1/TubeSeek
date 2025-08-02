@@ -22,7 +22,11 @@ export default function LoginPage() {
   const handleSignIn = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
+      // Don't log an error if the user closes the sign-in popup
+      if (error.code === 'auth/cancelled-popup-request') {
+        return;
+      }
       console.error("Error signing in with Google: ", error);
     }
   };
