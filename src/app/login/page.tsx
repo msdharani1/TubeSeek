@@ -56,7 +56,7 @@ export default function LoginPage() {
             </p>
             <Button onClick={handleSignIn} size="lg" className="mt-6">
                  <Image 
-                    src="https://res.cloudinary.com/diwu3avy6/image/upload/google_logo_2025_tqgvc7?_a=DATAdtAAZAA0" 
+                    src="https://res.cloudinary.com/diwu3avy6/image/upload/search_kzq7ng?_a=DATAdtAAZAA0" 
                     alt="Google logo"
                     width={24}
                     height={24}
