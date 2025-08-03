@@ -18,6 +18,13 @@ import { VideoPlayer } from "@/components/video-player";
 import { Frown, Loader2 } from "lucide-react";
 import { Header } from "@/components/header";
 
+type CachedData = {
+    timestamp: number;
+    results: SearchResult[];
+}
+
+const CACHE_EXPIRATION_MS = 60 * 60 * 1000; // 1 hour
+
 function SearchPage() {
     return (
         <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
@@ -79,6 +86,25 @@ function SearchPageContent() {
     setIsLoading(true);
     setResults([]);
 
+    // Check cache first
+    const cacheKey = `youtube_search_${searchQuery.toLowerCase()}`;
+    const cachedItem = localStorage.getItem(cacheKey);
+
+    if (cachedItem) {
+        try {
+            const cachedData: CachedData = JSON.parse(cachedItem);
+            if (Date.now() - cachedData.timestamp < CACHE_EXPIRATION_MS) {
+                setResults(cachedData.results);
+                setIsLoading(false);
+                return; // Use cached data
+            }
+        } catch (e) {
+            console.error("Failed to parse cache", e);
+            localStorage.removeItem(cacheKey);
+        }
+    }
+    
+    // If no valid cache, fetch from API
     try {
       const response = await searchAndRefineVideos(searchQuery);
       if (response.error) {
@@ -86,6 +112,13 @@ function SearchPageContent() {
       }
       const searchResults = response.data || [];
       setResults(searchResults);
+      
+      // Save to cache
+      const dataToCache: CachedData = {
+          timestamp: Date.now(),
+          results: searchResults
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
       
       if (user) {
         const userInfo = {
