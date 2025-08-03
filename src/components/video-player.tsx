@@ -155,7 +155,7 @@ const VideoDetails = ({
             </div>
             <div className="border-y py-4 my-4 flex items-center justify-between">
                 <h3 className="font-bold text-lg">{video.channelTitle}</h3>
-                <Button variant={isSubscribed ? 'default' : 'outline'} onClick={onSubscribe}>
+                <Button variant={isSubscribed ? 'default' : 'outline'} onClick={onSubscribe} className="hover:bg-muted/50">
                     {isSubscribed ? <BellRing className="mr-2 h-4 w-4" /> : <Bell className="mr-2 h-4 w-4" />}
                     {isSubscribed ? 'Subscribed' : 'Subscribe'}
                 </Button>
