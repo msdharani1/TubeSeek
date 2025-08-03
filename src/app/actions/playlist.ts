@@ -5,31 +5,9 @@ import type { Playlist, PlaylistItem, SearchResult } from '@/types/youtube';
 import { db } from '@/lib/firebase';
 import { ref, push, set, get, child, serverTimestamp, remove, query, orderByChild, equalTo } from 'firebase/database';
 
-// Ensure a default "Favorite" playlist exists for a user
-export async function ensureFavoritePlaylist(userId: string): Promise<void> {
-    if (!userId) return;
-    const playlistsRef = ref(db, `user-playlists/${userId}/playlists`);
-    const q = query(playlistsRef, orderByChild('name'), equalTo('Favorite'));
-    const snapshot = await get(q);
-
-    if (!snapshot.exists()) {
-        const favoritePlaylistRef = push(playlistsRef);
-        const playlistData = {
-            id: favoritePlaylistRef.key,
-            name: 'Favorite',
-            videoCount: 0,
-            createdAt: serverTimestamp(),
-        };
-        await set(favoritePlaylistRef, playlistData);
-    }
-}
-
 // Get all playlists for a user
 export async function getPlaylists(userId: string): Promise<{ data?: Playlist[]; error?: string }> {
     if (!userId) return { error: 'User ID is required.' };
-    
-    // Make sure the user has the default favorite playlist.
-    await ensureFavoritePlaylist(userId);
 
     const playlistsRef = ref(db, `user-playlists/${userId}/playlists`);
     try {
@@ -86,20 +64,60 @@ export async function updateVideoInPlaylists(
     try {
         // Add to new playlists
         for (const playlistId of toAdd) {
-            const playlistItemsRef = ref(db, `user-playlists/${userId}/items/${playlistId}`);
-            const newItemRef = push(playlistItemsRef);
-            const playlistItem: Omit<PlaylistItem, 'addedAt'> & { addedAt: any } = {
-                ...video,
-                id: newItemRef.key!,
-                addedAt: serverTimestamp(),
-            };
-            await set(newItemRef, playlistItem);
+            // Ensure a default "Favorite" playlist exists for a user if they add to it
+            if (playlistId === 'favorite-default') {
+                const playlistsRef = ref(db, `user-playlists/${userId}/playlists`);
+                const q = query(playlistsRef, orderByChild('name'), equalTo('Favorite'));
+                const snapshot = await get(q);
 
-            // Update thumbnail if it's the first video
-            const playlistRef = ref(db, `user-playlists/${userId}/playlists/${playlistId}`);
-            const snapshot = await get(playlistRef);
-            if(snapshot.exists() && !snapshot.val().thumbnail) {
-                await set(child(playlistRef, 'thumbnail'), video.thumbnail);
+                let actualPlaylistId = playlistId;
+
+                if (!snapshot.exists()) {
+                    const favoritePlaylistRef = push(playlistsRef);
+                    const playlistData = {
+                        id: favoritePlaylistRef.key,
+                        name: 'Favorite',
+                        videoCount: 0,
+                        createdAt: serverTimestamp(),
+                    };
+                    await set(favoritePlaylistRef, playlistData);
+                    actualPlaylistId = favoritePlaylistRef.key!;
+                } else {
+                    actualPlaylistId = Object.keys(snapshot.val())[0];
+                }
+                
+                const playlistItemsRef = ref(db, `user-playlists/${userId}/items/${actualPlaylistId}`);
+                const newItemRef = push(playlistItemsRef);
+                const playlistItem: Omit<PlaylistItem, 'addedAt'> & { addedAt: any } = {
+                    ...video,
+                    id: newItemRef.key!,
+                    addedAt: serverTimestamp(),
+                };
+                await set(newItemRef, playlistItem);
+                
+                // Update thumbnail if it's the first video
+                const playlistRef = ref(db, `user-playlists/${userId}/playlists/${actualPlaylistId}`);
+                 const playlistSnapshot = await get(playlistRef);
+                if(playlistSnapshot.exists() && !playlistSnapshot.val().thumbnail) {
+                    await set(child(playlistRef, 'thumbnail'), video.thumbnail);
+                }
+
+            } else {
+                const playlistItemsRef = ref(db, `user-playlists/${userId}/items/${playlistId}`);
+                const newItemRef = push(playlistItemsRef);
+                const playlistItem: Omit<PlaylistItem, 'addedAt'> & { addedAt: any } = {
+                    ...video,
+                    id: newItemRef.key!,
+                    addedAt: serverTimestamp(),
+                };
+                await set(newItemRef, playlistItem);
+
+                // Update thumbnail if it's the first video
+                const playlistRef = ref(db, `user-playlists/${userId}/playlists/${playlistId}`);
+                const snapshot = await get(playlistRef);
+                if(snapshot.exists() && !snapshot.val().thumbnail) {
+                    await set(child(playlistRef, 'thumbnail'), video.thumbnail);
+                }
             }
         }
 
@@ -130,14 +148,30 @@ export async function updateVideoInPlaylists(
 export async function getPlaylistVideos(userId: string, playlistId: string): Promise<{ data?: PlaylistItem[], error?: string, playlistName?: string }> {
     if (!userId || !playlistId) return { error: 'User and playlist ID are required.' };
     
-    const itemsRef = ref(db, `user-playlists/${userId}/items/${playlistId}`);
-    const playlistRef = ref(db, `user-playlists/${userId}/playlists/${playlistId}`);
+    let actualPlaylistId = playlistId;
+    let playlistName = "Playlist";
+
+    // Handle the case for the default favorite playlist placeholder
+    if (playlistId === 'favorite-default') {
+        const playlistsRef = ref(db, `user-playlists/${userId}/playlists`);
+        const q = query(playlistsRef, orderByChild('name'), equalTo('Favorite'));
+        const snapshot = await get(q);
+        if (snapshot.exists()) {
+            actualPlaylistId = Object.keys(snapshot.val())[0];
+        } else {
+            // If it doesn't exist in DB, it's an empty playlist
+            return { data: [], playlistName: "Favorite" };
+        }
+    }
+
+    const itemsRef = ref(db, `user-playlists/${userId}/items/${actualPlaylistId}`);
+    const playlistRef = ref(db, `user-playlists/${userId}/playlists/${actualPlaylistId}`);
 
     try {
         const itemsSnapshot = await get(itemsRef);
         const playlistSnapshot = await get(playlistRef);
 
-        const playlistName = playlistSnapshot.exists() ? playlistSnapshot.val().name : "Playlist";
+        playlistName = playlistSnapshot.exists() ? playlistSnapshot.val().name : "Playlist";
 
         if (itemsSnapshot.exists()) {
             const data: PlaylistItem[] = Object.values(itemsSnapshot.val());

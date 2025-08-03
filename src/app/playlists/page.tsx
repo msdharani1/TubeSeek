@@ -13,6 +13,13 @@ import { ListVideo, Frown, Loader2 } from "lucide-react";
 import { PlaylistCard } from "@/components/playlist-card";
 import { useToast } from "@/hooks/use-toast";
 
+const defaultFavoritePlaylist: Playlist = {
+    id: 'favorite-default',
+    name: 'Favorite',
+    videoCount: 0,
+    createdAt: Date.now(),
+};
+
 function PlaylistsPage() {
     const { user } = useAuth();
     const router = useRouter();
@@ -37,8 +44,15 @@ function PlaylistsPage() {
                 title: "Failed to load playlists",
                 description: error,
             });
+            setPlaylists([defaultFavoritePlaylist]);
         } else {
-            setPlaylists(data || []);
+            const fetchedPlaylists = data || [];
+            const hasFavorite = fetchedPlaylists.some(p => p.name === 'Favorite');
+            if (!hasFavorite) {
+                setPlaylists([defaultFavoritePlaylist, ...fetchedPlaylists]);
+            } else {
+                setPlaylists(fetchedPlaylists);
+            }
         }
         setIsLoading(false);
     };
@@ -46,6 +60,12 @@ function PlaylistsPage() {
     const handlePlaylistClick = (playlistId: string) => {
         router.push(`/playlists/${playlistId}`);
     };
+
+    const displayedPlaylists = playlists.sort((a, b) => {
+        if (a.name === 'Favorite') return -1;
+        if (b.name === 'Favorite') return 1;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+    });
 
     return (
         <>
@@ -64,20 +84,22 @@ function PlaylistsPage() {
                            <PlaylistCard key={i} />
                         ))}
                     </div>
-                ) : playlists.length > 0 ? (
+                ) : (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {playlists.map(playlist => (
+                        {displayedPlaylists.map(playlist => (
                             <PlaylistCard key={playlist.id} playlist={playlist} onClick={handlePlaylistClick} />
                         ))}
                     </div>
-                ) : (
+                )}
+                 {/* This case might not be reached now, but kept for safety. */}
+                 {!isLoading && displayedPlaylists.length === 0 && (
                     <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
                         <Frown className="w-16 h-16"/>
                         <h2 className="text-2xl font-semibold">No Playlists Yet</h2>
                         <p>Create your first playlist by adding a video.</p>
                         <Button onClick={() => router.push('/search')}>Find Videos</Button>
                     </div>
-                )}
+                 )}
             </main>
         </>
     );

@@ -14,6 +14,13 @@ import { getPlaylists, createPlaylist, updateVideoInPlaylists } from "@/app/acti
 import type { Playlist, SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 
+const defaultFavoritePlaylist: Playlist = {
+    id: 'favorite-default',
+    name: 'Favorite',
+    videoCount: 0,
+    createdAt: Date.now(),
+};
+
 export function AddToPlaylist({ video }: { video: SearchResult }) {
     const { user } = useAuth();
     const { toast } = useToast();
@@ -37,15 +44,19 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         setIsLoading(true);
         const { data } = await getPlaylists(user.uid);
         
-        // Find which playlists this video is already in
-        const videoPlaylists: string[] = [];
-        if (data) {
-            // This is a simplified check. A real app would need a more efficient way
-            // to check membership, maybe a separate lookup table.
-            // For now, we'll assume a fresh state. This part is complex without backend changes.
+        const fetchedPlaylists = data || [];
+        const hasFavorite = fetchedPlaylists.some(p => p.name === 'Favorite');
+        
+        if (!hasFavorite) {
+            setPlaylists([defaultFavoritePlaylist, ...fetchedPlaylists]);
+        } else {
+            setPlaylists(fetchedPlaylists);
         }
-        setPlaylists(data || []);
-        setSelectedPlaylists(videoPlaylists);
+
+        // This part is complex. For now, we assume we don't know which playlists
+        // the video is in when the popover opens. A more robust solution would
+        // check this, but it adds significant complexity.
+        setSelectedPlaylists([]);
         setIsLoading(false);
     };
 
@@ -64,7 +75,10 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         if (error) {
             toast({ variant: "destructive", title: "Failed to create playlist", description: error });
         } else if (data) {
-            setPlaylists(prev => [data, ...prev]);
+            setPlaylists(prev => {
+                const newPlaylists = [data, ...prev.filter(p => p.id !== 'favorite-default')];
+                return newPlaylists;
+            });
             setSelectedPlaylists(prev => [...prev, data.id]); // Auto-select new playlist
             setNewPlaylistName("");
             setShowNewPlaylistInput(false);
