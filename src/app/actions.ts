@@ -7,7 +7,7 @@ import {
 } from '@/types/youtube';
 import type { SearchResult, SearchQuery, UserInfo, WatchedVideo } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst } from 'firebase/database';
+import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst, endBefore } from 'firebase/database';
 import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -207,7 +207,7 @@ export async function getUsersForAdmin(adminEmail: string, startAfterKey?: strin
     }
 }
 
-export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: string, startAfterKey?: string | null): Promise<{ data?: { searches: SearchQuery[], nextCursor: string | null }; error?: string }> {
+export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: string, startAfterKey?: number | null): Promise<{ data?: { searches: SearchQuery[], nextCursor: number | null }; error?: string }> {
      if (adminEmail !== 'msdharaniofficial@gmail.com') {
         return { error: 'Unauthorized access.' };
     }
@@ -221,8 +221,11 @@ export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: s
         const searchesRef = ref(db, `user-searches/${userId}/searches`);
         
         let searchesQuery;
+        // Firebase RTDB queries with limitToLast are tricky for pagination. 
+        // We fetch items sorted by timestamp. The oldest item in the current batch
+        // becomes the `endBefore` value for the next page fetch.
         if (startAfterKey) {
-            searchesQuery = query(searchesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE), endBefore(startAfterKey));
+            searchesQuery = query(searchesRef, orderByChild('timestamp'), endBefore(startAfterKey), limitToLast(PAGE_SIZE));
         } else {
             searchesQuery = query(searchesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
         }
@@ -235,14 +238,13 @@ export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: s
                 ...(value as Omit<SearchQuery, 'id'>)
             }));
             
-            // Firebase RTDB limitToLast returns in ascending order, so we reverse
+            // Firebase RTDB limitToLast returns in ascending order, so we reverse to show newest first.
             searches.reverse(); 
 
-            let nextCursor: string | null = null;
+            let nextCursor: number | null = null;
             if (searches.length === PAGE_SIZE) {
+               // The next cursor is the timestamp of the *oldest* item in the current batch.
                const lastSearch = searches[searches.length - 1];
-               // To get the next page, we need to get the timestamp of the last item.
-               // Firebase's `endBefore` needs a value and optionally a key. We'll use the timestamp.
                nextCursor = lastSearch.timestamp as any; 
             }
             
@@ -451,3 +453,5 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
+
+    

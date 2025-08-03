@@ -44,7 +44,7 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [userNextCursor, setUserNextCursor] = useState<string | null>(null);
-  const [historyNextCursor, setHistoryNextCursor] = useState<string | null>(null);
+  const [historyNextCursor, setHistoryNextCursor] = useState<number | null>(null);
 
   const userObserver = useRef<IntersectionObserver>();
   const historyObserver = useRef<IntersectionObserver>();
@@ -63,7 +63,7 @@ function AdminPage() {
     setIsUsersLoading(false);
   }, [user?.email]);
 
-  const fetchHistory = useCallback(async (userId: string, cursor?: string | null) => {
+  const fetchHistory = useCallback(async (userId: string, cursor?: number | null) => {
     if (!user?.email) return;
     setIsHistoryLoading(true);
     const { data, error } = await getUserSearchHistoryForAdmin(user.email, userId, cursor);
@@ -244,3 +244,5 @@ function AdminPage() {
 }
 
 export default withAuth(AdminPage);
+
+    
