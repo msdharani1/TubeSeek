@@ -317,49 +317,47 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
-        <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col overflow-hidden">
-            <div className="flex flex-col lg:flex-row flex-1 min-h-0">
-                
-                {/* Left Column: Video and Details */}
-                <div className="lg:w-[70%] flex flex-col overflow-y-auto no-scrollbar">
-                    <div className="w-full aspect-video shrink-0 bg-black lg:sticky lg:top-0 z-10">
-                        <iframe
-                            key={iframeKey}
-                            ref={iframeRef}
-                            src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                            className="w-full h-full"
-                        ></iframe>
-                    </div>
-                     <VideoDetails 
-                        video={video} 
-                        onShare={handleShare} 
-                        showShareButton={showShareButton} 
-                        showAddToPlaylistButton={showAddToPlaylistButton} 
-                        seekTo={seekTo}
-                        isLiked={isLiked}
-                        isSubscribed={isSubscribed}
-                        onLike={handleLike}
-                        onSubscribe={handleSubscribe}
-                     />
+        <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar">
+            
+            {/* Left Column: Video and Details */}
+            <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-auto no-scrollbar">
+                <div className="w-full aspect-video shrink-0 bg-black lg:sticky lg:top-0 z-10">
+                    <iframe
+                        key={iframeKey}
+                        ref={iframeRef}
+                        src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="w-full h-full"
+                    ></iframe>
                 </div>
+                 <VideoDetails 
+                    video={video} 
+                    onShare={handleShare} 
+                    showShareButton={showShareButton} 
+                    showAddToPlaylistButton={showAddToPlaylistButton} 
+                    seekTo={seekTo}
+                    isLiked={isLiked}
+                    isSubscribed={isSubscribed}
+                    onLike={handleLike}
+                    onSubscribe={handleSubscribe}
+                 />
+            </div>
 
-                {/* Right Column: Suggestions */}
-                <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
-                    <div className="p-4">
-                        <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2 sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
-                           {getUpNextIcon()}
-                           {getUpNextTitle()}
-                        </h3>
-                        <div className="flex flex-col gap-2">
-                            {suggestions.map(suggestion => {
-                                const key = 'id' in suggestion && suggestion.id ? suggestion.id : suggestion.videoId;
-                                return <SuggestionCard key={key} video={suggestion} onPlay={onPlaySuggestion} />
-                            })}
-                        </div>
+            {/* Right Column: Suggestions */}
+            <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 lg:overflow-y-auto no-scrollbar border-t lg:border-t-0">
+                <div className="p-4">
+                    <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2 sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
+                       {getUpNextIcon()}
+                       {getUpNextTitle()}
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                        {suggestions.map(suggestion => {
+                            const key = 'id' in suggestion && suggestion.id ? suggestion.id : suggestion.videoId;
+                            return <SuggestionCard key={key} video={suggestion} onPlay={onPlaySuggestion} />
+                        })}
                     </div>
                 </div>
             </div>
