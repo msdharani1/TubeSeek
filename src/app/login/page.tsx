@@ -1,19 +1,23 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [isPolicyAgreed, setIsPolicyAgreed] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -54,7 +58,26 @@ export default function LoginPage() {
             <p className="max-w-md text-muted-foreground">
               No ads, no shorts, no distractions. Your focused portal to YouTube. Sign in to begin.
             </p>
-            <Button onClick={handleSignIn} size="lg" className="mt-6">
+
+             <div className="flex items-center space-x-2 mt-6">
+                <Checkbox 
+                    id="privacy-policy" 
+                    onCheckedChange={(checked) => setIsPolicyAgreed(checked === true)}
+                    checked={isPolicyAgreed}
+                />
+                <Label 
+                    htmlFor="privacy-policy" 
+                    className="text-sm font-normal text-muted-foreground cursor-pointer"
+                >
+                    I have read and agree to the{' '}
+                    <Link href="/privacy-policy" target="_blank" className="underline hover:text-primary transition-colors">
+                        Privacy Policy
+                    </Link>
+                    .
+                </Label>
+            </div>
+
+            <Button onClick={handleSignIn} size="lg" className="mt-4" disabled={!isPolicyAgreed}>
                  <Image 
                     src="https://res.cloudinary.com/diwu3avy6/image/upload/icons8-google-50_hhk5el?_a=DATAdtAAZAA0" 
                     alt="Google logo"
