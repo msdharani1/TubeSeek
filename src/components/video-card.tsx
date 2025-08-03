@@ -48,8 +48,9 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
           {video.title}
         </CardTitle>
          <div className="text-sm text-muted-foreground mt-2">
-            <p className="font-medium">{video.channelTitle}</p>
-            <p>{publishedDate}</p>
+             <p className="line-clamp-1">
+                {video.channelTitle} &bull; {publishedDate}
+            </p>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4 pt-0">
