@@ -12,16 +12,55 @@ import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
+// Helper function to make API requests with key rotation
+async function fetchWithYouTubeKeyRotation(url: string): Promise<Response> {
+    const apiKeys = [
+        process.env.YOUTUBE_API_KEY,
+        process.env.YOUTUBE_API_KEY2,
+        process.env.YOUTUBE_API_KEY3
+    ].filter(Boolean); // Filter out any undefined/empty keys
+
+    if (apiKeys.length === 0) {
+        throw new Error('Server configuration error: No YouTube API keys found.');
+    }
+
+    let lastError: any = null;
+
+    for (const key of apiKeys) {
+        const urlWithKey = `${url}&key=${key}`;
+        try {
+            const response = await fetch(urlWithKey);
+            if (response.ok) {
+                return response; // Success, return the response
+            }
+            // Check for quota-like errors to decide if we should rotate the key
+            if (response.status === 403 || response.status === 429) {
+                 const errorData = await response.json();
+                 console.warn(`API key failed with status ${response.status}. Trying next key. Error: ${errorData.error.message}`);
+                 lastError = errorData;
+                 continue; // Move to the next key
+            }
+            // For other errors, fail fast
+            const errorData = await response.json();
+            console.error('YouTube API error (non-rotatable):', errorData);
+            throw new Error(`Failed to fetch from YouTube: ${errorData.error.message}`);
+
+        } catch (error) {
+            // Catch network errors or errors from the fetch call itself
+            console.warn(`Request failed for a key. Trying next key. Error: ${error}`);
+            lastError = error;
+        }
+    }
+    
+    // If all keys failed
+    console.error("All YouTube API keys failed.", lastError);
+    const finalErrorMessage = lastError?.error?.message || 'The service is temporarily unavailable. Please try again later.';
+    throw new Error(`YouTube API Error: ${finalErrorMessage}`);
+}
+
 export async function searchAndRefineVideos(
   query: string
 ): Promise<{ data?: SearchResult[]; error?: string }> {
-  const apiKey = process.env.YOUTUBE_API_KEY;
-
-  if (!apiKey) {
-    console.error('YouTube API key is not configured.');
-    return { error: 'Server configuration error. Please contact support.' };
-  }
-
   try {
     // Step 1: Search for videos to get video IDs
     const searchParams = new URLSearchParams({
@@ -29,19 +68,11 @@ export async function searchAndRefineVideos(
       q: query,
       maxResults: '20',
       type: 'video',
-      key: apiKey,
     });
-    const searchResponse = await fetch(
-      `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
+    
+    const searchResponse = await fetchWithYouTubeKeyRotation(
+        `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
     );
-
-    if (!searchResponse.ok) {
-      const errorData = await searchResponse.json();
-      console.error('YouTube search API error:', errorData);
-      return {
-        error: `Failed to fetch from YouTube: ${errorData.error.message}`,
-      };
-    }
 
     const searchJson = await searchResponse.json();
     const parsedSearch = YoutubeSearchResponseSchema.safeParse(searchJson);
@@ -63,19 +94,11 @@ export async function searchAndRefineVideos(
     const videosParams = new URLSearchParams({
       part: 'snippet,contentDetails,statistics',
       id: videoIds.join(','),
-      key: apiKey,
     });
-    const videosResponse = await fetch(
-      `${YOUTUBE_API_BASE_URL}/videos?${videosParams.toString()}`
-    );
 
-    if (!videosResponse.ok) {
-      const errorData = await videosResponse.json();
-      console.error('YouTube videos API error:', errorData);
-      return {
-        error: `Failed to fetch video details: ${errorData.error.message}`,
-      };
-    }
+    const videosResponse = await fetchWithYouTubeKeyRotation(
+       `${YOUTUBE_API_BASE_URL}/videos?${videosParams.toString()}`
+    );
 
     const videosJson = await videosResponse.json();
     const parsedVideos = YoutubeVideosResponseSchema.safeParse(videosJson);
