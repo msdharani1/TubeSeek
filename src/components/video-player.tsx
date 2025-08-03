@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { ThumbsUp, Eye, X, Share2 } from "lucide-react";
-import type { SearchResult, UserInfo } from "@/types/youtube";
+import type { SearchResult, WatchedVideo } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -36,10 +36,11 @@ const formatDescription = (text: string) => {
 };
 
 
-function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video: SearchResult) => void }) {
-    const publishedAt = (video as any).watchedAt || video.publishedAt;
-    const timeAgo = formatDistanceToNowStrict(new Date(publishedAt)) + ' ago';
-
+function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo, onPlay: (video: SearchResult) => void }) {
+    const isWatchedVideo = 'watchedAt' in video && video.watchedAt;
+    const publishedAt = isWatchedVideo ? video.watchedAt : video.publishedAt;
+    const timeAgo = formatDistanceToNowStrict(new Date(publishedAt), { addSuffix: true });
+    
     return (
         <button onClick={() => onPlay(video)} className="flex gap-4 w-full text-left hover:bg-muted/50 rounded-lg p-2 transition-colors">
             <div className="relative shrink-0">
@@ -56,7 +57,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="text-muted-foreground mt-1 text-xs">
                     <p className="line-clamp-1">{video.channelTitle}</p>
-                    <p>{formatCount(video.viewCount)} views &bull; {timeAgo}</p>
+                    <p>{formatCount(video.viewCount)} views &bull; {isWatchedVideo ? `watched ${timeAgo}` : timeAgo}</p>
                 </div>
             </div>
         </button>
