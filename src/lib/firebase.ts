@@ -6,14 +6,14 @@ import { getDatabase } from "firebase/database";
 // Your web app's Firebase configuration
 // IMPORTANT: Replace this with your actual Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyBkgIYVEj5nB8ygwiRXeyk0cPj9YWjrNR4",
-  authDomain: "tubeseekcom.firebaseapp.com",
-  projectId: "tubeseekcom",
-  storageBucket: "tubeseekcom.firebasestorage.app",
-  messagingSenderId: "681212933796",
-  appId: "1:681212933796:web:82f6540b2b962d8d40d831",
-  measurementId: "G-HCHEJNN1RR",
-  databaseURL: "https://tubeseekcom-default-rtdb.firebaseio.com/"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 };
 
 // Initialize Firebase
