@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Playlist as PlaylistIcon, PlusCircle, Loader2, X } from "lucide-react";
+import { ListPlus, PlusCircle, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -93,7 +93,7 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button variant="outline">
-                    <PlaylistIcon className="mr-2 h-4 w-4"/>
+                    <ListPlus className="mr-2 h-4 w-4"/>
                     Add to Playlist
                 </Button>
             </PopoverTrigger>
