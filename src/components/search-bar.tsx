@@ -53,7 +53,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
             </Button>
         )}
       </div>
-      <Button type="submit" size="lg" disabled={isLoading} className="bg-primary hover:bg-primary/90">
+      <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
