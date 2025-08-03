@@ -18,7 +18,8 @@ async function fetchWithYouTubeKeyRotation(url: string): Promise<Response> {
     const apiKeys = [
         process.env.YOUTUBE_API_KEY,
         process.env.YOUTUBE_API_KEY2,
-        process.env.YOUTUBE_API_KEY3
+        process.env.YOUTUBE_API_KEY3,
+        process.env.YOUTUBE_API_KEY4
     ].filter(Boolean); // Filter out any undefined/empty keys
 
     if (apiKeys.length === 0) {
