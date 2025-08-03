@@ -320,8 +320,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar">
             
             {/* Left Column: Video and Details */}
-            <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-auto no-scrollbar">
-                <div className="w-full aspect-video shrink-0 bg-black lg:sticky lg:top-0 z-10">
+            <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
+                <div className="w-full aspect-video shrink-0 bg-black sticky top-0 lg:relative lg:top-auto
+ z-10">
                     <iframe
                         key={iframeKey}
                         ref={iframeRef}
