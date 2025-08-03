@@ -11,9 +11,10 @@ import { formatDistanceToNowStrict } from 'date-fns';
 type VideoCardProps = {
   video: SearchResult | WatchedVideo;
   onPlay: (video: SearchResult) => void;
+  id?: string;
 };
 
-export function VideoCard({ video, onPlay }: VideoCardProps) {
+export function VideoCard({ video, onPlay, id }: VideoCardProps) {
     const isWatchedVideo = 'watchedAt' in video && video.watchedAt;
     let timeAgo: string | null = null;
 
@@ -22,7 +23,7 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
     }
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+    <Card className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1" key={id || video.videoId}>
       <CardHeader className="p-0 relative">
         <Image
           src={video.thumbnail}

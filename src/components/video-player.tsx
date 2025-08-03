@@ -122,7 +122,7 @@ const VideoDetails = ({ video, onShare, showShareButton }: { video: SearchResult
 
 type VideoPlayerProps = {
   video: SearchResult | null;
-  suggestions: SearchResult[];
+  suggestions: (SearchResult | WatchedVideo)[];
   onPlaySuggestion: (video: SearchResult) => void;
   onClose: () => void;
   source: 'search' | 'history';
@@ -211,9 +211,10 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                             )}
                         </h3>
                         <div className="flex flex-col gap-2">
-                            {suggestions.map(suggestion => (
-                                <SuggestionCard key={suggestion.videoId} video={suggestion} onPlay={onPlaySuggestion} />
-                            ))}
+                            {suggestions.map(suggestion => {
+                                const key = 'id' in suggestion ? suggestion.id : suggestion.videoId;
+                                return <SuggestionCard key={key} video={suggestion} onPlay={onPlaySuggestion} />
+                            })}
                         </div>
                     </div>
                 </div>
