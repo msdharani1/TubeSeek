@@ -34,6 +34,7 @@ function SearchPageContent() {
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
   
   const query = searchParams.get('q');
   const videoId = searchParams.get('v');
@@ -48,6 +49,16 @@ function SearchPageContent() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
+
+  useEffect(() => {
+    if (videoId && results.length > 0) {
+      const videoToPlay = results.find(v => v.videoId === videoId);
+      setSelectedVideo(videoToPlay || null);
+    } else {
+      setSelectedVideo(null);
+    }
+  }, [videoId, results]);
+
 
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery) return;
@@ -104,9 +115,9 @@ function SearchPageContent() {
     }
   };
 
-  const handlePlayVideo = (videoIdToPlay: string) => {
+  const handlePlayVideo = (videoToPlay: SearchResult) => {
     const params = new URLSearchParams(window.location.search);
-    params.set('v', videoIdToPlay);
+    params.set('v', videoToPlay.videoId);
     router.push(`/search?${params.toString()}`);
   };
   
@@ -157,7 +168,7 @@ function SearchPageContent() {
 
       </main>
       <VideoPlayer
-        videoId={videoId}
+        video={selectedVideo}
         onClose={handleClosePlayer}
       />
     </>

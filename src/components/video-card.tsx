@@ -9,7 +9,7 @@ import { PlayCircle, ThumbsUp, Eye } from "lucide-react";
 
 type VideoCardProps = {
   video: SearchResult;
-  onPlay: (videoId: string) => void;
+  onPlay: (video: SearchResult) => void;
 };
 
 export function VideoCard({ video, onPlay }: VideoCardProps) {
@@ -50,7 +50,7 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
                 {Number(video.likeCount).toLocaleString()}
             </span>
         </div>
-        <Button onClick={() => onPlay(video.videoId)} size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
+        <Button onClick={() => onPlay(video)} size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
           <PlayCircle className="mr-2 h-5 w-5" />
           Play
         </Button>

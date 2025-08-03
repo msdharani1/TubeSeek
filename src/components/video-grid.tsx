@@ -4,7 +4,7 @@ import { VideoCard } from "./video-card";
 
 type VideoGridProps = {
   videos: SearchResult[];
-  onPlayVideo: (videoId: string) => void;
+  onPlayVideo: (video: SearchResult) => void;
 };
 
 export function VideoGrid({ videos, onPlayVideo }: VideoGridProps) {
