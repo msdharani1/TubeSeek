@@ -10,12 +10,28 @@ import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
 import { cn } from "@/lib/utils";
 
-type VideoPlayerProps = {
-  video: SearchResult | null;
-  suggestions: SearchResult[];
-  onPlaySuggestion: (video: SearchResult) => void;
-  onClose: () => void;
+// Helper to parse and style the description
+const formatDescription = (text: string) => {
+    const linkRegex = /(https?:\/\/[^\s]+)/g;
+    const hashtagRegex = /(#\w+)/g;
+    
+    const parts = text.split(linkRegex);
+    
+    return parts.map((part, i) => {
+        if (part.match(linkRegex)) {
+            return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{part}</a>;
+        }
+
+        const hashParts = part.split(hashtagRegex);
+        return hashParts.map((hashPart, j) => {
+            if (hashPart.match(hashtagRegex)) {
+                return <span key={`${i}-${j}`} className="text-accent">{hashPart}</span>;
+            }
+            return hashPart;
+        });
+    });
 };
+
 
 function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video: SearchResult) => void }) {
     return (
@@ -32,7 +48,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
             </div>
             <div className="flex flex-col text-sm">
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
-                <div className="text-muted-foreground mt-1">
+                <div className="text-muted-foreground mt-1 text-xs">
                     <p className="line-clamp-1">{video.channelTitle}</p>
                     <p>{Number(video.viewCount).toLocaleString()} views &bull; {formatDistanceToNowStrict(new Date(video.publishedAt))} ago</p>
                 </div>
@@ -46,7 +62,7 @@ const VideoDetails = ({ video, onCopyLink }: { video: SearchResult, onCopyLink: 
 
     return (
         <>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {video.title}
             </h1>
             <div className="py-4 flex flex-wrap items-center justify-between gap-4">
@@ -72,12 +88,12 @@ const VideoDetails = ({ video, onCopyLink }: { video: SearchResult, onCopyLink: 
             </div>
             <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mt-4 bg-muted/50 p-4 rounded-lg">
                 <h3 className="font-semibold text-foreground">Description</h3>
-                <p className={cn(
+                <div className={cn(
                     "whitespace-pre-wrap break-words",
                     !isDescriptionExpanded && "line-clamp-3"
                 )}>
-                    {video.description || "No description available."}
-                </p>
+                    {video.description ? formatDescription(video.description) : "No description available."}
+                </div>
                 {(video.description?.split('\n').length > 3 || video.description?.length > 200) && (
                      <Button variant="link" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)} className="p-0 h-auto text-primary">
                         {isDescriptionExpanded ? 'Show less' : 'Show more'}
