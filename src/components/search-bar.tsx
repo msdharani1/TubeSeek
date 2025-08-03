@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, X } from "lucide-react";
 
 type SearchBarProps = {
   onSearch: (query: string) => void;
@@ -24,16 +24,35 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     onSearch(query);
   };
 
+  const handleClear = () => {
+    setQuery("");
+    onSearch(""); // Trigger search with empty query to clear results
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
-      <Input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search for videos..."
-        className="flex-1 text-base bg-card border-2 border-border focus:border-primary focus:ring-primary"
-        disabled={isLoading}
-      />
+      <div className="relative flex-1">
+        <Input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search for videos..."
+          className="w-full text-base bg-card border-2 border-border focus:border-primary focus:ring-primary pr-10"
+          disabled={isLoading}
+        />
+        {query && !isLoading && (
+            <Button 
+                type="button"
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={handleClear}
+            >
+                <X className="h-5 w-5"/>
+                <span className="sr-only">Clear search</span>
+            </Button>
+        )}
+      </div>
       <Button type="submit" size="lg" disabled={isLoading} className="bg-primary hover:bg-primary/90">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
