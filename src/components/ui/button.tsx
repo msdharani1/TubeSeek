@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -36,12 +37,29 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  asChild?: boolean,
+  outline?: boolean,
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, outline, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // Custom logic for destructive outline
+    if (variant === 'destructive' && outline) {
+      return (
+        <Comp
+          className={cn(
+            buttonVariants({ size }),
+            'border border-destructive bg-transparent text-destructive hover:bg-destructive/10',
+            className
+          )}
+          ref={ref}
+          {...props}
+        />
+      )
+    }
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
