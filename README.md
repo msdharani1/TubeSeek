@@ -1,3 +1,4 @@
+
 # TubeSeek
 
 TubeSeek is a Next.js application that allows users to search for YouTube videos, view refined results powered by Generative AI, and play them directly on the site.
