@@ -6,8 +6,12 @@ import { AuthProvider } from '@/context/auth-context';
 import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'TubeSeek',
-  description: 'An intelligent YouTube search experience.',
+  title: {
+    default: "TubeSeek | Intelligent YouTube Search",
+    template: "%s | TubeSeek"
+  },
+  description: 'An intelligent, ad-free, and distraction-free portal to YouTube. No ads, no shorts, just the content you want.',
+  keywords: ["YouTube search", "ad-free YouTube", "video search", "intelligent search", "no shorts", "focused video watching"]
 };
 
 export default function RootLayout({
