@@ -18,9 +18,12 @@
     "user-playlists": {
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && auth.uid === $uid",
         "playlists": {
+            ".read": "auth != null && auth.uid === $uid",
             ".indexOn": "name"
+        },
+        "items": {
+            ".read": "auth != null && auth.uid === $uid"
         }
       }
     }
