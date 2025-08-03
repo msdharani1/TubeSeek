@@ -7,6 +7,7 @@ import type { SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 type VideoPlayerProps = {
   video: SearchResult | null;
@@ -43,7 +44,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
   const { toast } = useToast();
 
   const handleCopyLink = () => {
-    const url = window.location.href;
+    if (!video) return;
+    const url = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${video.videoId}`;
     navigator.clipboard.writeText(url).then(() => {
       toast({
         title: "Link Copied!",
@@ -66,9 +68,10 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
         <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col overflow-hidden">
-            <div className="flex-grow flex flex-col lg:flex-row lg:overflow-hidden">
-                {/* Main Content: Video, Details, Description */}
-                <div className="lg:w-[70%] lg:h-full flex flex-col lg:overflow-y-auto no-scrollbar">
+            <div className="flex flex-col lg:flex-row flex-1 lg:overflow-hidden">
+                {/* Main Content Area */}
+                <div className="flex flex-col lg:w-[70%] flex-1 lg:overflow-y-auto no-scrollbar">
+                    {/* Video Player */}
                     <div className="aspect-video shrink-0 bg-black">
                         <iframe
                             src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
@@ -79,45 +82,25 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
                             className="w-full h-full"
                         ></iframe>
                     </div>
-                    <div className="p-6">
-                        <h1 className="text-2xl font-bold text-foreground">
-                            {video.title}
-                        </h1>
-                        <div className="py-4 flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1.5">
-                                    <Eye className="w-4 h-4"/>
-                                    {Number(video.viewCount).toLocaleString()} views
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <ThumbsUp className="w-4 h-4"/>
-                                    {Number(video.likeCount).toLocaleString()} likes
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" onClick={handleCopyLink}>
-                                    <Copy className="mr-2 h-4 w-4"/>
-                                    Copy link
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="border-y py-4 my-4">
-                            <h3 className="font-bold text-lg">{video.channelTitle}</h3>
-                        </div>
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap mt-4 bg-muted/50 p-4 rounded-lg">
-                            <h3 className="font-semibold text-foreground">Description</h3>
-                            <p>{video.description || "No description available."}</p>
-                        </div>
+                    {/* Video Details (Visible on all screen sizes, part of the scrollable area on mobile) */}
+                    <div className="p-6 lg:hidden">
+                        <VideoDetails video={video} onCopyLink={handleCopyLink} />
+                    </div>
+                    {/* Main content for large screens */}
+                    <div className="hidden lg:block p-6">
+                         <VideoDetails video={video} onCopyLink={handleCopyLink} />
                     </div>
                 </div>
-                
+
                 {/* Right Column: Suggestions */}
-                <div className="lg:w-[30%] lg:h-full lg:overflow-y-auto border-t lg:border-t-0 lg:border-l no-scrollbar p-4">
-                    <h3 className="text-lg font-bold mb-4 px-2">Up next</h3>
-                    <div className="flex flex-col gap-2">
-                        {suggestions.map(suggestion => (
-                            <SuggestionCard key={suggestion.videoId} video={suggestion} onPlay={onPlaySuggestion} />
-                        ))}
+                <div className="lg:w-[30%] lg:border-l flex flex-col overflow-y-auto no-scrollbar border-t lg:border-t-0">
+                    <div className="p-4">
+                        <h3 className="text-lg font-bold mb-4 px-2">Up next</h3>
+                        <div className="flex flex-col gap-2">
+                            {suggestions.map(suggestion => (
+                                <SuggestionCard key={suggestion.videoId} video={suggestion} onPlay={onPlaySuggestion} />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -133,3 +116,36 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
     </div>
   );
 }
+
+const VideoDetails = ({ video, onCopyLink }: { video: SearchResult, onCopyLink: () => void }) => (
+    <>
+        <h1 className="text-2xl font-bold text-foreground">
+            {video.title}
+        </h1>
+        <div className="py-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                    <Eye className="w-4 h-4"/>
+                    {Number(video.viewCount).toLocaleString()} views
+                </span>
+                <span className="flex items-center gap-1.5">
+                    <ThumbsUp className="w-4 h-4"/>
+                    {Number(video.likeCount).toLocaleString()} likes
+                </span>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={onCopyLink}>
+                    <Copy className="mr-2 h-4 w-4"/>
+                    Copy link
+                </Button>
+            </div>
+        </div>
+        <div className="border-y py-4 my-4">
+            <h3 className="font-bold text-lg">{video.channelTitle}</h3>
+        </div>
+        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mt-4 bg-muted/50 p-4 rounded-lg">
+            <h3 className="font-semibold text-foreground">Description</h3>
+            <p className="whitespace-pre-wrap break-words">{video.description || "No description available."}</p>
+        </div>
+    </>
+);
