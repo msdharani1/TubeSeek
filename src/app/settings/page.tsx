@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { clearWatchHistory, deleteAllPlaylists } from '@/app/actions/user-data';
+import { clearWatchHistory, deleteAllPlaylists, clearLikedVideos, clearSubscriptions } from '@/app/actions/user-data';
 import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
 
 function SettingsPage() {
@@ -34,6 +34,8 @@ function SettingsPage() {
     const { toast } = useToast();
     const [isDeletingHistory, setIsDeletingHistory] = useState(false);
     const [isDeletingPlaylists, setIsDeletingPlaylists] = useState(false);
+    const [isDeletingLikes, setIsDeletingLikes] = useState(false);
+    const [isDeletingSubs, setIsDeletingSubs] = useState(false);
 
     if (!user) return null;
 
@@ -78,6 +80,30 @@ function SettingsPage() {
             toast({ variant: "destructive", title: "Failed to delete playlists", description: error });
         }
         setIsDeletingPlaylists(false);
+    }
+
+    const handleDeleteLikes = async () => {
+        if (!user) return;
+        setIsDeletingLikes(true);
+        const { success, error } = await clearLikedVideos(user.uid);
+        if (success) {
+            toast({ title: "Liked videos cleared successfully!" });
+        } else {
+            toast({ variant: "destructive", title: "Failed to clear likes", description: error });
+        }
+        setIsDeletingLikes(false);
+    }
+
+    const handleDeleteSubs = async () => {
+        if (!user) return;
+        setIsDeletingSubs(true);
+        const { success, error } = await clearSubscriptions(user.uid);
+        if (success) {
+            toast({ title: "All subscriptions cleared successfully!" });
+        } else {
+            toast({ variant: "destructive", title: "Failed to clear subscriptions", description: error });
+        }
+        setIsDeletingSubs(false);
     }
 
     return (
@@ -181,6 +207,60 @@ function SettingsPage() {
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                         <AlertDialogAction onClick={handleDeletePlaylists} disabled={isDeletingPlaylists}>
                                              {isDeletingPlaylists ? "Deleting..." : "Yes, delete playlists"}
+                                        </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </SettingsItem>
+                            <SettingsItem>
+                                <div>
+                                    <p className="font-medium">Clear Liked Videos</p>
+                                    <p className="text-sm text-muted-foreground">Delete all of your liked videos.</p>
+                                </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" outline>
+                                            <Trash2 className="mr-2 h-4 w-4" /> Clear
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete all your liked videos.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDeleteLikes} disabled={isDeletingLikes}>
+                                            {isDeletingLikes ? "Clearing..." : "Yes, clear likes"}
+                                        </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </SettingsItem>
+                             <SettingsItem>
+                                <div>
+                                    <p className="font-medium">Clear All Subscriptions</p>
+                                    <p className="text-sm text-muted-foreground">Permanently remove all your channel subscriptions.</p>
+                                </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" outline>
+                                            <Trash2 className="mr-2 h-4 w-4" /> Clear
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently remove all of your channel subscriptions.
+                                        </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDeleteSubs} disabled={isDeletingSubs}>
+                                             {isDeletingSubs ? "Clearing..." : "Yes, clear subscriptions"}
                                         </AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
