@@ -62,15 +62,54 @@ export async function toggleUserSuggestion(adminEmail: string, userId: string, i
 
     try {
         const userSettingsRef = ref(db, `user-settings/${userId}`);
-        await update(userSettingsRef, {
-            suggestionsEnabled: isEnabled
-        });
+        const snapshot = await get(userSettingsRef);
+        if(snapshot.exists()){
+            await update(userSettingsRef, {
+                suggestionsEnabled: isEnabled
+            });
+        } else {
+             await set(userSettingsRef, {
+                suggestionsEnabled: isEnabled
+            });
+        }
         return { success: true };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { error: `Failed to update user setting: ${errorMessage}` };
     }
 }
+
+
+// Admin action to toggle all users' suggestion status
+export async function toggleAllUserSuggestions(adminEmail: string, isEnabled: boolean): Promise<{ success?: boolean; error?: string }> {
+    if (adminEmail !== 'msdharaniofficial@gmail.com') {
+        return { error: 'Unauthorized access.' };
+    }
+
+    try {
+        const usersRef = ref(db, 'user-searches');
+        const usersSnapshot = await get(usersRef);
+
+        if (!usersSnapshot.exists()) {
+            return { success: true }; // No users to update
+        }
+
+        const allUserIds = Object.keys(usersSnapshot.val());
+        const updates: { [key: string]: any } = {};
+
+        allUserIds.forEach(userId => {
+            updates[`/user-settings/${userId}/suggestionsEnabled`] = isEnabled;
+        });
+
+        await update(ref(db), updates);
+        return { success: true };
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to update all user settings: ${errorMessage}` };
+    }
+}
+
 
 // Action for a user to check their own suggestion status
 export async function getUserSuggestionStatus(userId: string): Promise<{ data?: boolean; error?: string }> {

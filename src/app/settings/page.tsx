@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import { Header } from '@/components/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, Users } from 'lucide-react';
+import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, Users, Check, Ban } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists, clearLikedVideos, clearSubscriptions } from '@/app/actions/user-data';
 import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
-import { getAllUsersWithSettings, toggleUserSuggestion } from '@/app/actions/user-settings';
+import { getAllUsersWithSettings, toggleUserSuggestion, toggleAllUserSuggestions } from '@/app/actions/user-settings';
 import type { UserInfo } from '@/types/youtube';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -74,6 +74,21 @@ function UserManagementCard() {
         }
     }
 
+    const handleToggleAll = async (isEnabled: boolean) => {
+        if (!user?.email) return;
+
+        const originalUsers = [...users];
+        setUsers(currentUsers => currentUsers.map(u => ({...u, suggestionsEnabled: isEnabled})));
+
+        const { success, error } = await toggleAllUserSuggestions(user.email, isEnabled);
+        if (success) {
+            toast({ title: `All users have been ${isEnabled ? 'enabled' : 'disabled'}.` });
+        } else {
+            setUsers(originalUsers);
+            toast({ variant: 'destructive', title: 'Update failed', description: error });
+        }
+    }
+
     if (user?.email !== 'msdharaniofficial@gmail.com') {
         return null;
     }
@@ -84,7 +99,17 @@ function UserManagementCard() {
             description="Enable or disable video suggestions for users."
             icon={<Users />}
         >
-            <div className="divide-y max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-end gap-2 mb-4">
+                <Button size="sm" onClick={() => handleToggleAll(true)}>
+                    <Check className="mr-2 h-4 w-4" />
+                    Enable All
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => handleToggleAll(false)}>
+                    <Ban className="mr-2 h-4 w-4" />
+                    Disable All
+                </Button>
+            </div>
+            <div className="divide-y max-h-96 overflow-y-auto no-scrollbar">
                 {isLoading ? (
                     Array.from({length: 3}).map((_, i) => (
                         <div key={i} className="flex items-center justify-between py-3">
