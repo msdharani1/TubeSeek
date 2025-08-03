@@ -4,13 +4,14 @@
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { ThumbsUp, Eye, X, Share2, History } from "lucide-react";
-import type { SearchResult, WatchedVideo } from "@/types/youtube";
+import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
 import { cn, formatCount } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { saveVideoToHistory } from "@/app/actions";
+import { AddToPlaylist } from "./add-to-playlist";
 
 // Helper to parse and style the description
 const formatDescription = (text: string) => {
@@ -36,10 +37,18 @@ const formatDescription = (text: string) => {
 };
 
 
-function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo, onPlay: (video: SearchResult) => void }) {
+function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo | PlaylistItem, onPlay: (video: SearchResult) => void }) {
     const isWatchedVideo = 'watchedAt' in video && video.watchedAt;
-    const publishedAt = isWatchedVideo ? video.watchedAt : video.publishedAt;
-    const timeAgo = formatDistanceToNowStrict(new Date(publishedAt), { addSuffix: true });
+    const isPlaylistItem = 'addedAt' in video && video.addedAt;
+    
+    let timeAgo: string | null = null;
+    if (isWatchedVideo) {
+        timeAgo = formatDistanceToNowStrict(new Date(video.watchedAt), { addSuffix: true });
+    } else if (isPlaylistItem) {
+        timeAgo = formatDistanceToNowStrict(new Date(video.addedAt), { addSuffix: true });
+    } else {
+        timeAgo = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
+    }
     
     return (
         <button onClick={() => onPlay(video)} className="flex gap-4 w-full text-left hover:bg-muted/50 rounded-lg p-2 transition-colors">
@@ -57,7 +66,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo,
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="text-muted-foreground mt-1 text-xs">
                     <p className="line-clamp-1">{video.channelTitle}</p>
-                    <p>{formatCount(video.viewCount)} views &bull; {isWatchedVideo ? `watched ${timeAgo}` : timeAgo}</p>
+                    <p>{formatCount(video.viewCount)} views &bull; {timeAgo}</p>
                 </div>
             </div>
         </button>
@@ -90,14 +99,15 @@ const VideoDetails = ({ video, onShare, showShareButton }: { video: SearchResult
                         {formatCount(video.likeCount)} likes
                     </span>
                 </div>
-                {showShareButton && (
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                    {showShareButton && (
                         <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-accent/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
                             <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
                             <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
                         </Button>
-                    </div>
-                )}
+                    )}
+                    <AddToPlaylist video={video} />
+                </div>
             </div>
             <div className="border-y py-4 my-4">
                 <h3 className="font-bold text-lg">{video.channelTitle}</h3>
@@ -122,13 +132,14 @@ const VideoDetails = ({ video, onShare, showShareButton }: { video: SearchResult
 
 type VideoPlayerProps = {
   video: SearchResult | null;
-  suggestions: (SearchResult | WatchedVideo)[];
+  suggestions: (SearchResult | WatchedVideo | PlaylistItem)[];
   onPlaySuggestion: (video: SearchResult) => void;
   onClose: () => void;
-  source: 'search' | 'history';
+  source: 'search' | 'history' | 'playlist';
+  playlistName?: string;
 };
 
-export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source }: VideoPlayerProps) {
+export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -168,6 +179,18 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   const showShareButton = source === 'search';
 
+  const getUpNextTitle = () => {
+    switch(source) {
+        case 'history':
+            return 'Recent History';
+        case 'playlist':
+            return `From: ${playlistName || 'Playlist'}`;
+        case 'search':
+        default:
+            return 'Up next';
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
         <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col overflow-hidden">
@@ -201,14 +224,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                     
                     <div className="p-4">
                         <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2">
-                           {source === 'history' ? (
-                                <>
-                                    <History className="w-5 h-5"/>
-                                    Recent History
-                                </>
-                            ) : (
-                                "Up next"
-                            )}
+                           {source === 'history' ? <History className="w-5 h-5"/> : null}
+                           {getUpNextTitle()}
                         </h3>
                         <div className="flex flex-col gap-2">
                             {suggestions.map(suggestion => {

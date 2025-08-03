@@ -82,3 +82,18 @@ const WatchedVideoSchema = SearchResultSchema.extend({
 });
 
 export type WatchedVideo = z.infer<typeof WatchedVideoSchema>;
+
+export const PlaylistItemSchema = SearchResultSchema.extend({
+  id: z.string(), // Unique key for the playlist item in Firebase
+  addedAt: z.number(),
+});
+export type PlaylistItem = z.infer<typeof PlaylistItemSchema>;
+
+export const PlaylistSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  videoCount: z.number().default(0),
+  thumbnail: z.string().optional(),
+  createdAt: z.number(),
+});
+export type Playlist = z.infer<typeof PlaylistSchema>;

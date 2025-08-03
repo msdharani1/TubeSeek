@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { LogOut, User as UserIcon, Shield, History } from "lucide-react";
 import { Logo } from "./logo";
+import { ListVideo } from "./icons";
 
 export function Header() {
   const { user } = useAuth();
@@ -34,6 +35,10 @@ export function Header() {
 
   const handleHistoryClick = () => {
     router.push('/history');
+  }
+
+  const handlePlaylistsClick = () => {
+    router.push('/playlists');
   }
   
   const isAdmin = user?.email === "msdharaniofficial@gmail.com";
@@ -72,6 +77,10 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handlePlaylistsClick}>
+                  <ListVideo className="mr-2 h-4 w-4" />
+                  <span>Playlists</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleHistoryClick}>
                   <History className="mr-2 h-4 w-4" />
                   <span>History</span>
