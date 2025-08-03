@@ -131,7 +131,7 @@ const VideoDetails = ({
     }
 
     return (
-        <>
+        <div className="p-6">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {video.title}
             </h1>
@@ -181,7 +181,7 @@ const VideoDetails = ({
                     </Button>
                 )}
             </div>
-        </>
+        </div>
     );
 };
 
@@ -318,11 +318,11 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
         <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col overflow-hidden">
-            {/* Main container with conditional flex-direction */}
             <div className="flex flex-col lg:flex-row flex-1 min-h-0">
-                {/* Left/Top section for video and details */}
-                <div className="lg:w-[70%] flex flex-col">
-                    <div className="aspect-video shrink-0 bg-black">
+                
+                {/* Left Column: Video and Details */}
+                <div className="lg:w-[70%] flex flex-col overflow-y-auto no-scrollbar">
+                    <div className="w-full aspect-video shrink-0 bg-black lg:sticky lg:top-0 z-10">
                         <iframe
                             key={iframeKey}
                             ref={iframeRef}
@@ -334,42 +334,23 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                             className="w-full h-full"
                         ></iframe>
                     </div>
-
-                    {/* On large screens, details are here and scroll independently */}
-                    <div className="hidden lg:block p-6 overflow-y-auto no-scrollbar">
-                         <VideoDetails 
-                            video={video} 
-                            onShare={handleShare} 
-                            showShareButton={showShareButton} 
-                            showAddToPlaylistButton={showAddToPlaylistButton} 
-                            seekTo={seekTo}
-                            isLiked={isLiked}
-                            isSubscribed={isSubscribed}
-                            onLike={handleLike}
-                            onSubscribe={handleSubscribe}
-                         />
-                    </div>
+                     <VideoDetails 
+                        video={video} 
+                        onShare={handleShare} 
+                        showShareButton={showShareButton} 
+                        showAddToPlaylistButton={showAddToPlaylistButton} 
+                        seekTo={seekTo}
+                        isLiked={isLiked}
+                        isSubscribed={isSubscribed}
+                        onLike={handleLike}
+                        onSubscribe={handleSubscribe}
+                     />
                 </div>
 
-                {/* Right/Bottom section for suggestions and (on mobile) details */}
+                {/* Right Column: Suggestions */}
                 <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
-                    {/* On small screens, details appear here inside the scrollable area */}
-                    <div className="block lg:hidden p-6 border-b">
-                         <VideoDetails 
-                            video={video} 
-                            onShare={handleShare} 
-                            showShareButton={showShareButton} 
-                            showAddToPlaylistButton={showAddToPlaylistButton} 
-                            seekTo={seekTo}
-                            isLiked={isLiked}
-                            isSubscribed={isSubscribed}
-                            onLike={handleLike}
-                            onSubscribe={handleSubscribe}
-                         />
-                    </div>
-                    
                     <div className="p-4">
-                        <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2">
+                        <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2 sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
                            {getUpNextIcon()}
                            {getUpNextTitle()}
                         </h3>
@@ -385,7 +366,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
             <button
                 onClick={onClose}
-                className="absolute right-4 top-4 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors z-10"
+                className="absolute right-4 top-4 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors z-20"
                 aria-label="Close video player"
             >
                 <X className="h-5 w-5" />
