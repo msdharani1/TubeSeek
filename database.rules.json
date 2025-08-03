@@ -1,4 +1,3 @@
-
 {
   "rules": {
     "user-searches": {
@@ -26,6 +25,18 @@
         "items": {
             ".read": "auth != null && auth.uid === $uid"
         }
+      }
+    },
+    "user-likes": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "user-subscriptions": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }

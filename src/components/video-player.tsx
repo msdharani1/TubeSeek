@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History, ListVideo } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -11,6 +11,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { cn, formatCount } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { saveVideoToHistory } from "@/app/actions";
+import { getInteractionStatus, toggleLikeVideo, toggleSubscription } from "@/app/actions/video-interactions";
 import { AddToPlaylist } from "./add-to-playlist";
 
 // Helper to parse and style the description
@@ -92,7 +93,27 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
     )
 }
 
-const VideoDetails = ({ video, onShare, showShareButton, showAddToPlaylistButton, seekTo }: { video: SearchResult, onShare: () => void, showShareButton: boolean, showAddToPlaylistButton: boolean, seekTo: (seconds: number) => void }) => {
+const VideoDetails = ({ 
+    video, 
+    onShare, 
+    showShareButton, 
+    showAddToPlaylistButton, 
+    seekTo,
+    isLiked,
+    isSubscribed,
+    onLike,
+    onSubscribe
+}: { 
+    video: SearchResult, 
+    onShare: () => void, 
+    showShareButton: boolean, 
+    showAddToPlaylistButton: boolean, 
+    seekTo: (seconds: number) => void,
+    isLiked: boolean,
+    isSubscribed: boolean,
+    onLike: () => void,
+    onSubscribe: () => void
+}) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
 
@@ -128,10 +149,20 @@ const VideoDetails = ({ video, onShare, showShareButton, showAddToPlaylistButton
                     {showAddToPlaylistButton && <AddToPlaylist video={video} />}
                 </div>
             </div>
-            <div className="border-y py-4 my-4">
+            <div className="border-y py-4 my-4 flex items-center justify-between">
                 <h3 className="font-bold text-lg">{video.channelTitle}</h3>
+                <Button variant={isSubscribed ? 'default' : 'outline'} onClick={onSubscribe}>
+                    {isSubscribed ? <BellRing className="mr-2 h-4 w-4" /> : <Bell className="mr-2 h-4 w-4" />}
+                    {isSubscribed ? 'Subscribed' : 'Subscribe'}
+                </Button>
             </div>
-            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground mt-4 bg-muted/50 p-4 rounded-lg">
+             <div className="flex items-center gap-2 mb-4">
+                <Button variant={isLiked ? 'secondary' : 'outline'} className="flex-1" onClick={onLike}>
+                    <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
+                    {isLiked ? 'Liked' : 'Like'}
+                </Button>
+            </div>
+            <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-muted/50 p-4 rounded-lg">
                 <h3 className="font-semibold text-foreground">Description</h3>
                 <div className={cn(
                     "whitespace-pre-wrap break-words",
@@ -163,10 +194,24 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   const { user } = useAuth();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeKey, setIframeKey] = useState(0); 
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
+  const fetchStatus = useCallback(async () => {
+    if (!user || !video) return;
+    const { data, error } = await getInteractionStatus(user.uid, video.videoId, video.channelId);
+    if (error) {
+        console.error("Failed to get interaction status", error);
+    } else if (data) {
+        setIsLiked(data.isLiked);
+        setIsSubscribed(data.isSubscribed);
+    }
+  }, [user, video]);
+  
   useEffect(() => {
     if (video && user) {
         setIframeKey(prev => prev + 1); // Force re-render of iframe on new video
+        fetchStatus();
         saveVideoToHistory(user.uid, video)
             .then(result => {
                 if(result.error) {
@@ -175,7 +220,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 }
             })
     }
-  }, [video, user]);
+  }, [video, user, fetchStatus]);
 
   const seekTo = (seconds: number) => {
     if (iframeRef.current && video) {
@@ -200,6 +245,26 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
       });
     });
   };
+
+  const handleLike = async () => {
+      if (!user || !video) return;
+      setIsLiked(!isLiked); // Optimistic update
+      const { error } = await toggleLikeVideo(user.uid, video.videoId);
+      if (error) {
+          setIsLiked(!isLiked); // Revert on error
+          toast({ variant: "destructive", title: "Failed to like video", description: error });
+      }
+  }
+
+  const handleSubscribe = async () => {
+      if (!user || !video) return;
+      setIsSubscribed(!isSubscribed); // Optimistic update
+      const { error } = await toggleSubscription(user.uid, video.channelId, video.channelTitle);
+      if (error) {
+          setIsSubscribed(!isSubscribed); // Revert on error
+          toast({ variant: "destructive", title: "Failed to subscribe", description: error });
+      }
+  }
 
   if (!video) {
     return null;
@@ -254,7 +319,17 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
                     {/* On large screens, details are here and scroll independently */}
                     <div className="hidden lg:block p-6 overflow-y-auto no-scrollbar">
-                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} seekTo={seekTo} />
+                         <VideoDetails 
+                            video={video} 
+                            onShare={handleShare} 
+                            showShareButton={showShareButton} 
+                            showAddToPlaylistButton={showAddToPlaylistButton} 
+                            seekTo={seekTo}
+                            isLiked={isLiked}
+                            isSubscribed={isSubscribed}
+                            onLike={handleLike}
+                            onSubscribe={handleSubscribe}
+                         />
                     </div>
                 </div>
 
@@ -262,7 +337,17 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
                     {/* On small screens, details appear here inside the scrollable area */}
                     <div className="block lg:hidden p-6 border-b">
-                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} seekTo={seekTo} />
+                         <VideoDetails 
+                            video={video} 
+                            onShare={handleShare} 
+                            showShareButton={showShareButton} 
+                            showAddToPlaylistButton={showAddToPlaylistButton} 
+                            seekTo={seekTo}
+                            isLiked={isLiked}
+                            isSubscribed={isSubscribed}
+                            onLike={handleLike}
+                            onSubscribe={handleSubscribe}
+                         />
                     </div>
                     
                     <div className="p-4">
@@ -291,5 +376,3 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     </div>
   );
 }
-
-    

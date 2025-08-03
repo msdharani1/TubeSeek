@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: 'An intelligent, ad-free, and distraction-free portal to YouTube. No ads, no shorts, just the content you want.',
   keywords: ["YouTube search", "ad-free YouTube", "video search", "intelligent search", "no shorts", "focused video watching"],
   icons: {
-    icon: "https://res.cloudinary.com/diwu3avy6/image/upload/fav_egy0sj?_a=DATAdtAAZAA0",
+    icon: "https://res.cloudinary.com/diwu3avy6/image/upload/favicon_rounded_cfld4n?_a=DATAdtAAZAA0",
   },
 };
 

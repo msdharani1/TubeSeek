@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 export const YoutubeSearchResponseSchema = z.object({
@@ -9,6 +8,7 @@ export const YoutubeSearchResponseSchema = z.object({
     snippet: z.object({
       title: z.string(),
       description: z.string(),
+      channelId: z.string(),
       thumbnails: z.object({
         high: z.object({
           url: z.string(),
@@ -25,6 +25,7 @@ export const YoutubeVideosResponseSchema = z.object({
         title: z.string(),
         description: z.string(),
         publishedAt: z.string(),
+        channelId: z.string(),
         channelTitle: z.string(),
         thumbnails: z.object({
             high: z.object({
@@ -51,6 +52,7 @@ const SearchResultSchema = z.object({
   viewCount: z.string(),
   likeCount: z.string(),
   publishedAt: z.string(),
+  channelId: z.string(),
   channelTitle: z.string(),
 });
 
