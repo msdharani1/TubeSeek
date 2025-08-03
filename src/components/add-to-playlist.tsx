@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ListPlus, PlusCircle, Loader2 } from "lucide-react";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/auth-context";
-import { getPlaylists, createPlaylist, updateVideoInPlaylists } from "@/app/actions/playlist";
+import { getPlaylists, createPlaylist, updateVideoInPlaylists, getPlaylistsForVideo } from "@/app/actions/playlist";
 import type { Playlist, SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,38 +27,64 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
     const [open, setOpen] = useState(false);
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
     const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
+    const [initialSelectedPlaylists, setInitialSelectedPlaylists] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showNewPlaylistInput, setShowNewPlaylistInput] = useState(false);
     const [newPlaylistName, setNewPlaylistName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        if (open && user) {
-            fetchPlaylists();
-        }
-    }, [open, user]);
-
-    const fetchPlaylists = async () => {
+    const fetchAllData = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
-        const { data } = await getPlaylists(user.uid);
-        
-        const fetchedPlaylists = data || [];
-        const hasFavorite = fetchedPlaylists.some(p => p.name === 'Favorite');
-        
-        if (!hasFavorite) {
+
+        const [playlistsRes, videoPlaylistsRes] = await Promise.all([
+            getPlaylists(user.uid),
+            getPlaylistsForVideo(user.uid, video.videoId)
+        ]);
+
+        // Process playlists
+        const fetchedPlaylists = playlistsRes.data || [];
+        const dbHasFavorite = fetchedPlaylists.some(p => p.name === 'Favorite');
+        if (!dbHasFavorite) {
             setPlaylists([defaultFavoritePlaylist, ...fetchedPlaylists]);
         } else {
             setPlaylists(fetchedPlaylists);
         }
 
-        // This part is complex. For now, we assume we don't know which playlists
-        // the video is in when the popover opens. A more robust solution would
-        // check this, but it adds significant complexity.
-        setSelectedPlaylists([]);
+        // Process which playlists the video is in
+        if (videoPlaylistsRes.data) {
+            const videoIsIn = videoPlaylistsRes.data;
+            const favoritePlaylist = fetchedPlaylists.find(p => p.name === 'Favorite');
+            
+            // Map the placeholder 'favorite-default' if needed
+            const finalSelection = videoIsIn.map(id => {
+                 return id;
+            });
+
+            // Special handling if the real "Favorite" exists and video is in it
+            if (favoritePlaylist && videoIsIn.includes(favoritePlaylist.id)) {
+                 if (!finalSelection.includes('favorite-default')) {
+                    finalSelection.push('favorite-default');
+                 }
+            }
+            
+            setSelectedPlaylists(finalSelection);
+            setInitialSelectedPlaylists(finalSelection);
+        } else {
+            setSelectedPlaylists([]);
+            setInitialSelectedPlaylists([]);
+        }
+
         setIsLoading(false);
-    };
+    }, [user, video.videoId]);
+
+
+    useEffect(() => {
+        if (open) {
+            fetchAllData();
+        }
+    }, [open, fetchAllData]);
 
     const handleCheckedChange = (playlistId: string) => {
         setSelectedPlaylists(prev => 
@@ -75,10 +101,15 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         if (error) {
             toast({ variant: "destructive", title: "Failed to create playlist", description: error });
         } else if (data) {
-            setPlaylists(prev => {
-                const newPlaylists = [data, ...prev.filter(p => p.id !== 'favorite-default')];
-                return newPlaylists;
-            });
+             const allPlaylists = await getPlaylists(user.uid);
+             if (allPlaylists.data) {
+                const dbHasFavorite = allPlaylists.data.some(p => p.name === 'Favorite');
+                 if (!dbHasFavorite) {
+                    setPlaylists([defaultFavoritePlaylist, ...allPlaylists.data]);
+                } else {
+                    setPlaylists(allPlaylists.data);
+                }
+             }
             setSelectedPlaylists(prev => [...prev, data.id]); // Auto-select new playlist
             setNewPlaylistName("");
             setShowNewPlaylistInput(false);
@@ -89,10 +120,8 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
     const handleSave = async () => {
         if (!user) return;
         setIsSaving(true);
-        // This is a placeholder for checking what playlists the video is *currently* in.
-        // A more robust solution would fetch this state. For now, we pass an empty array.
-        const videoIsCurrentlyIn: string[] = []; 
-        const { error } = await updateVideoInPlaylists(user.uid, video, selectedPlaylists, videoIsCurrentlyIn);
+        
+        const { error } = await updateVideoInPlaylists(user.uid, video, selectedPlaylists, initialSelectedPlaylists);
         
         if (error) {
              toast({ variant: "destructive", title: "Failed to save", description: error });
@@ -102,6 +131,16 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         }
         setIsSaving(false);
     }
+
+    // Determine the actual DB IDs for saving
+    const finalSelectedIds = selectedPlaylists.filter(id => id !== 'favorite-default');
+    const favoritePlaylistInDb = playlists.find(p => p.name === 'Favorite' && p.id !== 'favorite-default');
+    if (selectedPlaylists.includes('favorite-default') && favoritePlaylistInDb) {
+        if (!finalSelectedIds.includes(favoritePlaylistInDb.id)) {
+            finalSelectedIds.push(favoritePlaylistInDb.id);
+        }
+    }
+
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -123,7 +162,11 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
                         </div>
                     ) : (
                         <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
-                            {playlists.map(playlist => (
+                             {playlists.sort((a,b) => {
+                                if (a.name === 'Favorite') return -1;
+                                if (b.name === 'Favorite') return 1;
+                                return 0;
+                            }).map(playlist => (
                                 <div key={playlist.id} className="flex items-center space-x-2">
                                     <Checkbox 
                                         id={playlist.id} 

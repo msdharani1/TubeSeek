@@ -64,13 +64,13 @@ export async function updateVideoInPlaylists(
     try {
         // Add to new playlists
         for (const playlistId of toAdd) {
-            // Ensure a default "Favorite" playlist exists for a user if they add to it
+            let actualPlaylistId = playlistId;
+
+            // Handle creating the 'Favorite' playlist if it's selected but doesn't exist
             if (playlistId === 'favorite-default') {
                 const playlistsRef = ref(db, `user-playlists/${userId}/playlists`);
                 const q = query(playlistsRef, orderByChild('name'), equalTo('Favorite'));
                 const snapshot = await get(q);
-
-                let actualPlaylistId = playlistId;
 
                 if (!snapshot.exists()) {
                     const favoritePlaylistRef = push(playlistsRef);
@@ -85,38 +85,30 @@ export async function updateVideoInPlaylists(
                 } else {
                     actualPlaylistId = Object.keys(snapshot.val())[0];
                 }
-                
-                const playlistItemsRef = ref(db, `user-playlists/${userId}/items/${actualPlaylistId}`);
-                const newItemRef = push(playlistItemsRef);
-                const playlistItem: Omit<PlaylistItem, 'addedAt'> & { addedAt: any } = {
-                    ...video,
-                    id: newItemRef.key!,
-                    addedAt: serverTimestamp(),
+            }
+            
+            const playlistItemsRef = ref(db, `user-playlists/${userId}/items/${actualPlaylistId}`);
+            const newItemRef = push(playlistItemsRef);
+            const playlistItem: Omit<PlaylistItem, 'addedAt'> & { addedAt: any } = {
+                ...video,
+                id: newItemRef.key!,
+                addedAt: serverTimestamp(),
+            };
+            await set(newItemRef, playlistItem);
+            
+            // Update thumbnail and video count
+            const playlistRef = ref(db, `user-playlists/${userId}/playlists/${actualPlaylistId}`);
+            const playlistSnapshot = await get(playlistRef);
+            if (playlistSnapshot.exists()) {
+                const updates: any = {
+                    videoCount: (playlistSnapshot.val().videoCount || 0) + 1,
                 };
-                await set(newItemRef, playlistItem);
-                
-                // Update thumbnail if it's the first video
-                const playlistRef = ref(db, `user-playlists/${userId}/playlists/${actualPlaylistId}`);
-                 const playlistSnapshot = await get(playlistRef);
-                if(playlistSnapshot.exists() && !playlistSnapshot.val().thumbnail) {
-                    await set(child(playlistRef, 'thumbnail'), video.thumbnail);
+                if (!playlistSnapshot.val().thumbnail) {
+                    updates.thumbnail = video.thumbnail;
                 }
-
-            } else {
-                const playlistItemsRef = ref(db, `user-playlists/${userId}/items/${playlistId}`);
-                const newItemRef = push(playlistItemsRef);
-                const playlistItem: Omit<PlaylistItem, 'addedAt'> & { addedAt: any } = {
-                    ...video,
-                    id: newItemRef.key!,
-                    addedAt: serverTimestamp(),
-                };
-                await set(newItemRef, playlistItem);
-
-                // Update thumbnail if it's the first video
-                const playlistRef = ref(db, `user-playlists/${userId}/playlists/${playlistId}`);
-                const snapshot = await get(playlistRef);
-                if(snapshot.exists() && !snapshot.val().thumbnail) {
-                    await set(child(playlistRef, 'thumbnail'), video.thumbnail);
+                await set(child(playlistRef, 'videoCount'), updates.videoCount);
+                if(updates.thumbnail) {
+                    await set(child(playlistRef, 'thumbnail'), updates.thumbnail);
                 }
             }
         }
@@ -126,12 +118,17 @@ export async function updateVideoInPlaylists(
             const itemsRef = ref(db, `user-playlists/${userId}/items/${playlistId}`);
             const itemQuery = query(itemsRef, orderByChild('videoId'), equalTo(video.videoId));
             const snapshot = await get(itemQuery);
+
             if (snapshot.exists()) {
-                const updates: { [key: string]: null } = {};
-                snapshot.forEach(childSnapshot => {
-                    updates[childSnapshot.key!] = null;
-                });
-                await remove(ref(db, `user-playlists/${userId}/items/${playlistId}/${Object.keys(updates)[0]}`));
+                const itemKey = Object.keys(snapshot.val())[0];
+                await remove(ref(db, `user-playlists/${userId}/items/${playlistId}/${itemKey}`));
+                
+                // Update video count
+                const playlistRef = ref(db, `user-playlists/${userId}/playlists/${playlistId}`);
+                const playlistSnapshot = await get(playlistRef);
+                if (playlistSnapshot.exists()) {
+                    await set(child(playlistRef, 'videoCount'), Math.max(0, (playlistSnapshot.val().videoCount || 1) - 1));
+                }
             }
         }
 
@@ -181,5 +178,35 @@ export async function getPlaylistVideos(userId: string, playlistId: string): Pro
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { error: `Failed to fetch playlist videos: ${errorMessage}` };
+    }
+}
+
+
+export async function getPlaylistsForVideo(userId: string, videoId: string): Promise<{ data?: string[]; error?: string }> {
+    if (!userId || !videoId) return { error: 'User ID and video ID are required.' };
+    
+    try {
+        const userItemsRef = ref(db, `user-playlists/${userId}/items`);
+        const snapshot = await get(userItemsRef);
+        if (!snapshot.exists()) {
+            return { data: [] };
+        }
+
+        const itemsByPlaylist = snapshot.val();
+        const playlistIds: string[] = [];
+
+        for (const playlistId in itemsByPlaylist) {
+            const items = itemsByPlaylist[playlistId];
+            for (const itemId in items) {
+                if (items[itemId].videoId === videoId) {
+                    playlistIds.push(playlistId);
+                    break; 
+                }
+            }
+        }
+        return { data: playlistIds };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to get playlists for video: ${errorMessage}` };
     }
 }

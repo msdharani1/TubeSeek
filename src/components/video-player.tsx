@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -73,7 +73,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
     )
 }
 
-const VideoDetails = ({ video, onShare, showShareButton }: { video: SearchResult, onShare: () => void, showShareButton: boolean }) => {
+const VideoDetails = ({ video, onShare, showShareButton, showAddToPlaylistButton }: { video: SearchResult, onShare: () => void, showShareButton: boolean, showAddToPlaylistButton: boolean }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
 
@@ -106,7 +106,7 @@ const VideoDetails = ({ video, onShare, showShareButton }: { video: SearchResult
                             <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
                         </Button>
                     )}
-                    <AddToPlaylist video={video} />
+                    {showAddToPlaylistButton && <AddToPlaylist video={video} />}
                 </div>
             </div>
             <div className="border-y py-4 my-4">
@@ -178,6 +178,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   }
 
   const showShareButton = source === 'search';
+  const showAddToPlaylistButton = source !== 'playlist';
 
   const getUpNextTitle = () => {
     switch(source) {
@@ -188,6 +189,18 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         case 'search':
         default:
             return 'Up next';
+    }
+  }
+
+  const getUpNextIcon = () => {
+      switch(source) {
+        case 'history':
+            return <History className="w-5 h-5"/>;
+        case 'playlist':
+            return <ListVideo className="w-5 h-5"/>;
+        case 'search':
+        default:
+            return null;
     }
   }
 
@@ -211,7 +224,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
                     {/* On large screens, details are here and scroll independently */}
                     <div className="hidden lg:block p-6 overflow-y-auto no-scrollbar">
-                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton}/>
+                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} />
                     </div>
                 </div>
 
@@ -219,17 +232,17 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
                     {/* On small screens, details appear here inside the scrollable area */}
                     <div className="block lg:hidden p-6 border-b">
-                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} />
+                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} />
                     </div>
                     
                     <div className="p-4">
                         <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2">
-                           {source === 'history' ? <History className="w-5 h-5"/> : null}
+                           {getUpNextIcon()}
                            {getUpNextTitle()}
                         </h3>
                         <div className="flex flex-col gap-2">
                             {suggestions.map(suggestion => {
-                                const key = 'id' in suggestion ? suggestion.id : suggestion.videoId;
+                                const key = 'id' in suggestion && suggestion.id ? suggestion.id : suggestion.videoId;
                                 return <SuggestionCard key={key} video={suggestion} onPlay={onPlaySuggestion} />
                             })}
                         </div>
