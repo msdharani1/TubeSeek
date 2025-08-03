@@ -59,7 +59,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         ) : (
           <Search className="h-5 w-5" />
         )}
-        <span className="sr-only">Search</span>
+        <span className="hidden sm:inline">Search</span>
       </Button>
     </form>
   );
