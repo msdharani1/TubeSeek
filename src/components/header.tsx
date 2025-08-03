@@ -68,7 +68,7 @@ export function Header() {
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-muted/50">
                 <div className="p-0.5 rounded-full bg-gradient-to-r from-primary via-accent to-primary">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
@@ -89,34 +89,34 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handlePlaylistsClick}>
+              <DropdownMenuItem onClick={handlePlaylistsClick} className="cursor-pointer">
                   <ListVideo className="mr-2 h-4 w-4" />
                   <span>Playlists</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleHistoryClick}>
+              <DropdownMenuItem onClick={handleHistoryClick} className="cursor-pointer">
                   <History className="mr-2 h-4 w-4" />
                   <span>History</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLikedVideosClick}>
+              <DropdownMenuItem onClick={handleLikedVideosClick} className="cursor-pointer">
                   <Heart className="mr-2 h-4 w-4" />
                   <span>Liked Videos</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSubscriptionsClick}>
+              <DropdownMenuItem onClick={handleSubscriptionsClick} className="cursor-pointer">
                   <Tv className="mr-2 h-4 w-4" />
                   <span>Subscriptions</span>
               </DropdownMenuItem>
-               <DropdownMenuItem onClick={handleSettingsClick}>
+               <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
               </DropdownMenuItem>
               {isAdmin && (
-                <DropdownMenuItem onClick={handleManageClick}>
+                <DropdownMenuItem onClick={handleManageClick} className="cursor-pointer">
                   <Shield className="mr-2 h-4 w-4" />
                   <span>Manage</span>
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

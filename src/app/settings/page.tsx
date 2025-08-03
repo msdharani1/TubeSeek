@@ -9,10 +9,8 @@ import { useRouter } from 'next/navigation';
 
 import { Header } from '@/components/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, ChevronRight, LogOut, Trash2, ShieldAlert } from 'lucide-react';
+import { User, LogOut, Trash2, ShieldAlert } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
-import Link from 'next/link';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists } from '@/app/actions/user-data';
+import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
 
 function SettingsPage() {
     const { user } = useAuth();
@@ -89,12 +88,8 @@ function SettingsPage() {
 
                 <div className="space-y-8">
                     {/* User Profile Section */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Profile</CardTitle>
-                            <CardDescription>This is your account information.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex items-center gap-4">
+                    <SettingsCard title="Profile" description="This is your account information.">
+                        <div className="flex items-center gap-4">
                             <Avatar className="h-16 w-16">
                                 <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
                                 <AvatarFallback>
@@ -106,52 +101,38 @@ function SettingsPage() {
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                                 <p className="text-xs text-muted-foreground">Membership since: {creationDate}</p>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </SettingsCard>
 
                     {/* Appearance Section */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Appearance</CardTitle>
-                            <CardDescription>Customize the look and feel of the app.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                           <div className="space-y-3">
-                             <p className="font-medium">Theme</p>
-                             <ThemeSwitcher />
-                           </div>
-                        </CardContent>
-                    </Card>
+                    <SettingsCard title="Appearance" description="Customize the look and feel of the app.">
+                        <SettingsItem>
+                            <p className="font-medium">Theme</p>
+                            <ThemeSwitcher />
+                        </SettingsItem>
+                    </SettingsCard>
 
                     {/* About Section */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>About</CardTitle>
-                            <CardDescription>Information about the application.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="divide-y">
-                           <div className="flex items-center justify-between py-3">
+                    <SettingsCard title="About" description="Information about the application.">
+                        <div className="divide-y">
+                           <SettingsItem>
                                 <p className="font-medium">App Version</p>
                                 <p className="text-muted-foreground">{appVersion}</p>
-                            </div>
-                            <Link href="/privacy-policy" className="flex items-center justify-between py-3 hover:bg-muted/50 -mx-6 px-6 cursor-pointer">
-                                <span className="font-medium">Privacy Policy</span>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </Link>
-                        </CardContent>
-                    </Card>
+                            </SettingsItem>
+                            <SettingsLinkItem href="/privacy-policy">
+                                Privacy Policy
+                            </SettingsLinkItem>
+                        </div>
+                    </SettingsCard>
 
                     {/* Danger Zone */}
-                    <Card className="border-destructive/50">
-                        <CardHeader>
-                           <div className="flex items-center gap-3">
-                             <ShieldAlert className="w-6 h-6 text-destructive" />
-                             <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                           </div>
-                            <CardDescription>These actions are irreversible. Please proceed with caution.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
+                    <SettingsCard 
+                        title="Danger Zone"
+                        description="These actions are irreversible. Please proceed with caution."
+                        className="border-destructive/50"
+                    >
+                         <div className="space-y-4">
+                            <SettingsItem>
                                 <div>
                                     <p className="font-medium">Clear Watch History</p>
                                     <p className="text-sm text-muted-foreground">Delete all of your watched videos.</p>
@@ -177,8 +158,8 @@ function SettingsPage() {
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
-                            </div>
-                             <div className="flex items-center justify-between">
+                            </SettingsItem>
+                             <SettingsItem>
                                 <div>
                                     <p className="font-medium">Delete All Playlists</p>
                                     <p className="text-sm text-muted-foreground">Permanently delete all of your playlists.</p>
@@ -204,8 +185,8 @@ function SettingsPage() {
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
-                            </div>
-                             <div className="flex items-center justify-between">
+                            </SettingsItem>
+                             <SettingsItem>
                                 <div>
                                     <p className="font-medium">Log Out</p>
                                     <p className="text-sm text-muted-foreground">Sign out of your account on this device.</p>
@@ -213,9 +194,9 @@ function SettingsPage() {
                                 <Button variant="destructive" onClick={handleSignOut}>
                                     <LogOut className="mr-2 h-4 w-4" /> Log Out
                                 </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </SettingsItem>
+                        </div>
+                    </SettingsCard>
                 </div>
             </main>
         </>
