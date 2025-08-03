@@ -146,6 +146,10 @@ const VideoDetails = ({
                             <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
                         </Button>
                     )}
+                    <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike}>
+                        <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
+                        {isLiked ? 'Liked' : 'Like'}
+                    </Button>
                     {showAddToPlaylistButton && <AddToPlaylist video={video} />}
                 </div>
             </div>
@@ -154,12 +158,6 @@ const VideoDetails = ({
                 <Button variant={isSubscribed ? 'default' : 'outline'} onClick={onSubscribe}>
                     {isSubscribed ? <BellRing className="mr-2 h-4 w-4" /> : <Bell className="mr-2 h-4 w-4" />}
                     {isSubscribed ? 'Subscribed' : 'Subscribe'}
-                </Button>
-            </div>
-             <div className="flex items-center gap-2 mb-4">
-                <Button variant={isLiked ? 'secondary' : 'outline'} className="flex-1" onClick={onLike}>
-                    <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
-                    {isLiked ? 'Liked' : 'Like'}
                 </Button>
             </div>
             <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-muted/50 p-4 rounded-lg">
