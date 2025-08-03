@@ -145,7 +145,7 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="hover:bg-muted/50">
                     <ListPlus className="mr-2 h-4 w-4"/>
                     Add to Playlist
                 </Button>

@@ -141,12 +141,12 @@ const VideoDetails = ({
                 </div>
                 <div className="flex items-center gap-2">
                     {showShareButton && (
-                        <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-accent/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
+                        <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-muted/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
                             <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
                             <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
                         </Button>
                     )}
-                    <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike}>
+                    <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike} className="hover:bg-muted/50">
                         <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
                         {isLiked ? 'Liked' : 'Like'}
                     </Button>
