@@ -135,17 +135,20 @@ function SearchPageContent() {
 
   const fetchSuggestions = useCallback(async () => {
       if (!user) return;
-      setIsLoading(true);
+      // Don't set loading true immediately. First, check if suggestions are enabled.
+      // This prevents the skeleton from showing if suggestions are off.
+      
       setResults([]);
 
-      const { data, error, suggestionsEnabled } = await getSuggestedVideos(user.uid);
-      setSuggestionsEnabled(suggestionsEnabled || false);
+      const { data, error, suggestionsEnabled: isEnabled } = await getSuggestedVideos(user.uid);
+      setSuggestionsEnabled(isEnabled || false);
       
-      if (!suggestionsEnabled) {
+      if (!isEnabled) {
           setIsLoading(false);
           return;
       }
       
+      setIsLoading(true);
       const cacheKey = `suggestions_cache_${user.uid}`;
       const cached = localStorage.getItem(cacheKey);
 
