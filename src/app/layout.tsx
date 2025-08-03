@@ -11,7 +11,10 @@ export const metadata: Metadata = {
     template: "%s | TubeSeek"
   },
   description: 'An intelligent, ad-free, and distraction-free portal to YouTube. No ads, no shorts, just the content you want.',
-  keywords: ["YouTube search", "ad-free YouTube", "video search", "intelligent search", "no shorts", "focused video watching"]
+  keywords: ["YouTube search", "ad-free YouTube", "video search", "intelligent search", "no shorts", "focused video watching"],
+  icons: {
+    icon: "https://res.cloudinary.com/diwu3avy6/image/upload/favicon_kfujh2?_a=DATAdtAAZAA0",
+  },
 };
 
 export default function RootLayout({
