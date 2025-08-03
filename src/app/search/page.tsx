@@ -23,7 +23,20 @@ type CachedData = {
     results: SearchResult[];
 }
 
-const CACHE_EXPIRATION_MS = 60 * 60 * 1000; // 1 hour
+const SEARCH_CACHE_EXPIRATION_MS = 60 * 60 * 1000; // 1 hour for regular search
+const SUGGESTIONS_CACHE_EXPIRATION_MS = 1 * 60 * 1000; // 1 minute for suggestions
+
+// Function to shuffle an array
+const shuffleArray = (array: any[]) => {
+  let currentIndex = array.length, randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+  return array;
+};
 
 function SearchPage() {
     return (
@@ -63,7 +76,7 @@ function SearchPageContent() {
     if (cachedItem) {
         try {
             const cachedData: CachedData = JSON.parse(cachedItem);
-            if (Date.now() - cachedData.timestamp < CACHE_EXPIRATION_MS) {
+            if (Date.now() - cachedData.timestamp < SEARCH_CACHE_EXPIRATION_MS) {
                 setResults(cachedData.results);
                 setIsLoading(false);
                 return; // Use cached data
@@ -128,11 +141,33 @@ function SearchPageContent() {
       setPageTitle("Suggestions for You");
       setResults([]);
 
+      const cacheKey = `suggestions_cache_${user.uid}`;
+      const cached = localStorage.getItem(cacheKey);
+
+      if (cached) {
+          try {
+              const { timestamp, results: cachedResults }: CachedData = JSON.parse(cached);
+              if (Date.now() - timestamp < SUGGESTIONS_CACHE_EXPIRATION_MS) {
+                  setResults(shuffleArray([...cachedResults])); // Shuffle cached results on reload
+                  setIsLoading(false);
+                  return;
+              }
+          } catch (e) {
+              console.error("Failed to parse suggestions cache", e);
+              localStorage.removeItem(cacheKey);
+          }
+      }
+
       const { data, error } = await getSuggestedVideos(user.uid);
       if (error) {
           toast({ variant: "destructive", title: "Failed to load suggestions", description: error });
-      } else {
+      } else if (data) {
           setResults(data || []);
+          const dataToCache: CachedData = {
+              timestamp: Date.now(),
+              results: data
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
       }
       setIsLoading(false);
   }, [user, toast]);
