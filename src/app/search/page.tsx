@@ -264,8 +264,8 @@ function SearchPageContent() {
         {!isLoading && (hasSearched || isShowingSuggestions) && results.length === 0 && (
             <div className="text-center text-muted-foreground flex flex-col items-center gap-4">
                 <Frown className="w-16 h-16"/>
-                <h2 className="text-2xl font-semibold">{hasSearched ? "No Results Found" : "Nothing to Suggest"}</h2>
-                <p>{hasSearched ? "We couldn't find any relevant videos for your search. Please try a different query." : "Watch, like, and subscribe to get personalized suggestions."}</p>
+                <h2 className="text-2xl font-semibold">{hasSearched ? "No Results Found" : "Try searching to get started"}</h2>
+                <p>{hasSearched ? "We couldn't find any relevant videos for your search. Please try a different query." : "Start watching videos to help us build a feed of videos you'll love."}</p>
             </div>
         )}
 
