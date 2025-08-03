@@ -21,22 +21,21 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/search" className="hover:text-primary transition-colors">Search</Link></li>
-              <li><Link href="/admin" className="hover:text-primary transition-colors">Admin</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
              <h3 className="text-lg font-semibold mb-4">Connect</h3>
               <div className="flex space-x-4">
-                <Link href="https://github.com/dharani-msd" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href="http://github.com/msdharani1/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Github className="h-6 w-6" />
                   <span className="sr-only">GitHub</span>
                 </Link>
-                <Link href="https://www.linkedin.com/in/ms-dharani-b83873256/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link href="https://www.linkedin.com/in/tharanimca/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Linkedin className="h-6 w-6" />
                   <span className="sr-only">LinkedIn</span>
                 </Link>
-                 <Link href="https://x.com/msdharani_" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                 <Link href="https://x.com/msdharani007" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                   <Twitter className="h-6 w-6" />
                   <span className="sr-only">Twitter</span>
                 </Link>
