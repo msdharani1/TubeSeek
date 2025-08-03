@@ -366,8 +366,8 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
 
         for (const result of searchResults) {
             if (result.data) {
-                // Add up to 4 videos per query to ensure diversity
-                for (const video of result.data.slice(0, 4)) {
+                // Add up to 8 videos per query to ensure diversity
+                for (const video of result.data.slice(0, 8)) {
                     if (!videoIdSet.has(video.videoId)) {
                         allSuggestedVideos.push(video);
                         videoIdSet.add(video.videoId);
@@ -385,3 +385,5 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
+
+    
