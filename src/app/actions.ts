@@ -376,10 +376,8 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
             }
         }
         
-        // 4. Shuffle and slice to get the final list
-        const shuffledVideos = allSuggestedVideos.sort(() => Math.random() - 0.5);
-
-        return { data: shuffledVideos.slice(0, 20) };
+        // 4. Slice to get the final list
+        return { data: allSuggestedVideos.slice(0, 20) };
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
