@@ -152,7 +152,7 @@ function SearchPageContent() {
               : "flex h-[calc(60vh-80px)] flex-col items-center justify-center text-center"
           )}
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center gap-4">
              <h1 className="text-4xl sm:text-6xl font-bold tracking-tighter text-foreground font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
                 TubeSeek
              </h1>
