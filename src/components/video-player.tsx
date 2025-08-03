@@ -79,7 +79,7 @@ export function VideoPlayer({ video, onClose }: VideoPlayerProps) {
                 </div>
                 
                 {/* Right Column: Description */}
-                <div className="lg:w-[30%] lg:h-full lg:overflow-y-auto border-t lg:border-t-0 lg:border-l">
+                <div className="lg:w-[30%] lg:h-full lg:overflow-y-auto border-t lg:border-t-0 lg:border-l no-scrollbar">
                     <div className="p-6">
                         <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
                             <h3 className="font-semibold text-foreground">Description</h3>
