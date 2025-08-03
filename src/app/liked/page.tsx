@@ -15,6 +15,13 @@ import { VideoCard } from "@/components/video-card";
 import { Heart, Frown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+type CachedLikedVideos = {
+    timestamp: number;
+    videos: LikedVideo[];
+}
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 function LikedVideosPage() {
     const { user } = useAuth();
     const { toast } = useToast();
@@ -46,6 +53,23 @@ function LikedVideosPage() {
     const fetchLikedVideos = async () => {
         setIsLoading(true);
         if (!user) return;
+
+        const cacheKey = `liked_videos_cache_${user.uid}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+             try {
+                const { timestamp, videos: cachedVideos }: CachedLikedVideos = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    setLikedVideos(cachedVideos);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse liked videos cache", e);
+                localStorage.removeItem(cacheKey);
+            }
+        }
         
         const { data, error } = await getLikedVideos(user.uid);
         if (error) {
@@ -54,8 +78,13 @@ function LikedVideosPage() {
                 title: "Failed to load liked videos",
                 description: error,
             });
-        } else {
-            setLikedVideos(data || []);
+        } else if (data) {
+            setLikedVideos(data);
+             const dataToCache: CachedLikedVideos = {
+                timestamp: Date.now(),
+                videos: data
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
         }
         setIsLoading(false);
     };

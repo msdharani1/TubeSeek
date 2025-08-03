@@ -9,7 +9,7 @@ import type { Playlist } from "@/types/youtube";
 
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
-import { ListVideo, Frown, Loader2 } from "lucide-react";
+import { ListVideo, Frown } from "lucide-react";
 import { PlaylistCard } from "@/components/playlist-card";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +19,13 @@ const defaultFavoritePlaylist: Playlist = {
     videoCount: 0,
     createdAt: Date.now(),
 };
+
+type CachedPlaylists = {
+    timestamp: number;
+    playlists: Playlist[];
+}
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 function PlaylistsPage() {
     const { user } = useAuth();
@@ -37,6 +44,24 @@ function PlaylistsPage() {
     const fetchPlaylists = async () => {
         if (!user) return;
         setIsLoading(true);
+
+        const cacheKey = `playlists_cache_${user.uid}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+            try {
+                const { timestamp, playlists: cachedPlaylists }: CachedPlaylists = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    processPlaylists(cachedPlaylists);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch(e) {
+                console.error("Failed to parse playlists cache", e);
+                localStorage.removeItem(cacheKey);
+            }
+        }
+
         const { data, error } = await getPlaylists(user.uid);
         if (error) {
             toast({
@@ -47,15 +72,24 @@ function PlaylistsPage() {
             setPlaylists([defaultFavoritePlaylist]);
         } else {
             const fetchedPlaylists = data || [];
-            const hasFavorite = fetchedPlaylists.some(p => p.name === 'Favorite');
-            if (!hasFavorite) {
-                setPlaylists([defaultFavoritePlaylist, ...fetchedPlaylists]);
-            } else {
-                setPlaylists(fetchedPlaylists);
-            }
+            processPlaylists(fetchedPlaylists);
+            const dataToCache: CachedPlaylists = {
+                timestamp: Date.now(),
+                playlists: fetchedPlaylists
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
         }
         setIsLoading(false);
     };
+
+    const processPlaylists = (fetchedPlaylists: Playlist[]) => {
+        const hasFavorite = fetchedPlaylists.some(p => p.name === 'Favorite');
+        if (!hasFavorite) {
+            setPlaylists([defaultFavoritePlaylist, ...fetchedPlaylists]);
+        } else {
+            setPlaylists(fetchedPlaylists);
+        }
+    }
 
     const handlePlaylistClick = (playlistId: string) => {
         router.push(`/playlists/${playlistId}`);

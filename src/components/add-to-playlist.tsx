@@ -126,6 +126,8 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         if (error) {
              toast({ variant: "destructive", title: "Failed to save", description: error });
         } else {
+             // Invalidate playlists cache on successful save
+             localStorage.removeItem(`playlists_cache_${user.uid}`);
              toast({ title: "Playlists updated!" });
              setOpen(false);
         }

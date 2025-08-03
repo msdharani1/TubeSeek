@@ -215,6 +215,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 if(result.error) {
                     // Don't show toast, just log it. Not critical for user.
                     console.warn("Could not save to history:", result.error)
+                } else {
+                    // Invalidate history cache
+                    localStorage.removeItem(`history_cache_${user.uid}`);
                 }
             })
     }
@@ -251,6 +254,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
       if (error) {
           setIsLiked(!isLiked); // Revert on error
           toast({ variant: "destructive", title: "Failed to like video", description: error });
+      } else {
+          // Invalidate liked videos cache on success
+          localStorage.removeItem(`liked_videos_cache_${user.uid}`);
       }
   }
 
@@ -261,6 +267,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
       if (error) {
           setIsSubscribed(!isSubscribed); // Revert on error
           toast({ variant: "destructive", title: "Failed to subscribe", description: error });
+      } else {
+          // Invalidate subscriptions cache on success
+          localStorage.removeItem(`subscriptions_cache_${user.uid}`);
       }
   }
 

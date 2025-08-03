@@ -10,8 +10,15 @@ import { useRouter } from 'next/navigation';
 
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tv, Frown, Loader2, BellRing } from "lucide-react";
+
+type CachedSubscriptions = {
+    timestamp: number;
+    subscriptions: Subscription[];
+}
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 function SubscriptionCard({ channel, onUnsubscribe }: { channel: Subscription, onUnsubscribe: (channel: Subscription) => void }) {
     return (
@@ -45,6 +52,23 @@ function SubscriptionsPage() {
     const fetchSubscriptions = async () => {
         setIsLoading(true);
         if (!user) return;
+
+        const cacheKey = `subscriptions_cache_${user.uid}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+             try {
+                const { timestamp, subscriptions: cachedSubs }: CachedSubscriptions = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    setSubscriptions(cachedSubs);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse subscriptions cache", e);
+                localStorage.removeItem(cacheKey);
+            }
+        }
         
         const { data, error } = await getSubscriptions(user.uid);
         if (error) {
@@ -53,8 +77,13 @@ function SubscriptionsPage() {
                 title: "Failed to load subscriptions",
                 description: error,
             });
-        } else {
-            setSubscriptions(data || []);
+        } else if (data) {
+            setSubscriptions(data);
+             const dataToCache: CachedSubscriptions = {
+                timestamp: Date.now(),
+                subscriptions: data
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
         }
         setIsLoading(false);
     };
@@ -71,6 +100,8 @@ function SubscriptionsPage() {
             setSubscriptions(prev => [...prev, channel].sort((a,b) => b.subscribedAt - a.subscribedAt));
             toast({ variant: "destructive", title: "Failed to unsubscribe", description: error });
         } else {
+            // Invalidate cache on successful action
+            localStorage.removeItem(`subscriptions_cache_${user.uid}`);
             toast({ title: `Unsubscribed from "${channel.channelTitle}"` });
         }
     }

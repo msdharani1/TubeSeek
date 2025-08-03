@@ -12,8 +12,15 @@ import { Header } from "@/components/header";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { VideoCard } from "@/components/video-card";
-import { History, Frown, Loader2 } from "lucide-react";
+import { History, Frown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+type CachedHistory = {
+    timestamp: number;
+    history: WatchedVideo[];
+}
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 function HistoryPage() {
     const { user } = useAuth();
@@ -46,6 +53,23 @@ function HistoryPage() {
     const fetchHistory = async () => {
         setIsLoading(true);
         if (!user) return;
+
+        const cacheKey = `history_cache_${user.uid}`;
+        const cached = localStorage.getItem(cacheKey);
+
+        if (cached) {
+            try {
+                const { timestamp, history: cachedHistory }: CachedHistory = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    setHistory(cachedHistory);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse history cache", e);
+                localStorage.removeItem(cacheKey);
+            }
+        }
         
         const { data, error } = await getUserHistory(user.uid);
         if (error) {
@@ -54,8 +78,13 @@ function HistoryPage() {
                 title: "Failed to load history",
                 description: error,
             });
-        } else {
-            setHistory(data || []);
+        } else if (data) {
+            setHistory(data);
+            const dataToCache: CachedHistory = {
+                timestamp: Date.now(),
+                history: data
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
         }
         setIsLoading(false);
     };
@@ -72,11 +101,6 @@ function HistoryPage() {
         router.push(`/history?${params.toString()}`);
     };
 
-    const handleClearHistory = async () => {
-        // This is a placeholder for a future implementation
-        console.log("Clearing history...");
-    }
-
     return (
         <>
             <Header />
@@ -86,9 +110,6 @@ function HistoryPage() {
                         <History className="w-8 h-8 text-primary" />
                         <h1 className="text-3xl font-bold tracking-tight">Watch History</h1>
                     </div>
-                    {/* <Button variant="outline" onClick={handleClearHistory} disabled={history.length === 0}>
-                        Clear watch history
-                    </Button> */}
                 </div>
                 
                 {isLoading ? (
