@@ -23,6 +23,7 @@ This project is not just a YouTube client; it's a demonstration of building a fu
 - [API & Logic](#api--logic)
   - [YouTube Data API](#youtube-data-api)
   - [Client-Side Caching](#client-side-caching)
+  - [Suggestion Engine](#suggestion-engine)
 - [Firebase Setup](#firebase-setup)
   - [Authentication](#authentication)
   - [Realtime Database Rules](#realtime-database-rules)
@@ -37,6 +38,7 @@ This project is not just a YouTube client; it's a demonstration of building a fu
   - Add or remove any video from multiple playlists with a user-friendly interface.
   - A special "Favorite" playlist for quick access.
 - **📜 Personalized Watch History**: Automatically saves videos you watch and displays them in a dedicated history page, sorted by most recent.
+- **💡 Personalized Suggestions**: A smart, non-AI-based recommendation system that analyzes your watch history, likes, and subscriptions to suggest relevant content on the homepage.
 - **🔐 Secure Authentication**: Employs Google Sign-In via Firebase Authentication for a secure and seamless login experience.
 - **🎨 Customizable Themes**: Choose between **Light**, **Dark**, and **System** themes to personalize your viewing experience.
 - **⚙️ User Data Control**: The settings page gives users full control over their data, including the ability to:
@@ -136,7 +138,7 @@ The frontend is built using **Next.js with the App Router**. Components are serv
 
 The application uses **Next.js Server Actions** for all backend logic, eliminating the need for traditional API routes. These actions are secure, server-only functions that can be called directly from client components.
 
--   **`src/app/actions.ts`**: Handles YouTube API calls and saving user search history.
+-   **`src/app/actions.ts`**: Handles YouTube API calls, saving user search history, and generating suggestions.
 -   **`src/app/actions/playlist.ts`**: Contains all logic for creating, reading, and updating user playlists in Firebase.
 -   **`src/app/actions/user-data.ts`**: Contains logic for deleting user history and playlists.
 
@@ -189,6 +191,30 @@ To enhance performance and reduce API usage, the app implements a simple client-
 -   Each cache entry is stored with a timestamp.
 -   If a cached result exists and is less than **1 hour old**, it is used directly.
 -   Otherwise, a fresh API call is made, and the new result is stored in the cache.
+
+### Suggestion Engine
+
+The homepage features a personalized suggestion system to recommend content. This system operates without a machine learning model and instead uses direct user activity to generate relevant recommendations.
+
+The logic, handled in the `getSuggestedVideos` server action, follows these steps:
+
+1.  **Data Gathering**: It fetches the user's most recent activity in parallel from Firebase:
+    -   Last 20 search queries.
+    -   Last 50 liked videos.
+    -   Last 50 watched videos.
+    -   All channel subscriptions.
+
+2.  **Keyword Extraction**: It creates a list of search topics with a clear priority:
+    -   **P1 - Search History**: The last 5 search terms are used first, as they are the strongest signal of current interest.
+    -   **P2 - Subscriptions**: The titles of the 5 most recent subscriptions are added.
+    -   **P3 - Liked Videos**: The channel names from the 3 most recently liked videos are added.
+    -   **P4 - Watch History**: If the list of topics is still small, channel names from the 3 most recent videos in history are added to round out the list.
+
+3.  **Fallback for New Users**: If a user has no activity, a default list of diverse topics (e.g., "Tech reviews," "Cooking tutorials") is used to prevent an empty homepage.
+
+4.  **Fetching & Compiling**: It performs a YouTube search for each topic, taking the top 4 videos from each to ensure variety. All results are compiled, and duplicates are removed.
+
+5.  **Final Presentation**: The system presents a final list of up to 20 unique videos on the homepage.
 
 ## Firebase Setup
 
