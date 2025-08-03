@@ -7,15 +7,13 @@ import { useSearchParams, useRouter } from "next/navigation";
 import type { SearchResult } from "@/types/youtube";
 import { searchAndRefineVideos, saveSearchQuery, getSuggestedVideos } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { withAuth, useAuth } from '@/context/auth-context';
 
 import { Logo } from "@/components/logo";
-import { SearchBar } from "@/components/search-bar";
 import { VideoGrid } from "@/components/video-grid";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
-import { Frown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Header } from "@/components/header";
 
 type CachedData = {
@@ -55,19 +53,18 @@ function SearchPageContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
-  const [pageTitle, setPageTitle] = useState("TubeSeek");
   
   const query = searchParams.get('q');
   const videoId = searchParams.get('v');
 
   const hasSearched = query !== null;
+  const isShowingSuggestions = !hasSearched && !isLoading;
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery) return;
 
     setIsLoading(true);
     setResults([]);
-    setPageTitle(`Results for "${searchQuery}"`);
 
     // Check cache first
     const cacheKey = `youtube_search_${searchQuery.toLowerCase()}`;
@@ -138,7 +135,6 @@ function SearchPageContent() {
   const fetchSuggestions = useCallback(async () => {
       if (!user) return;
       setIsLoading(true);
-      setPageTitle("Suggestions for You");
       setResults([]);
 
       const cacheKey = `suggestions_cache_${user.uid}`;
@@ -228,33 +224,20 @@ function SearchPageContent() {
     router.push(`/search?${params.toString()}`);
   };
 
-  const isShowingSuggestions = !hasSearched && !isLoading;
+  const getPageTitle = () => {
+    if(query) return `Results for "${query}"`;
+    if(isShowingSuggestions) return "Suggestions for You";
+    return "Welcome";
+  }
 
   return (
     <>
-      <Header />
+      <Header onSearch={handleSearch} isLoading={isLoading} initialQuery={query || ''} />
       <main className="container mx-auto px-4 py-8">
-        <div
-          className={cn(
-            "w-full transition-all duration-500 ease-in-out",
-            hasSearched || isShowingSuggestions
-              ? "mb-8 text-center"
-              : "flex h-[calc(60vh-80px)] flex-col items-center justify-center text-center"
-          )}
-        >
-          <div className="flex items-center justify-center gap-4">
-             <h1 className="text-4xl sm:text-6xl font-bold tracking-tighter text-foreground font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
-                {isShowingSuggestions || hasSearched ? pageTitle : "TubeSeek"}
-             </h1>
-          </div>
-          <p className={cn("mt-4 max-w-xl text-muted-foreground", (hasSearched || isShowingSuggestions) && "text-center mx-auto")}>
-            Your intelligent, ad-free portal to YouTube. No shorts, just the content you want.
-          </p>
-          <div className={cn("mt-8 w-full max-w-2xl", (hasSearched || isShowingSuggestions) && "mx-auto")}>
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} initialQuery={query || ''} />
-          </div>
-        </div>
-
+        {(hasSearched || isShowingSuggestions) && (
+            <h1 className="text-2xl font-bold tracking-tight mb-8">{getPageTitle()}</h1>
+        )}
+        
         {isLoading && <LoadingSkeleton />}
 
         {!isLoading && (hasSearched || isShowingSuggestions) && results.length > 0 && (
@@ -262,10 +245,10 @@ function SearchPageContent() {
         )}
         
         {!isLoading && (hasSearched || isShowingSuggestions) && results.length === 0 && (
-            <div className="text-center text-muted-foreground flex flex-col items-center gap-4">
+            <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
                 <Logo className="w-16 h-16 text-muted-foreground/50"/>
                 <h2 className="text-2xl font-semibold">{hasSearched ? "No Results Found" : "Try searching to get started"}</h2>
-                <p>{hasSearched ? "We couldn't find any relevant videos for your search. Please try a different query." : "Start watching videos to help us build a feed of videos you'll love."}</p>
+                <p className="max-w-md">{hasSearched ? "We couldn't find any relevant videos for your search. Please try a different query." : "Start watching videos to help us build a feed of videos you'll love."}</p>
             </div>
         )}
 

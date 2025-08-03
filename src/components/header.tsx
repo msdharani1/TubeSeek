@@ -11,8 +11,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { LogOut, User as UserIcon, Shield, History, Settings, Heart, Tv } from "lucide-react";
 import { Logo } from "./logo";
 import { ListVideo } from "./icons";
+import { SearchBar } from "./search-bar";
+import type { SearchBarProps } from "./search-bar";
 
-export function Header() {
+type HeaderProps = Partial<SearchBarProps>;
+
+export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
 
@@ -57,14 +61,22 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <button onClick={handleLogoClick} aria-label="Go to homepage" className="flex items-center gap-2">
-            <Logo className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold tracking-tight text-foreground font-headline hidden sm:inline-block">
-                TubeSeek
-            </span>
-        </button>
+      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+        <div className="flex items-center gap-2">
+            <button onClick={handleLogoClick} aria-label="Go to homepage" className="flex items-center gap-2">
+                <Logo className="h-8 w-8 text-primary" />
+                <span className="text-xl font-bold tracking-tight text-foreground font-headline hidden sm:inline-block">
+                    TubeSeek
+                </span>
+            </button>
+        </div>
         
+        {user && onSearch && (
+            <div className="flex-1 max-w-2xl">
+                <SearchBar onSearch={onSearch} isLoading={isLoading || false} initialQuery={initialQuery || ''} />
+            </div>
+        )}
+
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

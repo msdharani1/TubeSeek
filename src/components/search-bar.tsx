@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, X } from "lucide-react";
 
-type SearchBarProps = {
+export type SearchBarProps = {
   onSearch: (query: string) => void;
   isLoading: boolean;
   initialQuery?: string;
