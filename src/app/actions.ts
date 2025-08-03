@@ -126,17 +126,18 @@ export async function saveSearchQuery(
   }
 
   try {
-    const searchData = {
+    const searchData: Omit<SearchQuery, 'timestamp'> & { timestamp: any } = {
       query: query.trim(),
       resultsCount: resultsCount,
-      timestamp: new Date().toISOString(),
+      timestamp: serverTimestamp(),
     };
     
-    // Save user info and the search query
+    // Save the search query
     const userSearchesRef = ref(db, `user-searches/${user.uid}/searches`);
     const newUserSearchRef = push(userSearchesRef);
     await set(newUserSearchRef, searchData);
     
+    // Save or update user profile info
     const userInfoRef = ref(db, `user-searches/${user.uid}/profile`);
     await set(userInfoRef, {
         email: user.email,
