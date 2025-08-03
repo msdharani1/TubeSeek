@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "user-searches": {
+      // The admin can read all user search data
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
+      "$uid": {
+        // Any authenticated user can write to their own directory
+        ".write": "auth != null && auth.uid === $uid",
+        // A user can read their own data (the admin can already read it via the rule above)
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
