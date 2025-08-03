@@ -24,6 +24,8 @@ export const YoutubeVideosResponseSchema = z.object({
     snippet: z.object({
         title: z.string(),
         description: z.string(),
+        publishedAt: z.string(),
+        channelTitle: z.string(),
         thumbnails: z.object({
             high: z.object({
               url: z.string(),
@@ -48,6 +50,8 @@ const SearchResultSchema = z.object({
   duration: z.string(),
   viewCount: z.string(),
   likeCount: z.string(),
+  publishedAt: z.string(),
+  channelTitle: z.string(),
 });
 
 export type SearchResult = z.infer<typeof SearchResultSchema>;

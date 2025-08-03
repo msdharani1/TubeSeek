@@ -96,6 +96,8 @@ export async function searchAndRefineVideos(
       duration: item.contentDetails.duration,
       viewCount: item.statistics.viewCount || '0',
       likeCount: item.statistics.likeCount || '0',
+      publishedAt: item.snippet.publishedAt,
+      channelTitle: item.snippet.channelTitle,
     }));
 
     return { data: results };

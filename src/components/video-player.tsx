@@ -6,6 +6,7 @@ import { ThumbsUp, Eye, Copy, X } from "lucide-react";
 import type { SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { formatDistanceToNowStrict } from 'date-fns';
 
 type VideoPlayerProps = {
   video: SearchResult | null;
@@ -26,8 +27,12 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
                     className="w-40 h-auto aspect-video rounded-md object-cover"
                 />
             </div>
-            <div className="flex flex-col">
-                <h4 className="font-semibold text-sm line-clamp-2 leading-snug">{video.title}</h4>
+            <div className="flex flex-col text-sm">
+                <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
+                <div className="text-muted-foreground mt-1">
+                    <p className="line-clamp-1">{video.channelTitle}</p>
+                    <p>{Number(video.viewCount).toLocaleString()} views &bull; {formatDistanceToNowStrict(new Date(video.publishedAt))} ago</p>
+                </div>
             </div>
         </button>
     )
@@ -94,6 +99,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
                                     Copy link
                                 </Button>
                             </div>
+                        </div>
+                        <div className="border-y py-4 my-4">
+                            <h3 className="font-bold text-lg">{video.channelTitle}</h3>
                         </div>
                         <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap mt-4 bg-muted/50 p-4 rounded-lg">
                             <h3 className="font-semibold text-foreground">Description</h3>
