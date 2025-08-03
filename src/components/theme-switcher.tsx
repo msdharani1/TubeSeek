@@ -46,7 +46,7 @@ export function ThemeSwitcher() {
     localStorage.setItem('theme', newTheme);
   };
 
-  const buttonBaseClass = "rounded-full w-full h-8 hover:bg-muted/50 text-foreground";
+  const buttonBaseClass = "rounded-full w-full h-8 hover:bg-accent/20 text-foreground";
 
   return (
     <div className="flex items-center gap-2 p-1 rounded-full bg-muted">
@@ -54,7 +54,7 @@ export function ThemeSwitcher() {
          variant="ghost" 
          size="sm"
          onClick={() => handleThemeChange('light')}
-         className={cn(buttonBaseClass, theme === 'light' && "bg-background shadow-sm")}
+         className={cn(buttonBaseClass, theme === 'light' && "bg-background shadow-sm hover:bg-background")}
        >
          <Sun className="h-4 w-4 mr-2"/>
          Light
@@ -63,7 +63,7 @@ export function ThemeSwitcher() {
          variant="ghost" 
          size="sm"
          onClick={() => handleThemeChange('dark')}
-         className={cn(buttonBaseClass, theme === 'dark' && "bg-background shadow-sm")}
+         className={cn(buttonBaseClass, theme === 'dark' && "bg-background shadow-sm hover:bg-background")}
        >
          <Moon className="h-4 w-4 mr-2"/>
          Dark
@@ -72,7 +72,7 @@ export function ThemeSwitcher() {
          variant="ghost" 
          size="sm"
          onClick={() => handleThemeChange('system')}
-         className={cn(buttonBaseClass, theme === 'system' && "bg-background shadow-sm")}
+         className={cn(buttonBaseClass, theme === 'system' && "bg-background shadow-sm hover:bg-background")}
        >
          <Monitor className="h-4 w-4 mr-2"/>
          System
