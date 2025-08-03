@@ -31,14 +31,16 @@ This project is not just a YouTube client; it's a demonstration of building a fu
 ## Key Features
 
 - **📺 Enhanced Video Search**: Utilizes the YouTube Data API v3 to provide relevant video search results.
+- **💡 Personalized Suggestions**: A smart, non-AI-based recommendation system that analyzes your watch history, likes, and subscriptions to suggest relevant content on the homepage.
 - **✨ Distraction-Free Player**: A custom, full-featured video player that keeps you focused on the content, with "Up Next" suggestions.
 - **🕒 Clickable Timestamps**: Automatically detects and makes timestamps in video descriptions clickable for easy navigation.
 - **📂 Playlist Management**:
   - Create custom playlists.
   - Add or remove any video from multiple playlists with a user-friendly interface.
   - A special "Favorite" playlist for quick access.
+- **❤️ Like Videos**: Like and unlike any video. View all your liked videos in a dedicated "Liked Videos" page.
+- **🔔 Channel Subscriptions**: Subscribe or unsubscribe from any channel. View all your subscriptions in a dedicated page.
 - **📜 Personalized Watch History**: Automatically saves videos you watch and displays them in a dedicated history page, sorted by most recent.
-- **💡 Personalized Suggestions**: A smart, non-AI-based recommendation system that analyzes your watch history, likes, and subscriptions to suggest relevant content on the homepage.
 - **🔐 Secure Authentication**: Employs Google Sign-In via Firebase Authentication for a secure and seamless login experience.
 - **🎨 Customizable Themes**: Choose between **Light**, **Dark**, and **System** themes to personalize your viewing experience.
 - **⚙️ User Data Control**: The settings page gives users full control over their data, including the ability to:
