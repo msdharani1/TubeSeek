@@ -8,7 +8,7 @@ import type { SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
-import { cn } from "@/lib/utils";
+import { cn, formatCount } from "@/lib/utils";
 
 // Helper to parse and style the description
 const formatDescription = (text: string) => {
@@ -50,7 +50,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="text-muted-foreground mt-1 text-xs">
                     <p className="line-clamp-1">{video.channelTitle}</p>
-                    <p>{Number(video.viewCount).toLocaleString()} views &bull; {formatDistanceToNowStrict(new Date(video.publishedAt))} ago</p>
+                    <p>{formatCount(video.viewCount)} views &bull; {formatDistanceToNowStrict(new Date(video.publishedAt))} ago</p>
                 </div>
             </div>
         </button>
@@ -76,11 +76,11 @@ const VideoDetails = ({ video, onShare }: { video: SearchResult, onShare: () => 
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <Eye className="w-4 h-4"/>
-                        {Number(video.viewCount).toLocaleString()} views
+                        {formatCount(video.viewCount)} views
                     </span>
                     <span className="flex items-center gap-1.5">
                         <ThumbsUp className="w-4 h-4"/>
-                        {Number(video.likeCount).toLocaleString()} likes
+                        {formatCount(video.likeCount)} likes
                     </span>
                 </div>
                 <div className="flex items-center gap-2">

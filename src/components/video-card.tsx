@@ -1,7 +1,7 @@
 
 import Image from "next/image";
 import type { SearchResult } from "@/types/youtube";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, formatCount } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,11 +43,11 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4"/>
-                {Number(video.viewCount).toLocaleString()}
+                {formatCount(video.viewCount)}
             </span>
             <span className="flex items-center gap-1.5">
                 <ThumbsUp className="w-4 h-4"/>
-                {Number(video.likeCount).toLocaleString()}
+                {formatCount(video.likeCount)}
             </span>
         </div>
         <Button onClick={() => onPlay(video)} size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">

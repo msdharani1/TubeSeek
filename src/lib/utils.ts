@@ -19,3 +19,23 @@ export function formatDuration(isoDuration: string): string {
   }
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
+
+export function formatCount(count: string | number): string {
+  const num = Number(count);
+  if (isNaN(num)) {
+    return '0';
+  }
+
+  if (num < 1000) {
+    return num.toString();
+  } else if (num < 1000000) {
+    const value = num / 1000;
+    return value.toFixed(value < 10 ? 1 : 0) + 'K';
+  } else if (num < 1000000000) {
+    const value = num / 1000000;
+    return value.toFixed(value < 10 ? 1 : 0) + 'M';
+  } else {
+    const value = num / 1000000000;
+    return value.toFixed(value < 10 ? 1 : 0) + 'B';
+  }
+}
