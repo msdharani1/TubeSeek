@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 import type { SearchResult } from "@/types/youtube";
-import { searchAndRefineVideos, saveSearchQuery } from "@/app/actions";
+import { searchAndRefineVideos, saveSearchQuery, getSuggestedVideos } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { withAuth, useAuth } from '@/context/auth-context';
@@ -42,49 +42,19 @@ function SearchPageContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
+  const [pageTitle, setPageTitle] = useState("TubeSeek");
   
   const query = searchParams.get('q');
   const videoId = searchParams.get('v');
 
   const hasSearched = query !== null;
 
-  useEffect(() => {
-    if (query) {
-      performSearch(query);
-    } else {
-      setResults([]);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
-
-  useEffect(() => {
-    if (videoId && results.length > 0) {
-      const videoToPlay = results.find(v => v.videoId === videoId);
-      setSelectedVideo(videoToPlay || null);
-    } else {
-      setSelectedVideo(null);
-    }
-  }, [videoId, results]);
-
-  useEffect(() => {
-    if (selectedVideo) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-
-    // Cleanup function to remove the class when the component unmounts
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [selectedVideo]);
-
-
-  const performSearch = async (searchQuery: string) => {
+  const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery) return;
 
     setIsLoading(true);
     setResults([]);
+    setPageTitle(`Results for "${searchQuery}"`);
 
     // Check cache first
     const cacheKey = `youtube_search_${searchQuery.toLowerCase()}`;
@@ -149,7 +119,57 @@ function SearchPageContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, toast]);
+
+
+  const fetchSuggestions = useCallback(async () => {
+      if (!user) return;
+      setIsLoading(true);
+      setPageTitle("Suggestions for You");
+      setResults([]);
+
+      const { data, error } = await getSuggestedVideos(user.uid);
+      if (error) {
+          toast({ variant: "destructive", title: "Failed to load suggestions", description: error });
+      } else {
+          setResults(data || []);
+      }
+      setIsLoading(false);
+  }, [user, toast]);
+
+
+  useEffect(() => {
+    if (query) {
+      performSearch(query);
+    } else {
+      setResults([]);
+      fetchSuggestions();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, user]); // Depend on user to fetch suggestions when they log in
+
+  useEffect(() => {
+    if (videoId && results.length > 0) {
+      const videoToPlay = results.find(v => v.videoId === videoId);
+      setSelectedVideo(videoToPlay || null);
+    } else {
+      setSelectedVideo(null);
+    }
+  }, [videoId, results]);
+
+  useEffect(() => {
+    if (selectedVideo) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    // Cleanup function to remove the class when the component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [selectedVideo]);
+
 
   const handleSearch = (newQuery: string) => {
     const params = new URLSearchParams();
@@ -173,6 +193,8 @@ function SearchPageContent() {
     router.push(`/search?${params.toString()}`);
   };
 
+  const isShowingSuggestions = !hasSearched && !isLoading;
+
   return (
     <>
       <Header />
@@ -180,35 +202,35 @@ function SearchPageContent() {
         <div
           className={cn(
             "w-full transition-all duration-500 ease-in-out",
-            hasSearched
+            hasSearched || isShowingSuggestions
               ? "mb-8 text-center"
               : "flex h-[calc(60vh-80px)] flex-col items-center justify-center text-center"
           )}
         >
           <div className="flex items-center justify-center gap-4">
              <h1 className="text-4xl sm:text-6xl font-bold tracking-tighter text-foreground font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
-                TubeSeek
+                {isShowingSuggestions || hasSearched ? pageTitle : "TubeSeek"}
              </h1>
           </div>
-          <p className={cn("mt-4 max-w-xl text-muted-foreground", hasSearched && "text-center mx-auto")}>
+          <p className={cn("mt-4 max-w-xl text-muted-foreground", (hasSearched || isShowingSuggestions) && "text-center mx-auto")}>
             Your intelligent, ad-free portal to YouTube. No shorts, just the content you want.
           </p>
-          <div className={cn("mt-8 w-full max-w-2xl", hasSearched && "mx-auto")}>
+          <div className={cn("mt-8 w-full max-w-2xl", (hasSearched || isShowingSuggestions) && "mx-auto")}>
             <SearchBar onSearch={handleSearch} isLoading={isLoading} initialQuery={query || ''} />
           </div>
         </div>
 
         {isLoading && <LoadingSkeleton />}
 
-        {!isLoading && hasSearched && results.length > 0 && (
+        {!isLoading && (hasSearched || isShowingSuggestions) && results.length > 0 && (
           <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />
         )}
         
-        {!isLoading && hasSearched && results.length === 0 && (
+        {!isLoading && (hasSearched || isShowingSuggestions) && results.length === 0 && (
             <div className="text-center text-muted-foreground flex flex-col items-center gap-4">
                 <Frown className="w-16 h-16"/>
-                <h2 className="text-2xl font-semibold">No Results Found</h2>
-                <p>We couldn't find any relevant videos for your search. Please try a different query.</p>
+                <h2 className="text-2xl font-semibold">{hasSearched ? "No Results Found" : "Nothing to Suggest"}</h2>
+                <p>{hasSearched ? "We couldn't find any relevant videos for your search. Please try a different query." : "Watch, like, and subscribe to get personalized suggestions."}</p>
             </div>
         )}
 

@@ -8,6 +8,7 @@ import {
 import type { SearchResult, SearchQuery, UserInfo, WatchedVideo } from '@/types/youtube';
 import { db } from '@/lib/firebase';
 import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo } from 'firebase/database';
+import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -283,4 +284,106 @@ export async function getUserHistory(
     console.error("Failed to get user history:", errorMessage);
     return { error: `Failed to fetch history: ${errorMessage}` };
   }
+}
+
+async function getUserSearchHistory(userId: string): Promise<{ data?: SearchQuery[]; error?: string }> {
+    if (!userId) {
+        return { error: "User ID is required." };
+    }
+    const historyRef = ref(db, `user-searches/${userId}/searches`);
+    const historyQuery = query(historyRef, limitToLast(20)); // Get last 20 search queries
+    try {
+        const snapshot = await get(historyQuery);
+        if (snapshot.exists()) {
+            const historyData = snapshot.val();
+            const queries: SearchQuery[] = Object.values(historyData);
+            return { data: queries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) };
+        }
+        return { data: [] };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        return { error: `Failed to fetch search history: ${errorMessage}` };
+    }
+}
+
+
+export async function getSuggestedVideos(userId: string): Promise<{ data?: SearchResult[]; error?: string }> {
+    if (!userId) {
+        return { error: "User ID is required to get suggestions." };
+    }
+
+    try {
+        // 1. Fetch all user interaction data in parallel
+        const [
+            likedVideosRes,
+            historyVideosRes,
+            subscriptionsRes,
+            searchHistoryRes
+        ] = await Promise.all([
+            getLikedVideos(userId),
+            getUserHistory(userId),
+            getSubscriptions(userId),
+            getUserSearchHistory(userId)
+        ]);
+
+        const searchQueries = new Set<string>();
+
+        // 2. Extract search terms from the data
+        // Priority: Search History > Subscriptions > Liked Videos > Watch History
+        
+        // From Search History (highest priority)
+        if (searchHistoryRes.data) {
+            searchHistoryRes.data.slice(0, 5).forEach(item => searchQueries.add(item.query));
+        }
+
+        // From Subscriptions
+        if (subscriptionsRes.data) {
+            subscriptionsRes.data.slice(0, 5).forEach(sub => searchQueries.add(sub.channelTitle));
+        }
+
+        // From Liked Videos
+        if (likedVideosRes.data) {
+            likedVideosRes.data.slice(0, 3).forEach(video => searchQueries.add(video.channelTitle));
+        }
+        
+        // From Watch History
+        if (historyVideosRes.data && searchQueries.size < 5) {
+             historyVideosRes.data.slice(0, 3).forEach(video => searchQueries.add(video.channelTitle));
+        }
+        
+        // Fallback if no data is available
+        if (searchQueries.size === 0) {
+            const fallbackQueries = ["New music videos", "Tech reviews", "Cooking tutorials", "Workout at home", "Stand up comedy"];
+            fallbackQueries.forEach(q => searchQueries.add(q));
+        }
+        
+        // 3. Fetch videos for each search query
+        const allSuggestedVideos: SearchResult[] = [];
+        const videoIdSet = new Set<string>();
+
+        const searchPromises = Array.from(searchQueries).map(query => searchAndRefineVideos(query));
+        const searchResults = await Promise.all(searchPromises);
+
+        for (const result of searchResults) {
+            if (result.data) {
+                // Add up to 4 videos per query to ensure diversity
+                for (const video of result.data.slice(0, 4)) {
+                    if (!videoIdSet.has(video.videoId)) {
+                        allSuggestedVideos.push(video);
+                        videoIdSet.add(video.videoId);
+                    }
+                }
+            }
+        }
+        
+        // 4. Shuffle and slice to get the final list
+        const shuffledVideos = allSuggestedVideos.sort(() => Math.random() - 0.5);
+
+        return { data: shuffledVideos.slice(0, 20) };
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        console.error("Error generating suggested videos:", errorMessage);
+        return { error: `Failed to generate suggestions: ${errorMessage}` };
+    }
 }
