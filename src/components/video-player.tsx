@@ -25,6 +25,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
                     width={160}
                     height={90}
                     className="w-40 h-auto aspect-video rounded-md object-cover"
+                    data-ai-hint="video thumbnail"
                 />
             </div>
             <div className="flex flex-col text-sm">
