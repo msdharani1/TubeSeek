@@ -12,7 +12,8 @@
       ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && auth.uid === $uid",
+        ".indexOn": "videoId"
       }
     },
     "user-playlists": {
