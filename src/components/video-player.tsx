@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, Copy, X } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2 } from "lucide-react";
 import type { SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -57,8 +57,15 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
     )
 }
 
-const VideoDetails = ({ video, onCopyLink }: { video: SearchResult, onCopyLink: () => void }) => {
+const VideoDetails = ({ video, onShare }: { video: SearchResult, onShare: () => void }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
+
+    const handleShareClick = () => {
+        setIsSharing(true);
+        onShare();
+        setTimeout(() => setIsSharing(false), 600);
+    }
 
     return (
         <>
@@ -77,9 +84,9 @@ const VideoDetails = ({ video, onCopyLink }: { video: SearchResult, onCopyLink: 
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={onCopyLink}>
-                        <Copy className="mr-2 h-4 w-4"/>
-                        Copy link
+                    <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-accent/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
+                        <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
+                        <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
                     </Button>
                 </div>
             </div>
@@ -104,11 +111,17 @@ const VideoDetails = ({ video, onCopyLink }: { video: SearchResult, onCopyLink: 
     );
 };
 
+type VideoPlayerProps = {
+  video: SearchResult | null;
+  suggestions: SearchResult[];
+  onPlaySuggestion: (video: SearchResult) => void;
+  onClose: () => void;
+};
 
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: VideoPlayerProps) {
   const { toast } = useToast();
 
-  const handleCopyLink = () => {
+  const handleShare = () => {
     if (!video) return;
     const url = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${video.videoId}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -150,7 +163,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
 
                     {/* On large screens, details are here and scroll independently */}
                     <div className="hidden lg:block p-6 overflow-y-auto no-scrollbar">
-                         <VideoDetails video={video} onCopyLink={handleCopyLink} />
+                         <VideoDetails video={video} onShare={handleShare} />
                     </div>
                 </div>
 
@@ -158,7 +171,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
                 <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
                     {/* On small screens, details appear here inside the scrollable area */}
                     <div className="block lg:hidden p-6 border-b">
-                         <VideoDetails video={video} onCopyLink={handleCopyLink} />
+                         <VideoDetails video={video} onShare={handleShare} />
                     </div>
                     
                     <div className="p-4">
@@ -183,4 +196,3 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
     </div>
   );
 }
-
