@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2 } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History } from "lucide-react";
 import type { SearchResult, WatchedVideo } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -200,7 +200,16 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                     </div>
                     
                     <div className="p-4">
-                        <h3 className="text-lg font-bold mb-4 px-2">Up next</h3>
+                        <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2">
+                           {source === 'history' ? (
+                                <>
+                                    <History className="w-5 h-5"/>
+                                    Recent History
+                                </>
+                            ) : (
+                                "Up next"
+                            )}
+                        </h3>
                         <div className="flex flex-col gap-2">
                             {suggestions.map(suggestion => (
                                 <SuggestionCard key={suggestion.videoId} video={suggestion} onPlay={onPlaySuggestion} />
