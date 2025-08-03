@@ -8,11 +8,12 @@ import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
-import { cn, formatCount } from "@/lib/utils";
+import { cn, formatCount, formatDuration } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { saveVideoToHistory } from "@/app/actions";
 import { getInteractionStatus, toggleLikeVideo, toggleSubscription } from "@/app/actions/video-interactions";
 import { AddToPlaylist } from "./add-to-playlist";
+import { Badge } from "./ui/badge";
 
 // Helper to parse and style the description
 const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
@@ -81,6 +82,12 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
                     className="w-40 h-auto aspect-video rounded-md object-cover"
                     data-ai-hint="video thumbnail"
                 />
+                 <Badge
+                    variant="secondary"
+                    className="absolute bottom-1 right-1 bg-black/75 text-white text-xs px-1 py-0.5"
+                >
+                    {formatDuration(video.duration)}
+                </Badge>
             </div>
             <div className="flex flex-col text-sm">
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
