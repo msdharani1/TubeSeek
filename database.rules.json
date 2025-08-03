@@ -1,3 +1,4 @@
+
 {
   "rules": {
     "user-searches": {
@@ -37,6 +38,13 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "user-settings": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
+        ".read": "auth != null && auth.uid === $uid"
       }
     }
   }

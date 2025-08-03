@@ -53,12 +53,13 @@ function SearchPageContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
+  const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
   
   const query = searchParams.get('q');
   const videoId = searchParams.get('v');
 
   const hasSearched = query !== null;
-  const isShowingSuggestions = !hasSearched && !isLoading;
+  const isShowingSuggestions = !hasSearched && !isLoading && suggestionsEnabled;
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery) return;
@@ -137,6 +138,14 @@ function SearchPageContent() {
       setIsLoading(true);
       setResults([]);
 
+      const { data, error, suggestionsEnabled } = await getSuggestedVideos(user.uid);
+      setSuggestionsEnabled(suggestionsEnabled || false);
+      
+      if (!suggestionsEnabled) {
+          setIsLoading(false);
+          return;
+      }
+      
       const cacheKey = `suggestions_cache_${user.uid}`;
       const cached = localStorage.getItem(cacheKey);
 
@@ -154,7 +163,6 @@ function SearchPageContent() {
           }
       }
 
-      const { data, error } = await getSuggestedVideos(user.uid);
       if (error) {
           toast({ variant: "destructive", title: "Failed to load suggestions", description: error });
       } else if (data) {
@@ -227,8 +235,10 @@ function SearchPageContent() {
   const getPageTitle = () => {
     if(query) return `Results for "${query}"`;
     if(isShowingSuggestions) return "Suggestions for You";
-    return "Welcome";
+    return ""; // No title when suggestions are disabled
   }
+  
+  const showEmptyState = !isLoading && !query && (!suggestionsEnabled || results.length === 0);
 
   return (
     <>
@@ -244,11 +254,19 @@ function SearchPageContent() {
           <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />
         )}
         
-        {!isLoading && (hasSearched || isShowingSuggestions) && results.length === 0 && (
+        {!isLoading && hasSearched && results.length === 0 && (
+             <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+                <Logo className="w-16 h-16 text-muted-foreground/50"/>
+                <h2 className="text-2xl font-semibold">No Results Found</h2>
+                <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query.</p>
+            </div>
+        )}
+
+        {showEmptyState && (
             <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
                 <Logo className="w-16 h-16 text-muted-foreground/50"/>
-                <h2 className="text-2xl font-semibold">{hasSearched ? "No Results Found" : "Try searching to get started"}</h2>
-                <p className="max-w-md">{hasSearched ? "We couldn't find any relevant videos for your search. Please try a different query." : "Start watching videos to help us build a feed of videos you'll love."}</p>
+                <h2 className="text-2xl font-semibold">Ready to dive in?</h2>
+                <p className="max-w-md">Use the search bar above to find exactly what you're looking for.</p>
             </div>
         )}
 

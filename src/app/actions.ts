@@ -9,6 +9,7 @@ import type { SearchResult, SearchQuery, UserInfo, WatchedVideo } from '@/types/
 import { db } from '@/lib/firebase';
 import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst, endBefore } from 'firebase/database';
 import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
+import { getUserSuggestionStatus } from './actions/user-settings';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -398,13 +399,19 @@ async function getUserSearchHistory(userId: string): Promise<{ data?: SearchQuer
 }
 
 
-export async function getSuggestedVideos(userId: string): Promise<{ data?: SearchResult[]; error?: string }> {
+export async function getSuggestedVideos(userId: string): Promise<{ data?: SearchResult[]; error?: string; suggestionsEnabled?: boolean }> {
     if (!userId) {
         return { error: "User ID is required to get suggestions." };
     }
 
     try {
-        // 1. Fetch all user interaction data in parallel
+        // 1. Check if suggestions are enabled for the user
+        const statusRes = await getUserSuggestionStatus(userId);
+        if (statusRes.error || !statusRes.data) {
+            return { data: [], suggestionsEnabled: false, error: statusRes.error };
+        }
+
+        // 2. Fetch all user interaction data in parallel
         const [
             likedVideosRes,
             historyVideosRes,
@@ -419,7 +426,7 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
 
         const searchQueries = new Set<string>();
 
-        // 2. Extract search terms from the data
+        // 3. Extract search terms from the data
         // Priority: Search History > Subscriptions > Liked Videos > Watch History
         
         // From Search History (highest priority)
@@ -448,7 +455,7 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
             fallbackQueries.forEach(q => searchQueries.add(q));
         }
         
-        // 3. Fetch videos for each search query
+        // 4. Fetch videos for each search query
         const allSuggestedVideos: SearchResult[] = [];
         const videoIdSet = new Set<string>();
 
@@ -467,8 +474,8 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
             }
         }
         
-        // 4. Slice to get the final list
-        return { data: allSuggestedVideos.slice(0, 20) };
+        // 5. Slice to get the final list
+        return { data: allSuggestedVideos.slice(0, 20), suggestionsEnabled: true };
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";

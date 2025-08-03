@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { withAuth, useAuth } from '@/context/auth-context';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import { Header } from '@/components/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Trash2, ShieldAlert } from 'lucide-react';
+import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, Users } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,102 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists, clearLikedVideos, clearSubscriptions } from '@/app/actions/user-data';
 import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
+import { getAllUsersWithSettings, toggleUserSuggestion } from '@/app/actions/user-settings';
+import type { UserInfo } from '@/types/youtube';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type UserWithSettings = UserInfo & { id: string, suggestionsEnabled: boolean };
+
+function UserManagementCard() {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const [users, setUsers] = useState<UserWithSettings[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (user?.email === 'msdharaniofficial@gmail.com') {
+            fetchUsers();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
+    const fetchUsers = async () => {
+        if (!user?.email) return;
+        setIsLoading(true);
+        const { data, error } = await getAllUsersWithSettings(user.email);
+        if (error) {
+            toast({ variant: 'destructive', title: 'Failed to load users', description: error });
+            setUsers([]);
+        } else {
+            setUsers(data || []);
+        }
+        setIsLoading(false);
+    }
+
+    const handleToggle = async (userId: string, isEnabled: boolean) => {
+        if (!user?.email) return;
+        
+        // Optimistic UI update
+        setUsers(currentUsers => currentUsers.map(u => u.id === userId ? {...u, suggestionsEnabled: isEnabled} : u));
+
+        const { success, error } = await toggleUserSuggestion(user.email, userId, isEnabled);
+        if (!success) {
+            // Revert on failure
+             setUsers(currentUsers => currentUsers.map(u => u.id === userId ? {...u, suggestionsEnabled: !isEnabled} : u));
+            toast({ variant: 'destructive', title: 'Update failed', description: error });
+        }
+    }
+
+    if (user?.email !== 'msdharaniofficial@gmail.com') {
+        return null;
+    }
+
+    return (
+        <SettingsCard 
+            title="User Management"
+            description="Enable or disable video suggestions for users."
+            icon={<Users />}
+        >
+            <div className="divide-y max-h-96 overflow-y-auto">
+                {isLoading ? (
+                    Array.from({length: 3}).map((_, i) => (
+                        <div key={i} className="flex items-center justify-between py-3">
+                            <div className="flex items-center gap-4">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-48" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-6 w-11 rounded-full" />
+                        </div>
+                    ))
+                ) : (
+                    users.map(u => (
+                         <SettingsItem key={u.id}>
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src={u.photoURL || undefined} alt={u.displayName || 'User'} />
+                                    <AvatarFallback><User/></AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium">{u.displayName}</p>
+                                    <p className="text-sm text-muted-foreground">{u.email}</p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={u.suggestionsEnabled}
+                                onCheckedChange={(checked) => handleToggle(u.id, checked)}
+                                aria-label={`Toggle suggestions for ${u.displayName}`}
+                            />
+                        </SettingsItem>
+                    ))
+                )}
+            </div>
+        </SettingsCard>
+    )
+}
+
 
 function SettingsPage() {
     const { user } = useAuth();
@@ -114,7 +210,7 @@ function SettingsPage() {
 
                 <div className="space-y-8">
                     {/* User Profile Section */}
-                    <SettingsCard title="Profile" description="This is your account information.">
+                    <SettingsCard title="Profile" description="This is your account information." icon={<User />}>
                         <div className="flex items-center gap-4">
                             <Avatar className="h-16 w-16">
                                 <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
@@ -131,12 +227,14 @@ function SettingsPage() {
                     </SettingsCard>
 
                     {/* Appearance Section */}
-                    <SettingsCard title="Appearance" description="Customize the look and feel of the app.">
+                    <SettingsCard title="Appearance" description="Customize the look and feel of the app." icon={<SettingsIcon/>}>
                         <SettingsItem>
                             <p className="font-medium">Theme</p>
                             <ThemeSwitcher />
                         </SettingsItem>
                     </SettingsCard>
+
+                    <UserManagementCard />
 
                     {/* About Section */}
                     <SettingsCard title="About" description="Information about the application.">
@@ -156,6 +254,7 @@ function SettingsPage() {
                         title="Danger Zone"
                         description="These actions are irreversible. Please proceed with caution."
                         className="border-destructive/50"
+                        icon={<ShieldAlert/>}
                     >
                          <div className="space-y-4">
                             <SettingsItem>

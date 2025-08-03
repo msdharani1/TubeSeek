@@ -10,14 +10,20 @@ type SettingsCardProps = {
   description: string;
   children: ReactNode;
   className?: string;
+  icon?: ReactNode;
 };
 
-export function SettingsCard({ title, description, children, className }: SettingsCardProps) {
+export function SettingsCard({ title, description, children, className, icon }: SettingsCardProps) {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <div className="flex items-start gap-4">
+            {icon && <div className="mt-1 text-muted-foreground">{icon}</div>}
+            <div className="flex-1">
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
+            </div>
+        </div>
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
