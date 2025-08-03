@@ -158,7 +158,7 @@ function SearchPageContent() {
              </h1>
           </div>
           <p className={cn("mt-4 max-w-xl text-muted-foreground", hasSearched && "text-center mx-auto")}>
-            Your intelligent portal to YouTube. Enter a query to discover refined video results.
+            Your intelligent, ad-free portal to YouTube. Enter a query to discover refined video results.
           </p>
           <div className={cn("mt-8 w-full max-w-2xl", hasSearched && "mx-auto")}>
             <SearchBar onSearch={handleSearch} isLoading={isLoading} initialQuery={query || ''} />
