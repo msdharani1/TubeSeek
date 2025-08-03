@@ -1,20 +1,22 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { withAuth, useAuth } from '@/context/auth-context';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 import { Header } from '@/components/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, FileText, ChevronRight, LogOut, Trash2, ShieldAlert } from 'lucide-react';
+import { User, FileText, ChevronRight, LogOut, Trash2, ShieldAlert, ThumbsUp, Bell, Heart, Tv } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import Link from 'next/link';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +30,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists } from '@/app/actions/user-data';
-
+import { getLikedVideos, getSubscriptions, toggleLikeVideo, toggleSubscription } from '@/app/actions/video-interactions';
+import type { LikedVideo, Subscription } from '@/types/youtube';
 
 function SettingsPage() {
     const { user } = useAuth();
@@ -36,7 +39,26 @@ function SettingsPage() {
     const { toast } = useToast();
     const [isDeletingHistory, setIsDeletingHistory] = useState(false);
     const [isDeletingPlaylists, setIsDeletingPlaylists] = useState(false);
-    
+    const [likedVideos, setLikedVideos] = useState<LikedVideo[]>([]);
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+
+    useEffect(() => {
+        if (user) {
+            fetchInteractions();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
+    const fetchInteractions = async () => {
+        if (!user) return;
+        const [likedRes, subsRes] = await Promise.all([
+            getLikedVideos(user.uid),
+            getSubscriptions(user.uid)
+        ]);
+        if (likedRes.data) setLikedVideos(likedRes.data);
+        if (subsRes.data) setSubscriptions(subsRes.data);
+    };
+
     if (!user) return null;
 
     const appVersion = packageJson.version;
@@ -82,6 +104,20 @@ function SettingsPage() {
         setIsDeletingPlaylists(false);
     }
 
+    const handleUnlike = async (video: LikedVideo) => {
+        if (!user) return;
+        await toggleLikeVideo(user.uid, video);
+        setLikedVideos(prev => prev.filter(v => v.videoId !== video.videoId));
+        toast({ title: `Unliked "${video.title}"`});
+    }
+
+    const handleUnsubscribe = async (channel: Subscription) => {
+        if (!user) return;
+        await toggleSubscription(user.uid, channel.channelId, channel.channelTitle);
+        setSubscriptions(prev => prev.filter(c => c.channelId !== channel.channelId));
+        toast({ title: `Unsubscribed from "${channel.channelTitle}"`});
+    }
+
     return (
         <>
             <Header />
@@ -107,6 +143,70 @@ function SettingsPage() {
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                                 <p className="text-xs text-muted-foreground">Membership since: {creationDate}</p>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* My Content Section */}
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>My Content</CardTitle>
+                            <CardDescription>Manage your liked videos and subscriptions.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="liked-videos">
+                                    <AccordionTrigger>
+                                        <div className="flex items-center gap-3">
+                                            <Heart className="w-5 h-5 text-primary" />
+                                            Liked Videos
+                                            <span className="text-muted-foreground text-sm ml-2">({likedVideos.length})</span>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        {likedVideos.length > 0 ? (
+                                            <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                                                {likedVideos.map(video => (
+                                                    <div key={video.videoId} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                                                        <Image src={video.thumbnail} alt={video.title} width={80} height={45} className="rounded" />
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium line-clamp-1">{video.title}</p>
+                                                            <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
+                                                        </div>
+                                                        <Button variant="ghost" size="sm" onClick={() => handleUnlike(video)}>Unlike</Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted-foreground text-center py-4">You haven't liked any videos yet.</p>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="subscriptions">
+                                    <AccordionTrigger>
+                                        <div className="flex items-center gap-3">
+                                             <Tv className="w-5 h-5 text-primary" />
+                                             Subscriptions
+                                             <span className="text-muted-foreground text-sm ml-2">({subscriptions.length})</span>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                          {subscriptions.length > 0 ? (
+                                            <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                                                {subscriptions.map(channel => (
+                                                    <div key={channel.channelId} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium">{channel.channelTitle}</p>
+                                                        </div>
+                                                        <Button variant="ghost" size="sm" onClick={() => handleUnsubscribe(channel)}>Unsubscribe</Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted-foreground text-center py-4">You aren't subscribed to any channels yet.</p>
+                                        )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         </CardContent>
                     </Card>
 

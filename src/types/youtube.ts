@@ -99,3 +99,15 @@ export const PlaylistSchema = z.object({
   createdAt: z.number(),
 });
 export type Playlist = z.infer<typeof PlaylistSchema>;
+
+export const LikedVideoSchema = SearchResultSchema.extend({
+  likedAt: z.number(),
+});
+export type LikedVideo = z.infer<typeof LikedVideoSchema>;
+
+export const SubscriptionSchema = z.object({
+  channelId: z.string(),
+  channelTitle: z.string(),
+  subscribedAt: z.number(),
+});
+export type Subscription = z.infer<typeof SubscriptionSchema>;

@@ -249,7 +249,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   const handleLike = async () => {
       if (!user || !video) return;
       setIsLiked(!isLiked); // Optimistic update
-      const { error } = await toggleLikeVideo(user.uid, video.videoId);
+      const { error } = await toggleLikeVideo(user.uid, video);
       if (error) {
           setIsLiked(!isLiked); // Revert on error
           toast({ variant: "destructive", title: "Failed to like video", description: error });

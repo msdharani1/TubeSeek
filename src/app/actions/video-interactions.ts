@@ -3,12 +3,13 @@
 
 import { db } from '@/lib/firebase';
 import { ref, set, get, remove, serverTimestamp } from 'firebase/database';
+import type { SearchResult, LikedVideo, Subscription } from '@/types/youtube';
 
 // Like/Unlike a video
-export async function toggleLikeVideo(userId: string, videoId: string): Promise<{ success?: boolean; error?: string }> {
-    if (!userId || !videoId) return { error: 'User ID and Video ID are required.' };
+export async function toggleLikeVideo(userId: string, video: SearchResult): Promise<{ success?: boolean; error?: string }> {
+    if (!userId || !video) return { error: 'User ID and Video are required.' };
 
-    const likeRef = ref(db, `user-likes/${userId}/${videoId}`);
+    const likeRef = ref(db, `user-likes/${userId}/${video.videoId}`);
     try {
         const snapshot = await get(likeRef);
         if (snapshot.exists()) {
@@ -16,7 +17,11 @@ export async function toggleLikeVideo(userId: string, videoId: string): Promise<
             await remove(likeRef);
         } else {
             // Video is not liked, so like it
-            await set(likeRef, { videoId, likedAt: serverTimestamp() });
+            const likedVideo: Omit<LikedVideo, 'likedAt'> & { likedAt: any } = {
+                ...video,
+                likedAt: serverTimestamp()
+            };
+            await set(likeRef, likedVideo);
         }
         return { success: true };
     } catch (error) {
@@ -74,5 +79,42 @@ export async function getInteractionStatus(
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { error: `Failed to fetch interaction status: ${errorMessage}` };
+    }
+}
+
+
+// Get all liked videos for a user
+export async function getLikedVideos(userId: string): Promise<{ data?: LikedVideo[]; error?: string }> {
+    if (!userId) return { error: 'User ID is required.' };
+
+    const likesRef = ref(db, `user-likes/${userId}`);
+    try {
+        const snapshot = await get(likesRef);
+        if (snapshot.exists()) {
+            const data: LikedVideo[] = Object.values(snapshot.val());
+            return { data: data.sort((a, b) => b.likedAt - a.likedAt) };
+        }
+        return { data: [] };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to fetch liked videos: ${errorMessage}` };
+    }
+}
+
+// Get all subscriptions for a user
+export async function getSubscriptions(userId: string): Promise<{ data?: Subscription[]; error?: string }> {
+    if (!userId) return { error: 'User ID is required.' };
+
+    const subsRef = ref(db, `user-subscriptions/${userId}`);
+    try {
+        const snapshot = await get(subsRef);
+        if (snapshot.exists()) {
+            const data: Subscription[] = Object.values(snapshot.val());
+            return { data: data.sort((a, b) => b.subscribedAt - a.subscribedAt) };
+        }
+        return { data: [] };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to fetch subscriptions: ${errorMessage}` };
     }
 }
