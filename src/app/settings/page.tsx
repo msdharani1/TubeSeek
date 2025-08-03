@@ -117,10 +117,10 @@ function SettingsPage() {
                             <CardDescription>Customize the look and feel of the app.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center justify-between">
-                                <p className="font-medium">Theme</p>
-                                <ThemeSwitcher />
-                            </div>
+                           <div className="space-y-3">
+                             <p className="font-medium">Theme</p>
+                             <ThemeSwitcher />
+                           </div>
                         </CardContent>
                     </Card>
 
