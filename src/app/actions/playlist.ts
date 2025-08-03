@@ -3,7 +3,7 @@
 
 import type { Playlist, PlaylistItem, SearchResult } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set, get, child, serverTimestamp, remove, query, orderByChild, equalTo } from 'firebase/database';
+import { ref, push, set, get, child, serverTimestamp, remove, query, orderByChild, equalTo, update } from 'firebase/database';
 
 // Get all playlists for a user
 export async function getPlaylists(userId: string): Promise<{ data?: Playlist[]; error?: string }> {
@@ -100,16 +100,14 @@ export async function updateVideoInPlaylists(
             const playlistRef = ref(db, `user-playlists/${userId}/playlists/${actualPlaylistId}`);
             const playlistSnapshot = await get(playlistRef);
             if (playlistSnapshot.exists()) {
+                const currentData = playlistSnapshot.val();
                 const updates: any = {
-                    videoCount: (playlistSnapshot.val().videoCount || 0) + 1,
+                    videoCount: (currentData.videoCount || 0) + 1,
                 };
-                if (!playlistSnapshot.val().thumbnail) {
+                if (!currentData.thumbnail) {
                     updates.thumbnail = video.thumbnail;
                 }
-                await set(child(playlistRef, 'videoCount'), updates.videoCount);
-                if(updates.thumbnail) {
-                    await set(child(playlistRef, 'thumbnail'), updates.thumbnail);
-                }
+                await update(playlistRef, updates);
             }
         }
 
@@ -127,7 +125,10 @@ export async function updateVideoInPlaylists(
                 const playlistRef = ref(db, `user-playlists/${userId}/playlists/${playlistId}`);
                 const playlistSnapshot = await get(playlistRef);
                 if (playlistSnapshot.exists()) {
-                    await set(child(playlistRef, 'videoCount'), Math.max(0, (playlistSnapshot.val().videoCount || 1) - 1));
+                     const currentData = playlistSnapshot.val();
+                     await update(playlistRef, {
+                         videoCount: Math.max(0, (currentData.videoCount || 1) - 1)
+                     });
                 }
             }
         }
