@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { ThumbsUp, Eye, X, Share2, History, ListVideo } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
@@ -14,11 +14,24 @@ import { saveVideoToHistory } from "@/app/actions";
 import { AddToPlaylist } from "./add-to-playlist";
 
 // Helper to parse and style the description
-const formatDescription = (text: string) => {
+const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
     if (!text) return "No description available.";
+    
+    const timestampRegex = /(\d{1,2}:\d{2}(?::\d{2})?)/g; // Matches MM:SS and HH:MM:SS
     const linkRegex = /(https?:\/\/[^\s]+)/g;
     const hashtagRegex = /(#\w+)/g;
-    
+
+    const timeToSeconds = (time: string) => {
+        const parts = time.split(':').map(Number);
+        if (parts.length === 3) { // HH:MM:SS
+            return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+        if (parts.length === 2) { // MM:SS
+            return parts[0] * 60 + parts[1];
+        }
+        return 0;
+    };
+
     return text.split('\n').map((line, i) => (
         <p key={i}>
             {line.split(linkRegex).map((part, j) => {
@@ -29,7 +42,13 @@ const formatDescription = (text: string) => {
                     if (hashPart.match(hashtagRegex)) {
                         return <span key={`${j}-${k}`} className="text-accent">{hashPart}</span>;
                     }
-                    return hashPart;
+                     return hashPart.split(timestampRegex).map((timePart, l) => {
+                        if (timePart.match(timestampRegex)) {
+                            const seconds = timeToSeconds(timePart);
+                            return <a key={`${j}-${k}-${l}`} onClick={() => seekTo(seconds)} className="text-accent hover:underline cursor-pointer">{timePart}</a>;
+                        }
+                        return timePart;
+                    });
                 });
             })}
         </p>
@@ -73,7 +92,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
     )
 }
 
-const VideoDetails = ({ video, onShare, showShareButton, showAddToPlaylistButton }: { video: SearchResult, onShare: () => void, showShareButton: boolean, showAddToPlaylistButton: boolean }) => {
+const VideoDetails = ({ video, onShare, showShareButton, showAddToPlaylistButton, seekTo }: { video: SearchResult, onShare: () => void, showShareButton: boolean, showAddToPlaylistButton: boolean, seekTo: (seconds: number) => void }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
 
@@ -118,7 +137,7 @@ const VideoDetails = ({ video, onShare, showShareButton, showAddToPlaylistButton
                     "whitespace-pre-wrap break-words",
                     !isDescriptionExpanded && "line-clamp-3"
                 )}>
-                     {formatDescription(video.description)}
+                     {formatDescription(video.description, seekTo)}
                 </div>
                 {(video.description?.split('\n').length > 3 || video.description?.length > 200) && (
                      <Button variant="link" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)} className="p-0 h-auto text-primary">
@@ -142,9 +161,12 @@ type VideoPlayerProps = {
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeKey, setIframeKey] = useState(0); 
 
   useEffect(() => {
     if (video && user) {
+        setIframeKey(prev => prev + 1); // Force re-render of iframe on new video
         saveVideoToHistory(user.uid, video)
             .then(result => {
                 if(result.error) {
@@ -154,6 +176,12 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             })
     }
   }, [video, user]);
+
+  const seekTo = (seconds: number) => {
+    if (iframeRef.current && video) {
+        iframeRef.current.src = `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&start=${seconds}`;
+    }
+  };
 
   const handleShare = () => {
     if (!video) return;
@@ -213,6 +241,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 <div className="lg:w-[70%] flex flex-col">
                     <div className="aspect-video shrink-0 bg-black">
                         <iframe
+                            key={iframeKey}
+                            ref={iframeRef}
                             src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
                             title="YouTube video player"
                             frameBorder="0"
@@ -224,7 +254,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
                     {/* On large screens, details are here and scroll independently */}
                     <div className="hidden lg:block p-6 overflow-y-auto no-scrollbar">
-                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} />
+                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} seekTo={seekTo} />
                     </div>
                 </div>
 
@@ -232,7 +262,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
                     {/* On small screens, details appear here inside the scrollable area */}
                     <div className="block lg:hidden p-6 border-b">
-                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} />
+                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} showAddToPlaylistButton={showAddToPlaylistButton} seekTo={seekTo} />
                     </div>
                     
                     <div className="p-4">
@@ -261,3 +291,5 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     </div>
   );
 }
+
+    
