@@ -102,7 +102,7 @@ function LikedVideosPage() {
             </main>
             <VideoPlayer
                 video={selectedVideo}
-                source="history"
+                source="liked"
                 suggestions={likedVideos.filter(r => r.videoId !== selectedVideo?.videoId)}
                 onPlaySuggestion={handleSelectVideo}
                 onClose={handleClosePlayer}

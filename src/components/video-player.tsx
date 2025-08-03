@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -183,7 +183,7 @@ type VideoPlayerProps = {
   suggestions: (SearchResult | WatchedVideo | PlaylistItem)[];
   onPlaySuggestion: (video: SearchResult) => void;
   onClose: () => void;
-  source: 'search' | 'history' | 'playlist';
+  source: 'search' | 'history' | 'playlist' | 'liked';
   playlistName?: string;
 };
 
@@ -275,6 +275,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     switch(source) {
         case 'history':
             return 'Recent History';
+        case 'liked':
+            return 'Recent Likes';
         case 'playlist':
             return `From: ${playlistName || 'Playlist'}`;
         case 'search':
@@ -287,6 +289,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
       switch(source) {
         case 'history':
             return <History className="w-5 h-5"/>;
+        case 'liked':
+            return <Heart className="w-5 h-5"/>;
         case 'playlist':
             return <ListVideo className="w-5 h-5"/>;
         case 'search':
