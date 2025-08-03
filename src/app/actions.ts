@@ -453,5 +453,3 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
-
-    

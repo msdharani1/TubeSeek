@@ -213,11 +213,9 @@ function AdminPage() {
                         </div>
                     )}
 
-                    {historyNextCursor && !isHistoryLoading && (
-                        <div className="mt-4 text-center">
-                            <Button onClick={() => selectedUser && fetchHistory(selectedUser, historyNextCursor)}>
-                                Load More
-                            </Button>
+                    {historyNextCursor === null && searchHistory.length > 0 && !isHistoryLoading && (
+                         <div className="text-center text-muted-foreground py-6">
+                            <p>End of history.</p>
                         </div>
                     )}
                  </>
@@ -244,5 +242,3 @@ function AdminPage() {
 }
 
 export default withAuth(AdminPage);
-
-    
