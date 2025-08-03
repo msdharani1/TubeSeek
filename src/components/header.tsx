@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon, Shield, History, Settings } from "lucide-react";
+import { LogOut, User as UserIcon, Shield, History, Settings, Heart, Tv } from "lucide-react";
 import { Logo } from "./logo";
 import { ListVideo } from "./icons";
 
@@ -39,6 +39,14 @@ export function Header() {
 
   const handlePlaylistsClick = () => {
     router.push('/playlists');
+  }
+  
+  const handleLikedVideosClick = () => {
+    router.push('/liked');
+  }
+  
+  const handleSubscriptionsClick = () => {
+      router.push('/subscriptions');
   }
 
   const handleSettingsClick = () => {
@@ -88,6 +96,14 @@ export function Header() {
               <DropdownMenuItem onClick={handleHistoryClick}>
                   <History className="mr-2 h-4 w-4" />
                   <span>History</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLikedVideosClick}>
+                  <Heart className="mr-2 h-4 w-4" />
+                  <span>Liked Videos</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSubscriptionsClick}>
+                  <Tv className="mr-2 h-4 w-4" />
+                  <span>Subscriptions</span>
               </DropdownMenuItem>
                <DropdownMenuItem onClick={handleSettingsClick}>
                   <Settings className="mr-2 h-4 w-4" />

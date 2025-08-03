@@ -1,0 +1,112 @@
+
+"use client";
+
+import { useState, useEffect } from "react";
+import type { Subscription } from "@/types/youtube";
+import { getSubscriptions, toggleSubscription } from "@/app/actions/video-interactions";
+import { withAuth, useAuth } from '@/context/auth-context';
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
+
+import { Header } from "@/components/header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tv, Frown, Loader2, BellRing } from "lucide-react";
+
+function SubscriptionCard({ channel, onUnsubscribe }: { channel: Subscription, onUnsubscribe: (channel: Subscription) => void }) {
+    return (
+        <Card>
+            <CardContent className="p-4 flex items-center justify-between">
+                <p className="font-semibold">{channel.channelTitle}</p>
+                <Button variant="secondary" onClick={() => onUnsubscribe(channel)}>
+                    <BellRing className="mr-2 h-4 w-4" />
+                    Subscribed
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
+function SubscriptionsPage() {
+    const { user } = useAuth();
+    const { toast } = useToast();
+    const router = useRouter();
+    
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (user) {
+            fetchSubscriptions();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
+    const fetchSubscriptions = async () => {
+        setIsLoading(true);
+        if (!user) return;
+        
+        const { data, error } = await getSubscriptions(user.uid);
+        if (error) {
+            toast({
+                variant: "destructive",
+                title: "Failed to load subscriptions",
+                description: error,
+            });
+        } else {
+            setSubscriptions(data || []);
+        }
+        setIsLoading(false);
+    };
+
+    const handleUnsubscribe = async (channel: Subscription) => {
+        if (!user) return;
+        // Optimistically update UI
+        setSubscriptions(prev => prev.filter(c => c.channelId !== channel.channelId));
+        
+        const { error } = await toggleSubscription(user.uid, channel.channelId, channel.channelTitle);
+        
+        if (error) {
+            // Revert on error
+            setSubscriptions(prev => [...prev, channel].sort((a,b) => b.subscribedAt - a.subscribedAt));
+            toast({ variant: "destructive", title: "Failed to unsubscribe", description: error });
+        } else {
+            toast({ title: `Unsubscribed from "${channel.channelTitle}"` });
+        }
+    }
+
+    return (
+        <>
+            <Header />
+            <main className="container mx-auto px-4 py-8 max-w-2xl">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <Tv className="w-8 h-8 text-primary" />
+                        <h1 className="text-3xl font-bold tracking-tight">My Subscriptions</h1>
+                    </div>
+                </div>
+                
+                {isLoading ? (
+                     <div className="flex justify-center items-center h-64">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : subscriptions.length > 0 ? (
+                    <div className="space-y-4">
+                        {subscriptions.map(channel => (
+                            <SubscriptionCard key={channel.channelId} channel={channel} onUnsubscribe={handleUnsubscribe} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+                        <Frown className="w-16 h-16"/>
+                        <h2 className="text-2xl font-semibold">No Subscriptions Yet</h2>
+                        <p>Channels you subscribe to will appear here.</p>
+                        <Button onClick={() => router.push('/search')}>Find Channels to Subscribe To</Button>
+                    </div>
+                )}
+            </main>
+        </>
+    );
+}
+
+export default withAuth(SubscriptionsPage);
