@@ -7,7 +7,7 @@ import {
 } from '@/types/youtube';
 import type { SearchResult, SearchQuery, UserInfo, WatchedVideo } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo } from 'firebase/database';
+import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst } from 'firebase/database';
 import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -155,42 +155,108 @@ export async function saveSearchQuery(
   }
 }
 
-export async function getAllUserSearches(adminEmail: string): Promise<{ data?: Record<string, { profile: UserInfo; searches: SearchQuery[] }>; error?: string }> {
-  if (adminEmail !== 'msdharaniofficial@gmail.com') {
-    return { error: 'Unauthorized access.' };
-  }
-
-  if (!db) {
-    return { error: 'Database connection is not available.' };
-  }
-  
-  try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, `user-searches`));
-    if (snapshot.exists()) {
-      const allSearches = snapshot.val();
-      const formattedData: Record<string, { profile: UserInfo; searches: SearchQuery[] }> = {};
-
-      for (const userId in allSearches) {
-          const userData = allSearches[userId];
-          const userSearches: SearchQuery[] = userData.searches ? Object.values(userData.searches) : [];
-          
-          formattedData[userId] = {
-            profile: userData.profile || { email: 'Unknown User', uid: userId },
-            searches: userSearches.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-          };
-      }
-
-      return { data: formattedData };
-    } else {
-      return { data: {} };
+export async function getUsersForAdmin(adminEmail: string, startAfterKey?: string | null): Promise<{ data?: { users: (UserInfo & { id: string })[], nextCursor: string | null }; error?: string }> {
+    if (adminEmail !== 'msdharaniofficial@gmail.com') {
+        return { error: 'Unauthorized access.' };
     }
-  } catch(error) {
-      console.error('Failed to fetch all user searches from Firebase:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-      return { error: `Failed to fetch search history: ${errorMessage}` };
-  }
+    if (!db) {
+        return { error: 'Database connection is not available.' };
+    }
+
+    const PAGE_SIZE = 10;
+    try {
+        const usersRef = ref(db, 'user-searches');
+        let usersQuery;
+
+        if (startAfterKey) {
+            usersQuery = query(usersRef, orderByKey(), startAfter(startAfterKey), limitToFirst(PAGE_SIZE + 1));
+        } else {
+            usersQuery = query(usersRef, orderByKey(), limitToFirst(PAGE_SIZE + 1));
+        }
+        
+        const snapshot = await get(usersQuery);
+        if (snapshot.exists()) {
+            const allUsersData = snapshot.val();
+            const users: (UserInfo & { id: string })[] = [];
+            
+            for (const userId in allUsersData) {
+                const profile = allUsersData[userId].profile || {};
+                users.push({
+                    id: userId,
+                    uid: userId,
+                    email: profile.email || "N/A",
+                    displayName: profile.displayName || "N/A",
+                    photoURL: profile.photoURL || null,
+                });
+            }
+
+            let nextCursor: string | null = null;
+            if (users.length > PAGE_SIZE) {
+                const nextUser = users.pop(); 
+                nextCursor = nextUser!.id;
+            }
+            
+            return { data: { users, nextCursor } };
+        } else {
+            return { data: { users: [], nextCursor: null } };
+        }
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to fetch users: ${errorMessage}` };
+    }
 }
+
+export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: string, startAfterKey?: string | null): Promise<{ data?: { searches: SearchQuery[], nextCursor: string | null }; error?: string }> {
+     if (adminEmail !== 'msdharaniofficial@gmail.com') {
+        return { error: 'Unauthorized access.' };
+    }
+    if (!db) {
+        return { error: 'Database connection is not available.' };
+    }
+
+    const PAGE_SIZE = 10;
+
+    try {
+        const searchesRef = ref(db, `user-searches/${userId}/searches`);
+        
+        let searchesQuery;
+        if (startAfterKey) {
+            searchesQuery = query(searchesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE), endBefore(startAfterKey));
+        } else {
+            searchesQuery = query(searchesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
+        }
+
+        const snapshot = await get(searchesQuery);
+        if (snapshot.exists()) {
+            const searchesData = snapshot.val();
+            const searches: SearchQuery[] = Object.entries(searchesData).map(([key, value]) => ({
+                id: key,
+                ...(value as Omit<SearchQuery, 'id'>)
+            }));
+            
+            // Firebase RTDB limitToLast returns in ascending order, so we reverse
+            searches.reverse(); 
+
+            let nextCursor: string | null = null;
+            if (searches.length === PAGE_SIZE) {
+               const lastSearch = searches[searches.length - 1];
+               // To get the next page, we need to get the timestamp of the last item.
+               // Firebase's `endBefore` needs a value and optionally a key. We'll use the timestamp.
+               nextCursor = lastSearch.timestamp as any; 
+            }
+            
+            return { data: { searches, nextCursor } };
+        } else {
+            return { data: { searches: [], nextCursor: null } };
+        }
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to fetch search history: ${errorMessage}` };
+    }
+}
+
 
 export async function saveVideoToHistory(
   userId: string,
@@ -385,5 +451,3 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
-
-    

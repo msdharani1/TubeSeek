@@ -60,6 +60,7 @@ export type SearchResult = z.infer<typeof SearchResultSchema>;
 
 
 const SearchQuerySchema = z.object({
+  id: z.string().optional(), // Adding optional ID for keying in lists
   query: z.string(),
   resultsCount: z.number(),
   timestamp: z.string(),
