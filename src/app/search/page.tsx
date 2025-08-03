@@ -115,7 +115,7 @@ function SearchPageContent() {
     }
   };
 
-  const handlePlayVideo = (videoToPlay: SearchResult) => {
+  const handleSelectVideo = (videoToPlay: SearchResult) => {
     const params = new URLSearchParams(window.location.search);
     params.set('v', videoToPlay.videoId);
     router.push(`/search?${params.toString()}`);
@@ -145,7 +145,7 @@ function SearchPageContent() {
              </h1>
           </div>
           <p className={cn("mt-4 max-w-xl text-muted-foreground", hasSearched && "text-center mx-auto")}>
-            Your intelligent portal to YouTube. Enter a query to discover intelligently-filtered video results.
+            Your intelligent portal to YouTube. Enter a query to discover refined video results.
           </p>
           <div className={cn("mt-8 w-full max-w-2xl", hasSearched && "mx-auto")}>
             <SearchBar onSearch={handleSearch} isLoading={isLoading} initialQuery={query || ''} />
@@ -155,7 +155,7 @@ function SearchPageContent() {
         {isLoading && <LoadingSkeleton />}
 
         {!isLoading && hasSearched && results.length > 0 && (
-          <VideoGrid videos={results} onPlayVideo={handlePlayVideo} />
+          <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />
         )}
         
         {!isLoading && hasSearched && results.length === 0 && (
@@ -169,6 +169,8 @@ function SearchPageContent() {
       </main>
       <VideoPlayer
         video={selectedVideo}
+        suggestions={results.filter(r => r.videoId !== selectedVideo?.videoId)}
+        onPlaySuggestion={handleSelectVideo}
         onClose={handleClosePlayer}
       />
     </>

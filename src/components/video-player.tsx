@@ -3,17 +3,37 @@
 
 import { Button } from "./ui/button";
 import { ThumbsUp, Eye, Copy, X } from "lucide-react";
-import { Separator } from "./ui/separator";
 import type { SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 type VideoPlayerProps = {
   video: SearchResult | null;
+  suggestions: SearchResult[];
+  onPlaySuggestion: (video: SearchResult) => void;
   onClose: () => void;
 };
 
-export function VideoPlayer({ video, onClose }: VideoPlayerProps) {
+function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video: SearchResult) => void }) {
+    return (
+        <button onClick={() => onPlay(video)} className="flex gap-4 w-full text-left hover:bg-muted/50 rounded-lg p-2 transition-colors">
+            <div className="relative shrink-0">
+                <Image
+                    src={video.thumbnail}
+                    alt={video.title}
+                    width={160}
+                    height={90}
+                    className="w-40 h-auto aspect-video rounded-md object-cover"
+                />
+            </div>
+            <div className="flex flex-col">
+                <h4 className="font-semibold text-sm line-clamp-2 leading-snug">{video.title}</h4>
+            </div>
+        </button>
+    )
+}
+
+export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: VideoPlayerProps) {
   const { toast } = useToast();
 
   const handleCopyLink = () => {
@@ -41,8 +61,8 @@ export function VideoPlayer({ video, onClose }: VideoPlayerProps) {
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
         <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col overflow-hidden">
             <div className="flex-grow flex flex-col lg:flex-row lg:overflow-hidden">
-                {/* Left Column: Video Player and main info */}
-                <div className="lg:w-[70%] lg:h-full flex flex-col lg:overflow-y-auto">
+                {/* Main Content: Video, Details, Description */}
+                <div className="lg:w-[70%] lg:h-full flex flex-col lg:overflow-y-auto no-scrollbar">
                     <div className="aspect-video shrink-0 bg-black">
                         <iframe
                             src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
@@ -75,16 +95,20 @@ export function VideoPlayer({ video, onClose }: VideoPlayerProps) {
                                 </Button>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                {/* Right Column: Description */}
-                <div className="lg:w-[30%] lg:h-full lg:overflow-y-auto border-t lg:border-t-0 lg:border-l no-scrollbar">
-                    <div className="p-6">
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap mt-4 bg-muted/50 p-4 rounded-lg">
                             <h3 className="font-semibold text-foreground">Description</h3>
                             <p>{video.description || "No description available."}</p>
                         </div>
+                    </div>
+                </div>
+                
+                {/* Right Column: Suggestions */}
+                <div className="lg:w-[30%] lg:h-full lg:overflow-y-auto border-t lg:border-t-0 lg:border-l no-scrollbar p-4">
+                    <h3 className="text-lg font-bold mb-4 px-2">Up next</h3>
+                    <div className="flex flex-col gap-2">
+                        {suggestions.map(suggestion => (
+                            <SuggestionCard key={suggestion.videoId} video={suggestion} onPlay={onPlaySuggestion} />
+                        ))}
                     </div>
                 </div>
             </div>
