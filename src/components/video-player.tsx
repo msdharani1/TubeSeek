@@ -1,39 +1,45 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { ThumbsUp, Eye, X, Share2 } from "lucide-react";
-import type { SearchResult } from "@/types/youtube";
+import type { SearchResult, UserInfo } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
 import { cn, formatCount } from "@/lib/utils";
+import { useAuth } from "@/context/auth-context";
+import { saveVideoToHistory } from "@/app/actions";
 
 // Helper to parse and style the description
 const formatDescription = (text: string) => {
+    if (!text) return "No description available.";
     const linkRegex = /(https?:\/\/[^\s]+)/g;
     const hashtagRegex = /(#\w+)/g;
     
-    const parts = text.split(linkRegex);
-    
-    return parts.map((part, i) => {
-        if (part.match(linkRegex)) {
-            return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{part}</a>;
-        }
-
-        const hashParts = part.split(hashtagRegex);
-        return hashParts.map((hashPart, j) => {
-            if (hashPart.match(hashtagRegex)) {
-                return <span key={`${i}-${j}`} className="text-accent">{hashPart}</span>;
-            }
-            return hashPart;
-        });
-    });
+    return text.split('\n').map((line, i) => (
+        <p key={i}>
+            {line.split(linkRegex).map((part, j) => {
+                if (part.match(linkRegex)) {
+                    return <a key={j} href={part} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{part}</a>;
+                }
+                return part.split(hashtagRegex).map((hashPart, k) => {
+                    if (hashPart.match(hashtagRegex)) {
+                        return <span key={`${j}-${k}`} className="text-accent">{hashPart}</span>;
+                    }
+                    return hashPart;
+                });
+            })}
+        </p>
+    ));
 };
 
 
 function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video: SearchResult) => void }) {
+    const publishedAt = (video as any).watchedAt || video.publishedAt;
+    const timeAgo = formatDistanceToNowStrict(new Date(publishedAt)) + ' ago';
+
     return (
         <button onClick={() => onPlay(video)} className="flex gap-4 w-full text-left hover:bg-muted/50 rounded-lg p-2 transition-colors">
             <div className="relative shrink-0">
@@ -50,14 +56,14 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult, onPlay: (video
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="text-muted-foreground mt-1 text-xs">
                     <p className="line-clamp-1">{video.channelTitle}</p>
-                    <p>{formatCount(video.viewCount)} views &bull; {formatDistanceToNowStrict(new Date(video.publishedAt))} ago</p>
+                    <p>{formatCount(video.viewCount)} views &bull; {timeAgo}</p>
                 </div>
             </div>
         </button>
     )
 }
 
-const VideoDetails = ({ video, onShare }: { video: SearchResult, onShare: () => void }) => {
+const VideoDetails = ({ video, onShare, showShareButton }: { video: SearchResult, onShare: () => void, showShareButton: boolean }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
 
@@ -83,12 +89,14 @@ const VideoDetails = ({ video, onShare }: { video: SearchResult, onShare: () => 
                         {formatCount(video.likeCount)} likes
                     </span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-accent/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
-                        <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
-                        <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
-                    </Button>
-                </div>
+                {showShareButton && (
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-accent/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
+                            <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
+                            <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
+                        </Button>
+                    </div>
+                )}
             </div>
             <div className="border-y py-4 my-4">
                 <h3 className="font-bold text-lg">{video.channelTitle}</h3>
@@ -99,7 +107,7 @@ const VideoDetails = ({ video, onShare }: { video: SearchResult, onShare: () => 
                     "whitespace-pre-wrap break-words",
                     !isDescriptionExpanded && "line-clamp-3"
                 )}>
-                    {video.description ? formatDescription(video.description) : "No description available."}
+                     {formatDescription(video.description)}
                 </div>
                 {(video.description?.split('\n').length > 3 || video.description?.length > 200) && (
                      <Button variant="link" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)} className="p-0 h-auto text-primary">
@@ -116,10 +124,24 @@ type VideoPlayerProps = {
   suggestions: SearchResult[];
   onPlaySuggestion: (video: SearchResult) => void;
   onClose: () => void;
+  source: 'search' | 'history';
 };
 
-export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: VideoPlayerProps) {
+export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source }: VideoPlayerProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (video && user) {
+        saveVideoToHistory(user.uid, video)
+            .then(result => {
+                if(result.error) {
+                    // Don't show toast, just log it. Not critical for user.
+                    console.warn("Could not save to history:", result.error)
+                }
+            })
+    }
+  }, [video, user]);
 
   const handleShare = () => {
     if (!video) return;
@@ -143,6 +165,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
     return null;
   }
 
+  const showShareButton = source === 'search';
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
         <div className="bg-card rounded-lg shadow-xl w-full h-full flex flex-col overflow-hidden">
@@ -163,7 +187,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
 
                     {/* On large screens, details are here and scroll independently */}
                     <div className="hidden lg:block p-6 overflow-y-auto no-scrollbar">
-                         <VideoDetails video={video} onShare={handleShare} />
+                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton}/>
                     </div>
                 </div>
 
@@ -171,7 +195,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose }: V
                 <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 overflow-y-auto no-scrollbar border-t lg:border-t-0">
                     {/* On small screens, details appear here inside the scrollable area */}
                     <div className="block lg:hidden p-6 border-b">
-                         <VideoDetails video={video} onShare={handleShare} />
+                         <VideoDetails video={video} onShare={handleShare} showShareButton={showShareButton} />
                     </div>
                     
                     <div className="p-4">

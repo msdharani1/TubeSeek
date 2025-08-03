@@ -5,9 +5,9 @@ import {
   YoutubeSearchResponseSchema,
   YoutubeVideosResponseSchema,
 } from '@/types/youtube';
-import type { SearchResult, SearchQuery, UserInfo } from '@/types/youtube';
+import type { SearchResult, SearchQuery, UserInfo, WatchedVideo } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set, get, child } from 'firebase/database';
+import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove } from 'firebase/database';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -189,23 +189,83 @@ export async function getAllUserSearches(adminEmail: string): Promise<{ data?: R
   }
 }
 
-// Helper function to test Firebase connection
-export async function testFirebaseConnection(): Promise<{ success: boolean; error?: string }> {
+export async function saveVideoToHistory(
+  userId: string,
+  video: SearchResult
+): Promise<{ success?: boolean; error?: string }> {
+  if (!userId || !video) {
+    return { error: "User ID and video data are required." };
+  }
+  if (!db) {
+    return { error: "Database connection is not available." };
+  }
+
   try {
-    if (!db) {
-      return { success: false, error: 'Firebase database is not initialized' };
+    const historyRef = ref(db, `user-watch-history/${userId}`);
+    const newHistoryRef = push(historyRef);
+    
+    const historyItem: Omit<WatchedVideo, 'id'> = {
+        ...video,
+        watchedAt: serverTimestamp()
+    };
+    
+    await set(newHistoryRef, historyItem);
+
+    // Keep only the last 50 history items
+    const historyQuery = query(historyRef, limitToLast(50));
+    const snapshot = await get(historyQuery);
+    
+    if (snapshot.exists()) {
+        const allHistory = await get(historyRef);
+        const allKeys = Object.keys(allHistory.val());
+        const historyKeys = Object.keys(snapshot.val());
+        
+        if (allKeys.length > 50) {
+            const keysToDelete = allKeys.filter(key => !historyKeys.includes(key));
+            for (const key of keysToDelete) {
+                await remove(ref(db, `user-watch-history/${userId}/${key}`));
+            }
+        }
     }
 
-    // Try to create a test reference
-    const testRef = ref(db, 'connection-test');
-    await set(testRef, { timestamp: new Date().toISOString() });
-    
     return { success: true };
   } catch (error) {
-    console.error('Firebase connection test failed:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown connection error' 
-    };
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    console.error("Failed to save video to history:", errorMessage);
+    return { error: `Failed to save video to history: ${errorMessage}` };
+  }
+}
+
+
+export async function getUserHistory(
+  userId: string
+): Promise<{ data?: WatchedVideo[]; error?: string }> {
+  if (!userId) {
+    return { error: "User ID is required." };
+  }
+  if (!db) {
+    return { error: "Database connection is not available." };
+  }
+
+  try {
+    const historyRef = ref(db, `user-watch-history/${userId}`);
+    const historyQuery = query(historyRef, limitToLast(50));
+    const snapshot = await get(historyQuery);
+
+    if (snapshot.exists()) {
+      const historyData = snapshot.val();
+      const videos: WatchedVideo[] = Object.keys(historyData).map(key => ({
+        id: key,
+        ...historyData[key],
+      })).sort((a, b) => b.watchedAt - a.watchedAt); // Sort descending by watched date
+      
+      return { data: videos };
+    } else {
+      return { data: [] };
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    console.error("Failed to get user history:", errorMessage);
+    return { error: `Failed to fetch history: ${errorMessage}` };
   }
 }

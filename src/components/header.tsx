@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon, Shield } from "lucide-react";
+import { LogOut, User as UserIcon, Shield, History } from "lucide-react";
 import { Logo } from "./logo";
 
 export function Header() {
@@ -30,6 +30,10 @@ export function Header() {
 
   const handleManageClick = () => {
     router.push('/admin');
+  }
+
+  const handleHistoryClick = () => {
+    router.push('/history');
   }
   
   const isAdmin = user?.email === "msdharaniofficial@gmail.com";
@@ -68,6 +72,10 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleHistoryClick}>
+                  <History className="mr-2 h-4 w-4" />
+                  <span>History</span>
+              </DropdownMenuItem>
               {isAdmin && (
                 <DropdownMenuItem onClick={handleManageClick}>
                   <Shield className="mr-2 h-4 w-4" />

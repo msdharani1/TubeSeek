@@ -182,6 +182,7 @@ function SearchPageContent() {
       </main>
       <VideoPlayer
         video={selectedVideo}
+        source="search"
         suggestions={results.filter(r => r.videoId !== selectedVideo?.videoId)}
         onPlaySuggestion={handleSelectVideo}
         onClose={handleClosePlayer}
