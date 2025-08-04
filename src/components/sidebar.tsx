@@ -62,7 +62,7 @@ export function AppSidebar() {
             </span>
         </Link>
       </div>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col">
         <SidebarMenu className="p-4">
           {navItem("/playlists", <ListVideo />, "Playlists")}
           {navItem("/history", <History />, "History")}
@@ -71,45 +71,45 @@ export function AppSidebar() {
           {navItem("/settings", <Settings />, "Settings")}
           {isAdmin && navItem("/admin", <Shield />, "Manage")}
         </SidebarMenu>
+        <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground mb-2">
+            <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
+                    <Link href="http://github.com/msdharani1/" target="_blank">
+                        <Github className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
+                    <Link href="https://www.linkedin.com/in/tharanimca/" target="_blank">
+                        <Linkedin className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
+                    <Link href="https://x.com/msdharani007" target="_blank">
+                        <Twitter className="h-4 w-4" />
+                    </Link>
+                </Button>
+            </div>
+            <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:hidden">
+                <p>
+                    Developed by{' '}
+                    <a 
+                    href="http://www.dev.msdharani.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="font-bold text-primary hover:underline"
+                    >
+                    MS Dharani
+                    </a>
+                    .
+                </p>
+                <p>
+                    <Link href="/privacy-policy" onClick={() => setOpenMobile(false)} className="hover:text-primary underline">
+                        Privacy Policy
+                    </Link>
+                </p>
+            </div>
+        </SidebarFooter>
       </SidebarContent>
-      <SidebarFooter className="p-4 space-y-4 mt-auto hover:text-foreground mb-2">
-        <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
-                <Link href="http://github.com/msdharani1/" target="_blank">
-                    <Github className="h-4 w-4" />
-                </Link>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
-                 <Link href="https://www.linkedin.com/in/tharanimca/" target="_blank">
-                    <Linkedin className="h-4 w-4" />
-                </Link>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
-                <Link href="https://x.com/msdharani007" target="_blank">
-                    <Twitter className="h-4 w-4" />
-                </Link>
-            </Button>
-        </div>
-        <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:hidden">
-            <p>
-                Developed by{' '}
-                <a 
-                  href="http://www.dev.msdharani.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="font-bold text-primary hover:underline"
-                >
-                  MS Dharani
-                </a>
-                .
-            </p>
-            <p>
-                <Link href="/privacy-policy" onClick={() => setOpenMobile(false)} className="hover:text-primary underline">
-                    Privacy Policy
-                </Link>
-            </p>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
