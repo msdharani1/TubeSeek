@@ -150,16 +150,16 @@ const VideoDetails = ({
                 </div>
                 <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
                     <div className="flex items-center gap-2">
+                        <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike} className="hover:bg-muted/50 flex-shrink-0">
+                            <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
+                            {formatCount(likeCount)}
+                        </Button>
                         {showShareButton && (
                             <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-muted/50 transition-all flex-shrink-0", isSharing && "bg-accent/80 scale-105")}>
                                 <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
                                 <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
                             </Button>
                         )}
-                        <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike} className="hover:bg-muted/50 flex-shrink-0">
-                            <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
-                            {formatCount(likeCount)}
-                        </Button>
                         {showAddToPlaylistButton && <div className="flex-shrink-0"><AddToPlaylist video={video} /></div>}
                     </div>
                 </div>
