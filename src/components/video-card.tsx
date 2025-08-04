@@ -29,13 +29,13 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
       key={id || video.videoId}
       onClick={() => onPlay(video)}
     >
-      <CardHeader className="p-0 relative">
+      <CardHeader className="p-0 relative aspect-video">
         <Image
           src={video.thumbnail}
           alt={video.title}
           width={400}
           height={225}
-          className="w-full object-cover"
+          className="w-full h-full object-cover"
           data-ai-hint="video thumbnail"
         />
         <Badge
