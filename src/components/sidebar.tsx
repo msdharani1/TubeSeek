@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Sidebar,
-  SidebarHeader,
   SidebarContent,
   SidebarMenu,
   SidebarMenuItem,
@@ -25,7 +24,6 @@ import {
   Twitter,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { Logo } from "./logo";
 import { Button } from "./ui/button";
 
 export function AppSidebar() {
@@ -53,12 +51,6 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-            <Logo className="w-7 h-7 text-primary" />
-            <span className="text-xl font-bold">TubeSeek</span>
-        </div>
-      </SidebarHeader>
       <SidebarContent className="p-4">
         <SidebarMenu>
           {navItem("/playlists", <ListVideo />, "Playlists")}
@@ -70,15 +62,25 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4 space-y-4">
-        <div className="text-xs text-muted-foreground space-y-1">
-             <p>Developed by <strong>MS Dharani</strong></p>
+        <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:text-left">
+            <p>
+                Developed by{' '}
+                <a 
+                  href="http://www.dev.msdharani.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="font-bold text-primary hover:underline"
+                >
+                  MS Dharani
+                </a>
+            </p>
             <p>
                 <Link href="/privacy-policy" onClick={() => setOpenMobile(false)} className="hover:text-primary underline">
                     Privacy Policy
                 </Link>
             </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                 <Link href="http://github.com/msdharani1/" target="_blank">
                     <Github className="h-4 w-4" />

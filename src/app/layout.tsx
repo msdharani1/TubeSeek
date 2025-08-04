@@ -46,7 +46,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={cn("font-body antialiased", 'flex flex-col min-h-screen')}>
+      <body className={cn("font-body antialiased", 'bg-background text-foreground')}>
         <AuthProvider>
            <AppLayout>
               {children}

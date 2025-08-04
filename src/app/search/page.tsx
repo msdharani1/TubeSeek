@@ -14,7 +14,6 @@ import { VideoGrid } from "@/components/video-grid";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Loader2 } from "lucide-react";
-import { Header } from "@/components/header";
 
 type CachedData = {
     timestamp: number;
@@ -37,253 +36,226 @@ const shuffleArray = (array: any[]) => {
 };
 
 function SearchPage() {
-    return (
-        <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
-            <SearchPageContent />
-        </Suspense>
-    )
-}
+    const { user, loading } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
 
-export function SearchPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const { user } = useAuth();
-
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
-  const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
-  
-  const query = searchParams.get('q');
-  const videoId = searchParams.get('v');
-
-  const hasSearched = query !== null;
-  const isShowingSuggestions = !hasSearched && !isLoading && suggestionsEnabled;
-
-  const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery) return;
-
-    setIsLoading(true);
-    setResults([]);
-
-    // Check cache first
-    const cacheKey = `youtube_search_${searchQuery.toLowerCase()}`;
-    const cachedItem = localStorage.getItem(cacheKey);
-
-    if (cachedItem) {
-        try {
-            const cachedData: CachedData = JSON.parse(cachedItem);
-            if (Date.now() - cachedData.timestamp < SEARCH_CACHE_EXPIRATION_MS) {
-                setResults(cachedData.results);
-                setIsLoading(false);
-                return; // Use cached data
-            }
-        } catch (e) {
-            console.error("Failed to parse cache", e);
-            localStorage.removeItem(cacheKey);
-        }
-    }
+    const [results, setResults] = useState<SearchResult[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
+    const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
     
-    // If no valid cache, fetch from API
-    try {
-      const response = await searchAndRefineVideos(searchQuery);
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      const searchResults = response.data || [];
-      setResults(searchResults);
-      
-      // Save to cache
-      const dataToCache: CachedData = {
-          timestamp: Date.now(),
-          results: searchResults
-      };
-      localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
-      
-      if (user) {
-        const userInfo = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL
-        };
+    const query = searchParams.get('q');
+    const videoId = searchParams.get('v');
 
-        // Don't await this, let it run in the background
-        saveSearchQuery(userInfo, searchQuery, searchResults.length)
-          .then(saveResult => {
-            if (saveResult.error) {
-                console.warn("Failed to save search history:", saveResult.error);
-                // Not showing a toast for this as it's not critical for the user experience
-            }
-          });
-      }
+    const hasSearched = query !== null;
+    const isShowingSuggestions = !hasSearched && !isLoading && suggestionsEnabled;
 
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast({
-        variant: "destructive",
-        title: "Search Failed",
-        description: errorMessage,
-      });
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, toast]);
+    const performSearch = useCallback(async (searchQuery: string) => {
+      if (!searchQuery) return;
 
-
-  const fetchSuggestions = useCallback(async () => {
-      if (!user) return;
-      // Don't set loading true immediately. First, check if suggestions are enabled.
-      // This prevents the skeleton from showing if suggestions are off.
-      
-      setResults([]);
-
-      const { data, error, suggestionsEnabled: isEnabled } = await getSuggestedVideos(user.uid);
-      setSuggestionsEnabled(isEnabled || false);
-      
-      if (!isEnabled) {
-          setIsLoading(false);
-          return;
-      }
-      
       setIsLoading(true);
-      const cacheKey = `suggestions_cache_${user.uid}`;
-      const cached = localStorage.getItem(cacheKey);
+      setResults([]);
 
-      if (cached) {
+      const cacheKey = `youtube_search_${searchQuery.toLowerCase()}`;
+      const cachedItem = localStorage.getItem(cacheKey);
+
+      if (cachedItem) {
           try {
-              const { timestamp, results: cachedResults }: CachedData = JSON.parse(cached);
-              if (Date.now() - timestamp < SUGGESTIONS_CACHE_EXPIRATION_MS) {
-                  setResults(shuffleArray([...cachedResults])); // Shuffle cached results on reload
+              const cachedData: CachedData = JSON.parse(cachedItem);
+              if (Date.now() - cachedData.timestamp < SEARCH_CACHE_EXPIRATION_MS) {
+                  setResults(cachedData.results);
                   setIsLoading(false);
-                  return;
+                  return; 
               }
           } catch (e) {
-              console.error("Failed to parse suggestions cache", e);
+              console.error("Failed to parse cache", e);
               localStorage.removeItem(cacheKey);
           }
       }
-
-      if (error) {
-          toast({ variant: "destructive", title: "Failed to load suggestions", description: error });
-      } else if (data) {
-          setResults(data || []);
-          const dataToCache: CachedData = {
-              timestamp: Date.now(),
-              results: data
+      
+      try {
+        const response = await searchAndRefineVideos(searchQuery);
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        const searchResults = response.data || [];
+        setResults(searchResults);
+        
+        const dataToCache: CachedData = {
+            timestamp: Date.now(),
+            results: searchResults
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        
+        if (user) {
+          const userInfo = {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL
           };
-          localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+          saveSearchQuery(userInfo, searchQuery, searchResults.length)
+            .then(saveResult => {
+              if (saveResult.error) {
+                  console.warn("Failed to save search history:", saveResult.error);
+              }
+            });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        toast({
+          variant: "destructive",
+          title: "Search Failed",
+          description: errorMessage,
+        });
+        setResults([]);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-  }, [user, toast]);
+    }, [user, toast]);
 
+    const fetchSuggestions = useCallback(async () => {
+        if (!user) return;
+        
+        setResults([]);
+        const { data, error, suggestionsEnabled: isEnabled } = await getSuggestedVideos(user.uid);
+        
+        setSuggestionsEnabled(isEnabled || false);
+        if (!isEnabled) {
+            setIsLoading(false);
+            return;
+        }
+        
+        setIsLoading(true);
+        const cacheKey = `suggestions_cache_${user.uid}`;
+        const cached = localStorage.getItem(cacheKey);
 
-  useEffect(() => {
-    if (query) {
-      performSearch(query);
-    } else {
-      setResults([]);
-      fetchSuggestions();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, user]); // Depend on user to fetch suggestions when they log in
+        if (cached) {
+            try {
+                const { timestamp, results: cachedResults }: CachedData = JSON.parse(cached);
+                if (Date.now() - timestamp < SUGGESTIONS_CACHE_EXPIRATION_MS) {
+                    setResults(shuffleArray([...cachedResults]));
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse suggestions cache", e);
+                localStorage.removeItem(cacheKey);
+            }
+        }
 
-  useEffect(() => {
-    if (videoId && results.length > 0) {
-      const videoToPlay = results.find(v => v.videoId === videoId);
-      setSelectedVideo(videoToPlay || null);
-    } else {
-      setSelectedVideo(null);
-    }
-  }, [videoId, results]);
+        if (error) {
+            toast({ variant: "destructive", title: "Failed to load suggestions", description: error });
+        } else if (data) {
+            setResults(data || []);
+            const dataToCache: CachedData = {
+                timestamp: Date.now(),
+                results: data
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+        }
+        setIsLoading(false);
+    }, [user, toast]);
 
-  useEffect(() => {
-    if (selectedVideo) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
+    useEffect(() => {
+      if (query) {
+        performSearch(query);
+      } else {
+        setResults([]);
+        fetchSuggestions();
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [query, user]); 
 
-    // Cleanup function to remove the class when the component unmounts
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [selectedVideo]);
+    useEffect(() => {
+      if (videoId && results.length > 0) {
+        const videoToPlay = results.find(v => v.videoId === videoId);
+        setSelectedVideo(videoToPlay || null);
+      } else {
+        setSelectedVideo(null);
+      }
+    }, [videoId, results]);
 
+    useEffect(() => {
+      if (selectedVideo) {
+        document.body.classList.add("overflow-hidden");
+      } else {
+        document.body.classList.remove("overflow-hidden");
+      }
+      return () => {
+        document.body.classList.remove("overflow-hidden");
+      };
+    }, [selectedVideo]);
 
-  const handleSearch = (newQuery: string) => {
-    const params = new URLSearchParams();
-    if (newQuery) {
-      params.set('q', newQuery);
+    const handleSelectVideo = (videoToPlay: SearchResult) => {
+      const params = new URLSearchParams(window.location.search);
+      params.set('v', videoToPlay.videoId);
       router.push(`/search?${params.toString()}`);
-    } else {
-        router.push('/search');
+    };
+    
+    const handleClosePlayer = () => {
+      const params = new URLSearchParams(window.location.search);
+      params.delete('v');
+      router.push(`/search?${params.toString()}`);
+    };
+
+    const getPageTitle = () => {
+      if(query) return `Results for "${query}"`;
+      if(isShowingSuggestions) return "Suggestions for You";
+      return "";
     }
-  };
+    
+    const showEmptyState = !isLoading && !query && (!suggestionsEnabled || results.length === 0);
 
-  const handleSelectVideo = (videoToPlay: SearchResult) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set('v', videoToPlay.videoId);
-    router.push(`/search?${params.toString()}`);
-  };
-  
-  const handleClosePlayer = () => {
-    const params = new URLSearchParams(window.location.search);
-    params.delete('v');
-    router.push(`/search?${params.toString()}`);
-  };
+    return (
+      <div className="flex-1">
+        <main className="container mx-auto px-4 py-8">
+          {(hasSearched || isShowingSuggestions) && (
+              <h1 className="text-2xl font-bold tracking-tight mb-8">{getPageTitle()}</h1>
+          )}
+          
+          {isLoading && <LoadingSkeleton />}
 
-  const getPageTitle = () => {
-    if(query) return `Results for "${query}"`;
-    if(isShowingSuggestions) return "Suggestions for You";
-    return ""; // No title when suggestions are disabled
-  }
-  
-  const showEmptyState = !isLoading && !query && (!suggestionsEnabled || results.length === 0);
+          {!isLoading && (hasSearched || isShowingSuggestions) && results.length > 0 && (
+            <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />
+          )}
+          
+          {!isLoading && hasSearched && results.length === 0 && (
+               <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+                  <Logo className="w-16 h-16 text-muted-foreground/50"/>
+                  <h2 className="text-2xl font-semibold">No Results Found</h2>
+                  <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query.</p>
+              </div>
+          )}
 
-  return (
-    <>
-      <Header onSearch={handleSearch} isLoading={isLoading} initialQuery={query || ''} />
-      <main className="container mx-auto px-4 py-8">
-        {(hasSearched || isShowingSuggestions) && (
-            <h1 className="text-2xl font-bold tracking-tight mb-8">{getPageTitle()}</h1>
-        )}
-        
-        {isLoading && <LoadingSkeleton />}
+          {showEmptyState && (
+              <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+                  <Logo className="w-16 h-16 text-muted-foreground/50"/>
+                  <h2 className="text-2xl font-semibold">Ready to dive in?</h2>
+                  <p className="max-w-md">Use the search bar above to find exactly what you're looking for.</p>
+              </div>
+          )}
 
-        {!isLoading && (hasSearched || isShowingSuggestions) && results.length > 0 && (
-          <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />
-        )}
-        
-        {!isLoading && hasSearched && results.length === 0 && (
-             <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
-                <Logo className="w-16 h-16 text-muted-foreground/50"/>
-                <h2 className="text-2xl font-semibold">No Results Found</h2>
-                <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query.</p>
-            </div>
-        )}
-
-        {showEmptyState && (
-            <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
-                <Logo className="w-16 h-16 text-muted-foreground/50"/>
-                <h2 className="text-2xl font-semibold">Ready to dive in?</h2>
-                <p className="max-w-md">Use the search bar above to find exactly what you're looking for.</p>
-            </div>
-        )}
-
-      </main>
-      <VideoPlayer
-        video={selectedVideo}
-        source="search"
-        suggestions={results.filter(r => r.videoId !== selectedVideo?.videoId)}
-        onPlaySuggestion={handleSelectVideo}
-        onClose={handleClosePlayer}
-      />
-    </>
-  );
+        </main>
+        <VideoPlayer
+          video={selectedVideo}
+          suggestions={results.filter(r => r.videoId !== selectedVideo?.videoId)}
+          onPlaySuggestion={handleSelectVideo}
+          onClose={handleClosePlayer}
+          source="search"
+        />
+      </div>
+    );
 }
 
+function SearchPageWrapper() {
+   return (
+      <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
+          <SearchPage />
+      </Suspense>
+   )
+}
 
-export default withAuth(SearchPage);
+export default withAuth(SearchPageWrapper);
