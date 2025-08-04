@@ -33,9 +33,9 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
         <Image
           src={video.thumbnail}
           alt={video.title}
-          width={400}
-          height={225}
-          className="w-full h-full object-cover"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover"
           data-ai-hint="video thumbnail"
         />
         <Badge
