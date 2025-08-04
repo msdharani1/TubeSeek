@@ -1,4 +1,4 @@
-import { Header } from '@/components/header';
+import { PublicHeader } from '@/components/public-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Eye, Database, Users, FileText, Mail } from 'lucide-react';
@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
 
   return (
     <>
-      <Header />
+      <PublicHeader />
       <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-5xl mx-auto">
