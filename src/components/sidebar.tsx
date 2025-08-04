@@ -22,6 +22,7 @@ import {
   Github,
   Linkedin,
   Twitter,
+  Home,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
@@ -39,18 +40,21 @@ export function AppSidebar() {
     setOpenMobile(false);
   };
 
-  const navItem = (path: string, icon: React.ReactNode, text: string) => (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        onClick={() => handleNavigation(path)}
-        className="w-full justify-start"
-        isActive={pathname.startsWith(path)}
-      >
-        {icon}
-        <span>{text}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+  const navItem = (path: string, icon: React.ReactNode, text: string) => {
+    const isActive = path === '/search' ? pathname === path : pathname.startsWith(path);
+    return (
+        <SidebarMenuItem>
+        <SidebarMenuButton
+            onClick={() => handleNavigation(path)}
+            className="w-full justify-start"
+            isActive={isActive}
+        >
+            {icon}
+            <span>{text}</span>
+        </SidebarMenuButton>
+        </SidebarMenuItem>
+    )
+  };
 
   return (
     <Sidebar>
@@ -64,6 +68,7 @@ export function AppSidebar() {
       </div>
       <SidebarContent className="flex flex-col lg:h-[calc(100vh-theme(spacing.16))]">
         <SidebarMenu className="p-4">
+          {navItem("/search", <Home />, "Home")}
           {navItem("/playlists", <ListVideo />, "Playlists")}
           {navItem("/history", <History />, "History")}
           {navItem("/liked", <Heart />, "Liked Videos")}
