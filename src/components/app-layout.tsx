@@ -15,11 +15,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     if (showSidebar) {
         return (
             <SidebarProvider>
-                <div className="flex justify-center">
-                    <div className="flex w-full">
-                        <AppSidebar />
-                        <main className="flex-1">{children}</main>
-                    </div>
+                <div className="flex w-full">
+                    <AppSidebar />
+                    <main className="flex-1 min-w-0">{children}</main>
                 </div>
             </SidebarProvider>
         )
