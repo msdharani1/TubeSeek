@@ -44,7 +44,7 @@ function SearchPage() {
     )
 }
 
-function SearchPageContent() {
+export function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
