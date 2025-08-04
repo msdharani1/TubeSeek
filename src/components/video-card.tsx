@@ -25,7 +25,7 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
 
   return (
     <Card 
-      className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer" 
+      className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg sm:hover:-translate-y-1 cursor-pointer border-0 sm:border rounded-none sm:rounded-lg" 
       key={id || video.videoId}
       onClick={() => onPlay(video)}
     >

@@ -225,9 +225,9 @@ function SearchPage() {
 
     return (
       <div className="flex-1">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto sm:px-4 py-8">
           {(hasSearched || isShowingSuggestions) && (
-             <div className="flex items-center justify-between mb-8">
+             <div className="flex items-center justify-between mb-8 px-4 sm:px-0">
                  <h1 className="text-xl md:text-2xl font-bold tracking-tight">{getPageTitle()}</h1>
                   {hasSearched && (
                     <SearchFilter 
@@ -245,7 +245,7 @@ function SearchPage() {
           )}
           
           {!isLoading && hasSearched && results.length === 0 && (
-               <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+               <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
                   <Logo className="w-16 h-16 text-muted-foreground/50"/>
                   <h2 className="text-2xl font-semibold">No Results Found</h2>
                   <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query or adjust your filters.</p>
@@ -253,7 +253,7 @@ function SearchPage() {
           )}
 
           {showEmptyState && (
-              <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+              <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
                   <Logo className="w-16 h-16 text-muted-foreground/50"/>
                   <h2 className="text-2xl font-semibold">Ready to dive in?</h2>
                   <p className="max-w-md">Use the search bar above to find exactly what you're looking for.</p>

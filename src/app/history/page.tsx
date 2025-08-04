@@ -102,8 +102,8 @@ function HistoryPage() {
 
     return (
         <>
-            <main className="container mx-auto px-4 py-8">
-                <div className="flex items-center justify-between mb-8">
+            <main className="container mx-auto sm:px-4 py-8">
+                <div className="flex items-center justify-between mb-8 px-4 sm:px-0">
                     <div className="flex items-center gap-3">
                         <History className="w-8 h-8 text-primary" />
                         <h1 className="text-3xl font-bold tracking-tight">Watch History</h1>
@@ -119,7 +119,7 @@ function HistoryPage() {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+                    <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
                         <Frown className="w-16 h-16"/>
                         <h2 className="text-2xl font-semibold">No History Yet</h2>
                         <p>Videos you watch will appear here.</p>
