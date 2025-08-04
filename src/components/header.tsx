@@ -7,18 +7,24 @@ import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { LogOut, User as UserIcon, Search } from "lucide-react";
 import { Logo } from "./logo";
 import { SearchBar } from "./search-bar";
-import type { SearchBarProps } from "./search-bar";
 import { SidebarTrigger } from "./ui/sidebar";
 
-type HeaderProps = Partial<SearchBarProps>;
-
-export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
+export function Header() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q');
 
   const handleSignOut = async () => {
     try {
@@ -33,11 +39,19 @@ export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
     router.push('/search');
   }
 
+  const handleSearch = (newQuery: string) => {
+    const params = new URLSearchParams();
+    if (newQuery) {
+      params.set('q', newQuery);
+    }
+    router.push(`/search?${params.toString()}`);
+  }
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-2">
-            {user && <SidebarTrigger />}
+            <SidebarTrigger />
             <button onClick={handleLogoClick} aria-label="Go to homepage" className="flex items-center gap-2">
                 <Logo className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold tracking-tight text-foreground font-headline hidden sm:inline-block">
@@ -46,19 +60,19 @@ export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
             </button>
         </div>
         
-        {user && onSearch && (
-            <div className="flex-1 max-w-2xl">
-                <SearchBar onSearch={onSearch} isLoading={isLoading || false} initialQuery={initialQuery || ''} />
-            </div>
-        )}
+        <div className="flex flex-1 justify-center px-4">
+          <div className="w-full max-w-2xl">
+            <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query || ''} />
+          </div>
+        </div>
 
-        {user && (
+        <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-muted/50">
                 <div className="p-0.5 rounded-full bg-gradient-to-r from-primary via-accent to-primary">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                      <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
                       <AvatarFallback>
                         <UserIcon/>
                       </AvatarFallback>
@@ -69,9 +83,9 @@ export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                  <p className="text-sm font-medium leading-none">{user?.displayName}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
+                    {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -82,7 +96,7 @@ export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        </div>
       </div>
     </header>
   );

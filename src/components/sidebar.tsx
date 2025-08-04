@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Sidebar,
@@ -28,6 +28,7 @@ import { Button } from "./ui/button";
 
 export function AppSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { setOpenMobile } = useSidebar();
   const isAdmin = user?.email === "msdharaniofficial@gmail.com";
@@ -42,6 +43,7 @@ export function AppSidebar() {
       <SidebarMenuButton
         onClick={() => handleNavigation(path)}
         className="w-full justify-start"
+        isActive={pathname.startsWith(path)}
       >
         {icon}
         <span>{text}</span>
@@ -51,7 +53,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarContent className="p-4">
+      <SidebarContent className="p-4 pt-8">
         <SidebarMenu>
           {navItem("/playlists", <ListVideo />, "Playlists")}
           {navItem("/history", <History />, "History")}
