@@ -63,7 +63,7 @@ export function AppSidebar() {
         </Link>
       </div>
       <SidebarContent>
-        <SidebarMenu className="px-2">
+        <SidebarMenu className="p-4">
           {navItem("/playlists", <ListVideo />, "Playlists")}
           {navItem("/history", <History />, "History")}
           {navItem("/liked", <Heart />, "Liked Videos")}
