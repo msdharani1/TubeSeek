@@ -1,12 +1,10 @@
 
-
 import Image from "next/image";
 import type { WatchedVideo, SearchResult } from "@/types/youtube";
 import { formatDuration, formatCount } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle, ThumbsUp, Eye, Clock } from "lucide-react";
+import { Eye, Clock } from "lucide-react";
 import { formatDistanceToNowStrict } from 'date-fns';
 
 type VideoCardProps = {
@@ -26,7 +24,11 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
     const publishedDate = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1" key={id || video.videoId}>
+    <Card 
+      className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer" 
+      key={id || video.videoId}
+      onClick={() => onPlay(video)}
+    >
       <CardHeader className="p-0 relative">
         <Image
           src={video.thumbnail}
@@ -49,7 +51,7 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
         </CardTitle>
          <div className="text-sm text-muted-foreground mt-2">
              <p className="line-clamp-1">
-                {video.channelTitle} &bull; {publishedDate}
+                {video.channelTitle}
             </p>
         </div>
       </CardContent>
@@ -61,22 +63,12 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
                     Watched {timeAgo}
                 </span>
             ) : (
-                <>
-                    <span className="flex items-center gap-1.5">
-                        <Eye className="w-4 h-4"/>
-                        {formatCount(video.viewCount)}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <ThumbsUp className="w-4 h-4"/>
-                        {formatCount(video.likeCount)}
-                    </span>
-                </>
+                <span className="flex items-center gap-1.5">
+                    <Eye className="w-4 h-4"/>
+                    {formatCount(video.viewCount)} &bull; {publishedDate}
+                </span>
             )}
         </div>
-        <Button onClick={() => onPlay(video)} size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
-          <PlayCircle className="mr-2 h-5 w-5" />
-          Play
-        </Button>
       </CardFooter>
     </Card>
   );
