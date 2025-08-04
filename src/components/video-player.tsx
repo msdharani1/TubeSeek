@@ -109,7 +109,8 @@ const VideoDetails = ({
     isLiked,
     isSubscribed,
     onLike,
-    onSubscribe
+    onSubscribe,
+    likeCount
 }: { 
     video: SearchResult, 
     onShare: () => void, 
@@ -119,7 +120,8 @@ const VideoDetails = ({
     isLiked: boolean,
     isSubscribed: boolean,
     onLike: () => void,
-    onSubscribe: () => void
+    onSubscribe: () => void,
+    likeCount: number,
 }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
@@ -129,35 +131,37 @@ const VideoDetails = ({
         onShare();
         setTimeout(() => setIsSharing(false), 600);
     }
+    
+    const publishedDate = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
 
     return (
         <div className="p-6">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {video.title}
             </h1>
-            <div className="py-4 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                         <Eye className="w-4 h-4"/>
                         {formatCount(video.viewCount)} views
                     </span>
-                    <span className="flex items-center gap-1.5">
-                        <ThumbsUp className="w-4 h-4"/>
-                        {formatCount(video.likeCount)} likes
-                    </span>
+                     <span>&bull;</span>
+                    <span>{publishedDate}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    {showShareButton && (
-                        <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-muted/50 transition-all", isSharing && "bg-accent/80 scale-105")}>
-                            <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
-                            <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
+                <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-2">
+                        {showShareButton && (
+                            <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-muted/50 transition-all flex-shrink-0", isSharing && "bg-accent/80 scale-105")}>
+                                <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
+                                <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
+                            </Button>
+                        )}
+                        <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike} className="hover:bg-muted/50 flex-shrink-0">
+                            <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
+                            {formatCount(likeCount)}
                         </Button>
-                    )}
-                    <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike} className="hover:bg-muted/50">
-                        <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
-                        {isLiked ? 'Liked' : 'Like'}
-                    </Button>
-                    {showAddToPlaylistButton && <AddToPlaylist video={video} />}
+                        {showAddToPlaylistButton && <div className="flex-shrink-0"><AddToPlaylist video={video} /></div>}
+                    </div>
                 </div>
             </div>
             <div className="border-y py-4 my-4 flex items-center justify-between">
@@ -201,9 +205,11 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   const [iframeKey, setIframeKey] = useState(0); 
   const [isLiked, setIsLiked] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   const fetchStatus = useCallback(async () => {
     if (!user || !video) return;
+    setLikeCount(Number(video.likeCount) || 0);
     const { data, error } = await getInteractionStatus(user.uid, video.videoId, video.channelId);
     if (error) {
         console.error("Failed to get interaction status", error);
@@ -256,10 +262,17 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   const handleLike = async () => {
       if (!user || !video) return;
-      setIsLiked(!isLiked); // Optimistic update
+      
+      // Optimistic update
+      const wasLiked = isLiked;
+      setIsLiked(!wasLiked);
+      setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
+      
       const { error } = await toggleLikeVideo(user.uid, video);
       if (error) {
-          setIsLiked(!isLiked); // Revert on error
+          // Revert on error
+          setIsLiked(wasLiked);
+          setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
           toast({ variant: "destructive", title: "Failed to like video", description: error });
       } else {
           // Invalidate liked videos cache on success
@@ -343,6 +356,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                     isSubscribed={isSubscribed}
                     onLike={handleLike}
                     onSubscribe={handleSubscribe}
+                    likeCount={likeCount}
                  />
             </div>
 
