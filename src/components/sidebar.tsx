@@ -78,17 +78,17 @@ export function AppSidebar() {
         </SidebarMenu>
         <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground md:mb-16">
             <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
-                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground" asChild>
                     <Link href="http://github.com/msdharani1/" target="_blank">
                         <Github className="h-4 w-4" />
                     </Link>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground" asChild>
                     <Link href="https://www.linkedin.com/in/tharanimca/" target="_blank">
                         <Linkedin className="h-4 w-4" />
                     </Link>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground" asChild>
                     <Link href="https://x.com/msdharani007" target="_blank">
                         <Twitter className="h-4 w-4" />
                     </Link>
