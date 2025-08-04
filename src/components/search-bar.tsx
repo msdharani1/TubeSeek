@@ -36,7 +36,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for videos..."
-          className="w-full text-base bg-card border-2 border-border focus:border-primary focus:ring-primary pr-10 rounded-r-none"
+          className="w-full text-base bg-card border-2 border-border focus:border-primary pr-10 rounded-r-none"
           disabled={isLoading}
         />
         {query && !isLoading && (
