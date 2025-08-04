@@ -62,7 +62,7 @@ export function AppSidebar() {
             </span>
         </Link>
       </div>
-      <SidebarContent className="flex flex-col">
+      <SidebarContent className="flex flex-col lg:h-[calc(100vh-theme(spacing.16))]">
         <SidebarMenu className="p-4">
           {navItem("/playlists", <ListVideo />, "Playlists")}
           {navItem("/history", <History />, "History")}
