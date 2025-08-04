@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-import type { SearchResult } from "@/types/youtube";
+import type { SearchResult, FilterOptions } from "@/types/youtube";
 import { searchAndRefineVideos, saveSearchQuery, getSuggestedVideos } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth, useAuth } from '@/context/auth-context';
@@ -13,6 +14,7 @@ import { VideoGrid } from "@/components/video-grid";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Loader2 } from "lucide-react";
+import { SearchFilter } from "@/components/search-filter";
 
 type CachedData = {
     timestamp: number;
@@ -44,6 +46,10 @@ function SearchPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
     const [suggestionsEnabled, setSuggestionsEnabled] = useState(false);
+    const [filters, setFilters] = useState<FilterOptions>({
+      order: 'relevance',
+      videoDuration: 'any',
+    });
     
     const query = searchParams.get('q');
     const videoId = searchParams.get('v');
@@ -51,13 +57,15 @@ function SearchPage() {
     const hasSearched = query !== null;
     const isShowingSuggestions = !hasSearched && !isLoading && suggestionsEnabled;
 
-    const performSearch = useCallback(async (searchQuery: string) => {
+    const performSearch = useCallback(async (searchQuery: string, newFilters?: FilterOptions) => {
       if (!searchQuery) return;
+
+      const currentFilters = newFilters || filters;
 
       setIsLoading(true);
       setResults([]);
 
-      const cacheKey = `youtube_search_${searchQuery.toLowerCase()}`;
+      const cacheKey = `youtube_search_${searchQuery.toLowerCase()}_${currentFilters.order}_${currentFilters.videoDuration}`;
       const cachedItem = localStorage.getItem(cacheKey);
 
       if (cachedItem) {
@@ -75,7 +83,7 @@ function SearchPage() {
       }
       
       try {
-        const response = await searchAndRefineVideos(searchQuery);
+        const response = await searchAndRefineVideos(searchQuery, currentFilters);
         if (response.error) {
           throw new Error(response.error);
         }
@@ -88,7 +96,7 @@ function SearchPage() {
         };
         localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
         
-        if (user) {
+        if (user && !newFilters) { // Only save query on initial search, not filter change
           const userInfo = {
               uid: user.uid,
               email: user.email,
@@ -113,7 +121,7 @@ function SearchPage() {
       } finally {
         setIsLoading(false);
       }
-    }, [user, toast]);
+    }, [user, toast, filters]);
 
     const fetchSuggestions = useCallback(async () => {
         if (!user) return;
@@ -157,6 +165,13 @@ function SearchPage() {
         }
         setIsLoading(false);
     }, [user, toast]);
+
+    const handleFilterChange = (newFilters: FilterOptions) => {
+      setFilters(newFilters);
+      if (query) {
+        performSearch(query, newFilters);
+      }
+    };
 
     useEffect(() => {
       if (query) {
@@ -212,7 +227,15 @@ function SearchPage() {
       <div className="flex-1">
         <div className="container mx-auto px-4 py-8">
           {(hasSearched || isShowingSuggestions) && (
-              <h1 className="text-2xl font-bold tracking-tight mb-8">{getPageTitle()}</h1>
+             <div className="flex items-center justify-between mb-8">
+                 <h1 className="text-xl md:text-2xl font-bold tracking-tight">{getPageTitle()}</h1>
+                  {hasSearched && (
+                    <SearchFilter 
+                      currentFilters={filters}
+                      onFilterChange={handleFilterChange}
+                    />
+                  )}
+             </div>
           )}
           
           {isLoading && <LoadingSkeleton />}
@@ -225,7 +248,7 @@ function SearchPage() {
                <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
                   <Logo className="w-16 h-16 text-muted-foreground/50"/>
                   <h2 className="text-2xl font-semibold">No Results Found</h2>
-                  <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query.</p>
+                  <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query or adjust your filters.</p>
               </div>
           )}
 

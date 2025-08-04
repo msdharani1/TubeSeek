@@ -5,7 +5,7 @@ import {
   YoutubeSearchResponseSchema,
   YoutubeVideosResponseSchema,
 } from '@/types/youtube';
-import type { SearchResult, SearchQuery, UserInfo, WatchedVideo } from '@/types/youtube';
+import type { SearchResult, SearchQuery, UserInfo, WatchedVideo, FilterOptions } from '@/types/youtube';
 import { db } from '@/lib/firebase';
 import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst, endBefore } from 'firebase/database';
 import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
@@ -61,7 +61,8 @@ async function fetchWithYouTubeKeyRotation(url: string): Promise<Response> {
 }
 
 export async function searchAndRefineVideos(
-  query: string
+  query: string,
+  filters: FilterOptions = {}
 ): Promise<{ data?: SearchResult[]; error?: string }> {
   try {
     // Step 1: Search for videos to get video IDs
@@ -70,6 +71,7 @@ export async function searchAndRefineVideos(
       q: query,
       maxResults: '20',
       type: 'video',
+      ...filters,
     });
     
     const searchResponse = await fetchWithYouTubeKeyRotation(
@@ -126,6 +128,12 @@ export async function searchAndRefineVideos(
       channelId: item.snippet.channelId,
       channelTitle: item.snippet.channelTitle,
     }));
+
+    // Re-order results based on the original search order if a specific order was requested
+    if (filters.order && filters.order !== 'relevance') {
+      const orderedResults = videoIds.map(id => results.find(res => res.videoId === id)).filter(Boolean) as SearchResult[];
+      return { data: orderedResults };
+    }
 
     return { data: results };
   } catch (error) {

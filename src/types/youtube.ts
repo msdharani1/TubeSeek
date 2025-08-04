@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export const YoutubeSearchResponseSchema = z.object({
@@ -112,3 +113,8 @@ export const SubscriptionSchema = z.object({
   subscribedAt: z.number(),
 });
 export type Subscription = z.infer<typeof SubscriptionSchema>;
+
+export type FilterOptions = {
+  order?: 'date' | 'rating' | 'relevance' | 'title' | 'videoCount' | 'viewCount';
+  videoDuration?: 'any' | 'long' | 'medium' | 'short';
+};
