@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon, Search } from "lucide-react";
+import { LogOut, User as UserIcon } from "lucide-react";
 import { Logo } from "./logo";
 import { SearchBar } from "./search-bar";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -49,7 +49,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
             <SidebarTrigger />
             <button onClick={handleLogoClick} aria-label="Go to homepage" className="flex items-center gap-2">
