@@ -330,7 +330,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   return (
     <div className="fixed inset-x-0 bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
-        <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar">
+        <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
             {/* Left Column: Video and Details */}
             <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
