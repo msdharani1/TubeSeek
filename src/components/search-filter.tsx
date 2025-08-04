@@ -5,7 +5,6 @@ import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -15,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Filter } from 'lucide-react';
 import type { FilterOptions } from '@/types/youtube';
+import { cn } from '@/lib/utils';
 
 type SearchFilterProps = {
   currentFilters: FilterOptions;
@@ -40,9 +40,9 @@ export function SearchFilter({ currentFilters, onFilterChange }: SearchFilterPro
   return (
     <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          <Filter className="mr-2 h-4 w-4" />
-          Filter
+        <Button variant="outline" className="px-3 sm:px-4">
+          <Filter className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Filter</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
