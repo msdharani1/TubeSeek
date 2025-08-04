@@ -49,7 +49,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
+        
+        {/* Left Section */}
         <div className="flex items-center gap-2">
             <SidebarTrigger />
             <button onClick={handleLogoClick} aria-label="Go to homepage" className="flex items-center gap-2">
@@ -60,12 +62,14 @@ export function Header() {
             </button>
         </div>
         
+        {/* Center Section */}
         <div className="flex flex-1 justify-center px-4">
           <div className="w-full max-w-2xl">
             <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query || ''} />
           </div>
         </div>
 
+        {/* Right Section */}
         <div className="flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
