@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,7 +26,6 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
   const handleClear = () => {
     setQuery("");
-    onSearch(""); // Trigger search with empty query to clear results
   }
 
   return (
