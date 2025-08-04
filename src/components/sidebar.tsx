@@ -53,7 +53,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarContent className="p-4 pt-8">
+      <SidebarContent className="p-4">
         <SidebarMenu>
           {navItem("/playlists", <ListVideo />, "Playlists")}
           {navItem("/history", <History />, "History")}
