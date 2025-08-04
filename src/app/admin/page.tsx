@@ -7,9 +7,7 @@ import { withAuth, useAuth } from '@/context/auth-context';
 import { getUsersForAdmin, getUserSearchHistoryForAdmin } from '@/app/actions';
 import type { SearchQuery, UserInfo } from '@/types/youtube';
 
-import { Header } from '@/components/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -132,112 +130,109 @@ function AdminPage() {
   }
 
   return (
-    <>
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-6">Admin Dashboard</h1>
-        {error ? (
-            <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>User Search History</CardTitle>
-              <div className="mt-4">
-                <Select onValueChange={setSelectedUser} disabled={users.length === 0 && isUsersLoading}>
-                  <SelectTrigger className="w-full md:w-[380px]">
-                    <SelectValue placeholder="Select a user to view their history" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {users.map((u, index) => {
-                          const isLastElement = users.length === index + 1;
+    <main className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold tracking-tight mb-6">Admin Dashboard</h1>
+      {error ? (
+          <Alert variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+          </Alert>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>User Search History</CardTitle>
+            <div className="mt-4">
+              <Select onValueChange={setSelectedUser} disabled={users.length === 0 && isUsersLoading}>
+                <SelectTrigger className="w-full md:w-[380px]">
+                  <SelectValue placeholder="Select a user to view their history" />
+                </SelectTrigger>
+                <SelectContent>
+                    {users.map((u, index) => {
+                        const isLastElement = users.length === index + 1;
+                        return (
+                          <SelectItem ref={isLastElement ? lastUserElementRef : null} key={u.id} value={u.id}>
+                              <div className="flex items-center gap-3">
+                              <Avatar className="h-6 w-6">
+                                  <AvatarImage src={u.photoURL || undefined} />
+                                  <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
+                              </Avatar>
+                              <span>{u.email}</span>
+                              </div>
+                          </SelectItem>
+                        );
+                    })}
+                    {isUsersLoading && (
+                        <div className="flex justify-center items-center p-2">
+                            <Loader2 className="h-4 w-4 animate-spin"/>
+                        </div>
+                    )}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {selectedUser ? (
+                <>
+                  {searchHistory.length > 0 ? (
+                  <Table>
+                      <TableHeader>
+                      <TableRow>
+                          <TableHead>Search Query</TableHead>
+                          <TableHead className="text-right">Results</TableHead>
+                          <TableHead className="text-right">Date & Time</TableHead>
+                      </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                      {searchHistory.map((search, index) => {
+                          const isLastElement = searchHistory.length === index + 1;
                           return (
-                            <SelectItem ref={isLastElement ? lastUserElementRef : null} key={u.id} value={u.id}>
-                                <div className="flex items-center gap-3">
-                                <Avatar className="h-6 w-6">
-                                    <AvatarImage src={u.photoURL || undefined} />
-                                    <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
-                                </Avatar>
-                                <span>{u.email}</span>
-                                </div>
-                            </SelectItem>
+                              <TableRow ref={isLastElement ? lastHistoryElementRef : null} key={search.id || index}>
+                                  <TableCell className="font-medium">{search.query}</TableCell>
+                                  <TableCell className="text-right">{search.resultsCount}</TableCell>
+                                  <TableCell className="text-right">
+                                      {new Date(search.timestamp).toLocaleString()}
+                                  </TableCell>
+                              </TableRow>
                           );
-                      })}
-                      {isUsersLoading && (
-                          <div className="flex justify-center items-center p-2">
-                              <Loader2 className="h-4 w-4 animate-spin"/>
-                          </div>
-                      )}
-                  </SelectContent>
-                </Select>
+                        })}
+                      </TableBody>
+                  </Table>
+                  ) : !isHistoryLoading ? (
+                      <div className="text-center text-muted-foreground py-12">
+                          <p>This user has no search history yet.</p>
+                      </div>
+                  ) : null}
+
+                  {isHistoryLoading && (
+                      <div className="flex justify-center items-center h-24">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                  )}
+
+                  {historyNextCursor === null && searchHistory.length > 0 && !isHistoryLoading && (
+                        <div className="text-center text-muted-foreground py-6">
+                          <p>End of history.</p>
+                      </div>
+                  )}
+                </>
+            ) : (
+              <div className="text-center text-muted-foreground py-12">
+                  {isUsersLoading ? (
+                      <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin"/>
+                          <span>Loading users...</span>
+                      </div>
+                  ) : users.length > 0 ? (
+                      <p>Please select a user to see their search history.</p>
+                  ) : (
+                      <p>No user search data found.</p>
+                  )}
               </div>
-            </CardHeader>
-            <CardContent>
-              {selectedUser ? (
-                 <>
-                    {searchHistory.length > 0 ? (
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Search Query</TableHead>
-                            <TableHead className="text-right">Results</TableHead>
-                            <TableHead className="text-right">Date & Time</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {searchHistory.map((search, index) => {
-                            const isLastElement = searchHistory.length === index + 1;
-                            return (
-                                <TableRow ref={isLastElement ? lastHistoryElementRef : null} key={search.id || index}>
-                                    <TableCell className="font-medium">{search.query}</TableCell>
-                                    <TableCell className="text-right">{search.resultsCount}</TableCell>
-                                    <TableCell className="text-right">
-                                        {new Date(search.timestamp).toLocaleString()}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                         })}
-                        </TableBody>
-                    </Table>
-                    ) : !isHistoryLoading ? (
-                        <div className="text-center text-muted-foreground py-12">
-                            <p>This user has no search history yet.</p>
-                        </div>
-                    ) : null}
-
-                    {isHistoryLoading && (
-                        <div className="flex justify-center items-center h-24">
-                           <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        </div>
-                    )}
-
-                    {historyNextCursor === null && searchHistory.length > 0 && !isHistoryLoading && (
-                         <div className="text-center text-muted-foreground py-6">
-                            <p>End of history.</p>
-                        </div>
-                    )}
-                 </>
-              ) : (
-                <div className="text-center text-muted-foreground py-12">
-                    {isUsersLoading ? (
-                        <div className="flex items-center justify-center gap-2">
-                            <Loader2 className="h-5 w-5 animate-spin"/>
-                            <span>Loading users...</span>
-                        </div>
-                    ) : users.length > 0 ? (
-                        <p>Please select a user to see their search history.</p>
-                    ) : (
-                        <p>No user search data found.</p>
-                    )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </main>
-    </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </main>
   );
 }
 

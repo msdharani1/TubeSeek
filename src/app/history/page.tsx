@@ -8,7 +8,6 @@ import { withAuth, useAuth } from '@/context/auth-context';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Header } from "@/components/header";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { VideoCard } from "@/components/video-card";
@@ -103,7 +102,6 @@ function HistoryPage() {
 
     return (
         <>
-            <Header />
             <main className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">

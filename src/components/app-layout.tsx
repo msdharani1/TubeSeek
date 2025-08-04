@@ -30,7 +30,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     <Header />
                     <div className="flex flex-1 overflow-hidden">
                         <AppSidebar />
-                        <main className="flex-1 overflow-y-auto bg-background p-4">
+                        <main className="flex-1 overflow-y-auto bg-background">
                             {children}
                         </main>
                     </div>

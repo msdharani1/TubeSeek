@@ -7,7 +7,6 @@ import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
-import { Header } from '@/components/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, Users, Check, Ban } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
@@ -228,182 +227,179 @@ function SettingsPage() {
     }
 
     return (
-        <>
-            <Header />
-            <main className="container mx-auto px-4 py-8 max-w-2xl">
-                <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
+        <main className="container mx-auto px-4 py-8 max-w-2xl">
+            <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
 
-                <div className="space-y-8">
-                    {/* User Profile Section */}
-                    <SettingsCard title="Profile" description="This is your account information." icon={<User />}>
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16">
-                                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-                                <AvatarFallback>
-                                    <User className="h-8 w-8" />
-                                </AvatarFallback>
-                            </Avatar>
-                            <div className="grid gap-1">
-                                <p className="text-lg font-semibold">{user.displayName}</p>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
-                                <p className="text-xs text-muted-foreground">Membership since: {creationDate}</p>
-                            </div>
+            <div className="space-y-8">
+                {/* User Profile Section */}
+                <SettingsCard title="Profile" description="This is your account information." icon={<User />}>
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16">
+                            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                            <AvatarFallback>
+                                <User className="h-8 w-8" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="grid gap-1">
+                            <p className="text-lg font-semibold">{user.displayName}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="text-xs text-muted-foreground">Membership since: {creationDate}</p>
                         </div>
-                    </SettingsCard>
+                    </div>
+                </SettingsCard>
 
-                    {/* Appearance Section */}
-                    <SettingsCard title="Appearance" description="Customize the look and feel of the app." icon={<SettingsIcon/>}>
+                {/* Appearance Section */}
+                <SettingsCard title="Appearance" description="Customize the look and feel of the app." icon={<SettingsIcon/>}>
+                    <SettingsItem>
+                        <p className="font-medium">Theme</p>
+                        <ThemeSwitcher />
+                    </SettingsItem>
+                </SettingsCard>
+
+                <UserManagementCard />
+
+                {/* About Section */}
+                <SettingsCard title="About" description="Information about the application.">
+                    <div className="divide-y">
                         <SettingsItem>
-                            <p className="font-medium">Theme</p>
-                            <ThemeSwitcher />
+                            <p className="font-medium">App Version</p>
+                            <p className="text-muted-foreground">{appVersion}</p>
                         </SettingsItem>
-                    </SettingsCard>
+                        <SettingsLinkItem href="/privacy-policy">
+                            Privacy Policy
+                        </SettingsLinkItem>
+                    </div>
+                </SettingsCard>
 
-                    <UserManagementCard />
-
-                    {/* About Section */}
-                    <SettingsCard title="About" description="Information about the application.">
-                        <div className="divide-y">
-                           <SettingsItem>
-                                <p className="font-medium">App Version</p>
-                                <p className="text-muted-foreground">{appVersion}</p>
-                            </SettingsItem>
-                            <SettingsLinkItem href="/privacy-policy">
-                                Privacy Policy
-                            </SettingsLinkItem>
-                        </div>
-                    </SettingsCard>
-
-                    {/* Danger Zone */}
-                    <SettingsCard 
-                        title="Danger Zone"
-                        description="These actions are irreversible. Please proceed with caution."
-                        className="border-destructive/50"
-                        icon={<ShieldAlert/>}
-                    >
-                         <div className="space-y-4">
-                            <SettingsItem>
-                                <div>
-                                    <p className="font-medium">Clear Watch History</p>
-                                    <p className="text-sm text-muted-foreground">Delete all of your watched videos.</p>
-                                </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" outline>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Clear
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete your entire watch history.
-                                        </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteHistory} disabled={isDeletingHistory}>
-                                            {isDeletingHistory ? "Clearing..." : "Yes, clear history"}
-                                        </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </SettingsItem>
-                             <SettingsItem>
-                                <div>
-                                    <p className="font-medium">Delete All Playlists</p>
-                                    <p className="text-sm text-muted-foreground">Permanently delete all of your playlists.</p>
-                                </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" outline>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete all of your playlists and their content.
-                                        </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeletePlaylists} disabled={isDeletingPlaylists}>
-                                             {isDeletingPlaylists ? "Deleting..." : "Yes, delete playlists"}
-                                        </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </SettingsItem>
-                            <SettingsItem>
-                                <div>
-                                    <p className="font-medium">Clear Liked Videos</p>
-                                    <p className="text-sm text-muted-foreground">Delete all of your liked videos.</p>
-                                </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" outline>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Clear
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete all your liked videos.
-                                        </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteLikes} disabled={isDeletingLikes}>
-                                            {isDeletingLikes ? "Clearing..." : "Yes, clear likes"}
-                                        </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </SettingsItem>
-                             <SettingsItem>
-                                <div>
-                                    <p className="font-medium">Clear All Subscriptions</p>
-                                    <p className="text-sm text-muted-foreground">Permanently remove all your channel subscriptions.</p>
-                                </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" outline>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Clear
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently remove all of your channel subscriptions.
-                                        </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteSubs} disabled={isDeletingSubs}>
-                                             {isDeletingSubs ? "Clearing..." : "Yes, clear subscriptions"}
-                                        </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </SettingsItem>
-                             <SettingsItem>
-                                <div>
-                                    <p className="font-medium">Log Out</p>
-                                    <p className="text-sm text-muted-foreground">Sign out of your account on this device.</p>
-                                </div>
-                                <Button variant="destructive" onClick={handleSignOut}>
-                                    <LogOut className="mr-2 h-4 w-4" /> Log Out
-                                </Button>
-                            </SettingsItem>
-                        </div>
-                    </SettingsCard>
-                </div>
-            </main>
-        </>
+                {/* Danger Zone */}
+                <SettingsCard 
+                    title="Danger Zone"
+                    description="These actions are irreversible. Please proceed with caution."
+                    className="border-destructive/50"
+                    icon={<ShieldAlert/>}
+                >
+                      <div className="space-y-4">
+                        <SettingsItem>
+                            <div>
+                                <p className="font-medium">Clear Watch History</p>
+                                <p className="text-sm text-muted-foreground">Delete all of your watched videos.</p>
+                            </div>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" outline>
+                                        <Trash2 className="mr-2 h-4 w-4" /> Clear
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete your entire watch history.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteHistory} disabled={isDeletingHistory}>
+                                        {isDeletingHistory ? "Clearing..." : "Yes, clear history"}
+                                    </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </SettingsItem>
+                          <SettingsItem>
+                            <div>
+                                <p className="font-medium">Delete All Playlists</p>
+                                <p className="text-sm text-muted-foreground">Permanently delete all of your playlists.</p>
+                            </div>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" outline>
+                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete all of your playlists and their content.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeletePlaylists} disabled={isDeletingPlaylists}>
+                                          {isDeletingPlaylists ? "Deleting..." : "Yes, delete playlists"}
+                                    </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </SettingsItem>
+                        <SettingsItem>
+                            <div>
+                                <p className="font-medium">Clear Liked Videos</p>
+                                <p className="text-sm text-muted-foreground">Delete all of your liked videos.</p>
+                            </div>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" outline>
+                                        <Trash2 className="mr-2 h-4 w-4" /> Clear
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete all your liked videos.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteLikes} disabled={isDeletingLikes}>
+                                        {isDeletingLikes ? "Clearing..." : "Yes, clear likes"}
+                                    </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </SettingsItem>
+                          <SettingsItem>
+                            <div>
+                                <p className="font-medium">Clear All Subscriptions</p>
+                                <p className="text-sm text-muted-foreground">Permanently remove all your channel subscriptions.</p>
+                            </div>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" outline>
+                                        <Trash2 className="mr-2 h-4 w-4" /> Clear
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently remove all of your channel subscriptions.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteSubs} disabled={isDeletingSubs}>
+                                          {isDeletingSubs ? "Clearing..." : "Yes, clear subscriptions"}
+                                    </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </SettingsItem>
+                          <SettingsItem>
+                            <div>
+                                <p className="font-medium">Log Out</p>
+                                <p className="text-sm text-muted-foreground">Sign out of your account on this device.</p>
+                            </div>
+                            <Button variant="destructive" onClick={handleSignOut}>
+                                <LogOut className="mr-2 h-4 w-4" /> Log Out
+                            </Button>
+                        </SettingsItem>
+                    </div>
+                </SettingsCard>
+            </div>
+        </main>
     );
 }
 

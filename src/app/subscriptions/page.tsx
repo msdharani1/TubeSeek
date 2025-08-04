@@ -8,7 +8,6 @@ import { withAuth, useAuth } from '@/context/auth-context';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
-import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tv, Frown, Loader2, BellRing } from "lucide-react";
@@ -107,36 +106,33 @@ function SubscriptionsPage() {
     }
 
     return (
-        <>
-            <Header />
-            <main className="container mx-auto px-4 py-8 max-w-2xl">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                        <Tv className="w-8 h-8 text-primary" />
-                        <h1 className="text-3xl font-bold tracking-tight">My Subscriptions</h1>
-                    </div>
+        <main className="container mx-auto px-4 py-8 max-w-2xl">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                    <Tv className="w-8 h-8 text-primary" />
+                    <h1 className="text-3xl font-bold tracking-tight">My Subscriptions</h1>
                 </div>
-                
-                {isLoading ? (
-                     <div className="flex justify-center items-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : subscriptions.length > 0 ? (
-                    <div className="space-y-4">
-                        {subscriptions.map(channel => (
-                            <SubscriptionCard key={channel.channelId} channel={channel} onUnsubscribe={handleUnsubscribe} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
-                        <Frown className="w-16 h-16"/>
-                        <h2 className="text-2xl font-semibold">No Subscriptions Yet</h2>
-                        <p>Channels you subscribe to will appear here.</p>
-                        <Button onClick={() => router.push('/search')}>Find Channels to Subscribe To</Button>
-                    </div>
-                )}
-            </main>
-        </>
+            </div>
+            
+            {isLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : subscriptions.length > 0 ? (
+                <div className="space-y-4">
+                    {subscriptions.map(channel => (
+                        <SubscriptionCard key={channel.channelId} channel={channel} onUnsubscribe={handleUnsubscribe} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20">
+                    <Frown className="w-16 h-16"/>
+                    <h2 className="text-2xl font-semibold">No Subscriptions Yet</h2>
+                    <p>Channels you subscribe to will appear here.</p>
+                    <Button onClick={() => router.push('/search')}>Find Channels to Subscribe To</Button>
+                </div>
+            )}
+        </main>
     );
 }
 

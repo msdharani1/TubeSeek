@@ -7,7 +7,6 @@ import { withAuth, useAuth } from "@/context/auth-context";
 import { getPlaylists } from "@/app/actions/playlist";
 import type { Playlist } from "@/types/youtube";
 
-import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { ListVideo, Frown } from "lucide-react";
 import { PlaylistCard } from "@/components/playlist-card";
@@ -103,7 +102,6 @@ function PlaylistsPage() {
 
     return (
         <>
-            <Header />
             <main className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
