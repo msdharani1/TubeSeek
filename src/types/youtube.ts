@@ -82,7 +82,9 @@ export type UserInfo = z.infer<typeof UserInfoSchema>;
 
 const WatchedVideoSchema = SearchResultSchema.extend({
     id: z.string(),
-    watchedAt: z.number(), // Using a number for Firebase server timestamp
+    watchedAt: z.number(),
+    durationSeconds: z.number().optional(),
+    progressSeconds: z.number().optional(),
 });
 
 export type WatchedVideo = z.infer<typeof WatchedVideoSchema>;

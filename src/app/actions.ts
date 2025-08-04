@@ -7,9 +7,10 @@ import {
 } from '@/types/youtube';
 import type { SearchResult, SearchQuery, UserInfo, WatchedVideo, FilterOptions } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst, endBefore } from 'firebase/database';
+import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst, endBefore, update } from 'firebase/database';
 import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
 import { getUserSuggestionStatus } from './actions/user-settings';
+import { isoDurationToSeconds } from '@/lib/utils';
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
@@ -292,7 +293,6 @@ export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: s
     }
 }
 
-
 export async function saveVideoToHistory(
   userId: string,
   video: SearchResult
@@ -300,44 +300,45 @@ export async function saveVideoToHistory(
   if (!userId || !video) {
     return { error: 'User ID and video data are required.' };
   }
-  if (!db) {
-    return { error: 'Database connection is not available.' };
-  }
 
   try {
     const historyRef = ref(db, `user-watch-history/${userId}`);
-    
-    // Check if the video already exists in the history
     const videoQuery = query(historyRef, orderByChild('videoId'), equalTo(video.videoId));
     const snapshot = await get(videoQuery);
 
+    const durationSeconds = isoDurationToSeconds(video.duration);
+
     if (snapshot.exists()) {
-      // If it exists, remove the old entry. A new one will be added below.
-      // This effectively updates its 'watchedAt' time and moves it to the "top"
       const existingKey = Object.keys(snapshot.val())[0];
-      await remove(ref(db, `user-watch-history/${userId}/${existingKey}`));
+      const existingData = snapshot.val()[existingKey];
+      // Update timestamp and duration, but keep progress
+      const updates = {
+        watchedAt: serverTimestamp(),
+        durationSeconds: durationSeconds,
+        progressSeconds: existingData.progressSeconds || 0
+      };
+      await update(ref(db, `user-watch-history/${userId}/${existingKey}`), updates);
+
+    } else {
+      const historyItem: Omit<WatchedVideo, 'id' | 'watchedAt'> & { watchedAt: any } = {
+          ...video,
+          watchedAt: serverTimestamp(),
+          durationSeconds: durationSeconds,
+          progressSeconds: 0,
+      };
+      const newHistoryRef = push(historyRef);
+      await set(newHistoryRef, historyItem);
     }
-
-    const historyItem: Omit<WatchedVideo, 'id' | 'watchedAt'> & { watchedAt: any } = {
-        ...video,
-        watchedAt: serverTimestamp()
-    };
     
-    // Add the new or updated video entry
-    const newHistoryRef = push(historyRef);
-    await set(newHistoryRef, historyItem);
-
-    // After adding, check the total count and trim if it exceeds 50
-    const allHistorySnapshot = await get(historyRef);
+    // Trim old history entries if count exceeds 50
+    const allHistorySnapshot = await get(query(historyRef, limitToLast(100))); // Fetch more to be safe
     if (allHistorySnapshot.exists()) {
       const allHistory = allHistorySnapshot.val();
-      const allKeys = Object.keys(allHistory);
+      const allKeys = Object.entries(allHistory).sort(([, a], [, b]) => (a as any).watchedAt - (b as any).watchedAt);
       
       if (allKeys.length > 50) {
-        // Sort keys by timestamp to find the oldest one
-        const sortedHistory = Object.entries(allHistory).sort(([, a], [, b]) => (a as any).watchedAt - (b as any).watchedAt);
-        const keysToDeleteCount = sortedHistory.length - 50;
-        const keysToDelete = sortedHistory.slice(0, keysToDeleteCount).map(([key]) => key);
+        const keysToDeleteCount = allKeys.length - 50;
+        const keysToDelete = allKeys.slice(0, keysToDeleteCount).map(([key]) => key);
 
         for (const key of keysToDelete) {
           await remove(ref(db, `user-watch-history/${userId}/${key}`));
@@ -351,6 +352,36 @@ export async function saveVideoToHistory(
     console.error('Failed to save video to history:', errorMessage);
     return { error: `Failed to save video to history: ${errorMessage}` };
   }
+}
+
+export async function updateVideoProgress(
+    userId: string,
+    videoId: string,
+    progressSeconds: number
+): Promise<{ success?: boolean; error?: string }> {
+    if (!userId || !videoId) {
+        return { error: 'User ID and Video ID are required.' };
+    }
+    try {
+        const historyRef = ref(db, `user-watch-history/${userId}`);
+        const videoQuery = query(historyRef, orderByChild('videoId'), equalTo(videoId));
+        const snapshot = await get(videoQuery);
+
+        if (snapshot.exists()) {
+            const existingKey = Object.keys(snapshot.val())[0];
+            await update(ref(db, `user-watch-history/${userId}/${existingKey}`), {
+                progressSeconds: Math.floor(progressSeconds)
+            });
+            return { success: true };
+        }
+        // If it doesn't exist, we don't create it here. saveVideoToHistory should do that.
+        return { success: false, error: 'History record not found.' };
+
+    } catch (error) {
+        // This can fail silently as it's not critical.
+        console.warn('Failed to update video progress:', error);
+        return { success: false };
+    }
 }
 
 

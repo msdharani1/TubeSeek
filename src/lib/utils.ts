@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -19,6 +20,19 @@ export function formatDuration(isoDuration: string): string {
   }
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
+
+export function isoDurationToSeconds(isoDuration: string): number {
+    if (!isoDuration) return 0;
+    const matches = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!matches) return 0;
+    
+    const hours = parseInt(matches[1] || '0', 10);
+    const minutes = parseInt(matches[2] || '0', 10);
+    const seconds = parseInt(matches[3] || '0', 10);
+    
+    return (hours * 3600) + (minutes * 60) + seconds;
+}
+
 
 export function formatCount(count: string | number): string {
   const num = Number(count);

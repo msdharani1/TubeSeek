@@ -8,9 +8,9 @@ import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
-import { cn, formatCount, formatDuration } from "@/lib/utils";
+import { cn, formatCount, formatDuration, isoDurationToSeconds } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
-import { saveVideoToHistory } from "@/app/actions";
+import { saveVideoToHistory, updateVideoProgress } from "@/app/actions";
 import { getInteractionStatus, toggleLikeVideo, toggleSubscription } from "@/app/actions/video-interactions";
 import { AddToPlaylist } from "./add-to-playlist";
 import { Badge } from "./ui/badge";
@@ -201,11 +201,73 @@ type VideoPlayerProps = {
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeKey, setIframeKey] = useState(0); 
+  const playerRef = useRef<any>(null); // To hold the YouTube player instance
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
   const [isLiked, setIsLiked] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+
+  const onPlayerReady = useCallback((event: any) => {
+    const startSeconds = 'progressSeconds' in video! ? video.progressSeconds : 0;
+    if (startSeconds) {
+        event.target.seekTo(startSeconds, true);
+    }
+    event.target.playVideo();
+  }, [video]);
+  
+  const onPlayerStateChange = useCallback((event: any) => {
+    if (event.data === YT.PlayerState.PLAYING) {
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = setInterval(() => {
+            const currentTime = event.target.getCurrentTime();
+            if (user && video) {
+                updateVideoProgress(user.uid, video.videoId, currentTime);
+            }
+        }, 5000); // Save progress every 5 seconds
+    } else {
+        if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+        }
+    }
+  }, [user, video]);
+
+
+  const loadYouTubePlayer = useCallback(() => {
+    if (!video) return;
+
+    const createPlayer = () => {
+        if (playerRef.current) {
+            playerRef.current.destroy();
+        }
+        playerRef.current = new YT.Player('youtube-player', {
+            videoId: video.videoId,
+            playerVars: {
+                autoplay: 1,
+                rel: 0,
+                start: 'progressSeconds' in video && video.progressSeconds ? Math.floor(video.progressSeconds) : 0
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    };
+
+    if (window.YT && window.YT.Player) {
+        createPlayer();
+    } else {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        if (firstScriptTag && firstScriptTag.parentNode) {
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+        (window as any).onYouTubeIframeAPIReady = createPlayer;
+    }
+  }, [video, onPlayerReady, onPlayerStateChange]);
+
 
   const fetchStatus = useCallback(async () => {
     if (!user || !video) return;
@@ -221,24 +283,33 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   
   useEffect(() => {
     if (video && user) {
-        setIframeKey(prev => prev + 1); // Force re-render of iframe on new video
+        loadYouTubePlayer();
         fetchStatus();
         saveVideoToHistory(user.uid, video)
             .then(result => {
                 if(result.error) {
-                    // Don't show toast, just log it. Not critical for user.
                     console.warn("Could not save to history:", result.error)
                 } else {
-                    // Invalidate history cache
                     localStorage.removeItem(`history_cache_${user.uid}`);
                 }
             })
     }
+    
+    // Cleanup on component unmount
+    return () => {
+        if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+        }
+        if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+            playerRef.current.destroy();
+        }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video, user, fetchStatus]);
 
   const seekTo = (seconds: number) => {
-    if (iframeRef.current && video) {
-        iframeRef.current.src = `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&start=${seconds}`;
+    if (playerRef.current) {
+        playerRef.current.seekTo(seconds, true);
     }
   };
 
@@ -263,32 +334,28 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   const handleLike = async () => {
       if (!user || !video) return;
       
-      // Optimistic update
       const wasLiked = isLiked;
       setIsLiked(!wasLiked);
       setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
       
       const { error } = await toggleLikeVideo(user.uid, video);
       if (error) {
-          // Revert on error
           setIsLiked(wasLiked);
           setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
           toast({ variant: "destructive", title: "Failed to like video", description: error });
       } else {
-          // Invalidate liked videos cache on success
           localStorage.removeItem(`liked_videos_cache_${user.uid}`);
       }
   }
 
   const handleSubscribe = async () => {
       if (!user || !video) return;
-      setIsSubscribed(!isSubscribed); // Optimistic update
+      setIsSubscribed(!isSubscribed);
       const { error } = await toggleSubscription(user.uid, video.channelId, video.channelTitle);
       if (error) {
-          setIsSubscribed(!isSubscribed); // Revert on error
+          setIsSubscribed(!isSubscribed);
           toast({ variant: "destructive", title: "Failed to subscribe", description: error });
       } else {
-          // Invalidate subscriptions cache on success
           localStorage.removeItem(`subscriptions_cache_${user.uid}`);
       }
   }
@@ -332,19 +399,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     <div className="fixed inset-x-0 bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
-            {/* Left Column: Video and Details */}
             <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
                 <div className="w-full aspect-video shrink-0 bg-black sticky top-0 z-10">
-                    <iframe
-                        key={iframeKey}
-                        ref={iframeRef}
-                        src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
-                        title="YouTube video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                        className="w-full h-full"
-                    ></iframe>
+                    <div id="youtube-player" className="w-full h-full"></div>
                 </div>
                  <VideoDetails 
                     video={video} 
@@ -360,7 +417,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                  />
             </div>
 
-            {/* Right Column: Suggestions */}
             <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 lg:overflow-y-auto no-scrollbar border-t lg:border-t-0">
                 <div className="p-4">
                     <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2 sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">

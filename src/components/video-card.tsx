@@ -15,12 +15,14 @@ type VideoCardProps = {
 
 export function VideoCard({ video, onPlay, id }: VideoCardProps) {
     const isWatchedVideo = 'watchedAt' in video && video.watchedAt;
-    let timeAgo: string | null = null;
+    const progress = isWatchedVideo && video.durationSeconds && video.progressSeconds
+        ? (video.progressSeconds / video.durationSeconds) * 100
+        : 0;
 
+    let timeAgo: string | null = null;
     if (isWatchedVideo) {
         timeAgo = formatDistanceToNowStrict(new Date(video.watchedAt), { addSuffix: true });
     }
-
     const publishedDate = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
 
   return (
@@ -44,6 +46,11 @@ export function VideoCard({ video, onPlay, id }: VideoCardProps) {
         >
           {formatDuration(video.duration)}
         </Badge>
+         {progress > 0 && (
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-500/50">
+                <div className="h-full bg-red-600" style={{ width: `${progress}%` }} />
+            </div>
+        )}
       </CardHeader>
       <CardContent className="flex-grow p-4">
         <CardTitle className="text-base font-bold leading-snug line-clamp-2">
