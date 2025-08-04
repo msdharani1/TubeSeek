@@ -71,7 +71,7 @@ export function AppSidebar() {
           {navItem("/settings", <Settings />, "Settings")}
           {isAdmin && navItem("/admin", <Shield />, "Manage")}
         </SidebarMenu>
-        <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground mb-2">
+        <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground md:mb-8">
             <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
                 <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
                     <Link href="http://github.com/msdharani1/" target="_blank">
