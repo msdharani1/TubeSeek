@@ -255,7 +255,7 @@ function SettingsPage() {
 
                 {/* Appearance Section */}
                 <SettingsCard title="Appearance" description="Customize the look and feel of the app." icon={<SettingsIcon/>}>
-                    <SettingsItem>
+                    <SettingsItem className="flex-col items-start gap-4 sm:flex-row sm:items-center">
                         <p className="font-medium">Theme</p>
                         <ThemeSwitcher />
                     </SettingsItem>
@@ -276,9 +276,9 @@ function SettingsPage() {
                     </div>
                 </SettingsCard>
 
-                {/* Danger Zone */}
+                {/* Data & Account Actions */}
                 <SettingsCard 
-                    title="Danger Zone"
+                    title="Data & Account Actions"
                     description="These actions are irreversible and any data deleted cannot be recovered. Please proceed with caution."
                     className="border-destructive/50"
                     icon={<ShieldAlert/>}
@@ -409,3 +409,5 @@ function SettingsPage() {
 }
 
 export default withAuth(SettingsPage);
+
+    
