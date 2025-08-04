@@ -70,7 +70,7 @@ export function Header() {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center">
+        <div className="hidden sm:flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-muted/50">

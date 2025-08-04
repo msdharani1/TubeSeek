@@ -63,7 +63,7 @@ export function AppSidebar() {
           {isAdmin && navItem("/admin", <Shield />, "Manage")}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4 space-y-4">
+      <SidebarFooter className="p-4 space-y-4 relative md:mb-[70px] lg:mb-[70px]">
         <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                 <Link href="http://github.com/msdharani1/" target="_blank">
