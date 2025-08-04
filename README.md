@@ -232,4 +232,4 @@ The `database.rules.json` file enforces security. Key rules include:
 
 -   Users can only read and write their own data (e.g., `user-playlists/$uid`, `user-watch-history/$uid`).
 -   Data is indexed on specific fields (like `videoId`) for efficient querying.
--   The admin user (`msdharaniofficial@gmail.com`) has special read access to all `user-searches` for the admin dashboard.
+-   The admin user (`msdharaniofficial@gmail.com`) has special read access to all `user-searches` for the admin dashboard..
