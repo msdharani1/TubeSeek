@@ -8,7 +8,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, Users, Check, Ban } from 'lucide-react';
+import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, Users, Check, Ban, ChevronLeft } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
@@ -124,14 +124,14 @@ function UserManagementCard() {
                 ) : (
                     users.map(u => (
                          <SettingsItem key={u.id}>
-                            <div className="flex items-center gap-4">
-                                <Avatar className="h-10 w-10">
+                            <div className="flex items-center gap-4 overflow-hidden">
+                                <Avatar className="h-10 w-10 flex-shrink-0">
                                     <AvatarImage src={u.photoURL || undefined} alt={u.displayName || 'User'} />
                                     <AvatarFallback><User/></AvatarFallback>
                                 </Avatar>
-                                <div>
-                                    <p className="font-medium">{u.displayName}</p>
-                                    <p className="text-sm text-muted-foreground">{u.email}</p>
+                                <div className="flex-1 overflow-hidden">
+                                    <p className="font-medium truncate">{u.displayName}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                                 </div>
                             </div>
                             <Switch
@@ -228,7 +228,12 @@ function SettingsPage() {
 
     return (
         <main className="container mx-auto px-4 py-8 max-w-2xl">
-            <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
+            <div className="flex items-center mb-8">
+                <Button variant="ghost" size="icon" className="mr-2" onClick={() => router.back()}>
+                    <ChevronLeft />
+                </Button>
+                <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+            </div>
 
             <div className="space-y-8">
                 {/* User Profile Section */}
@@ -274,7 +279,7 @@ function SettingsPage() {
                 {/* Danger Zone */}
                 <SettingsCard 
                     title="Danger Zone"
-                    description="These actions are irreversible. Please proceed with caution."
+                    description="These actions are irreversible and any data deleted cannot be recovered. Please proceed with caution."
                     className="border-destructive/50"
                     icon={<ShieldAlert/>}
                 >
