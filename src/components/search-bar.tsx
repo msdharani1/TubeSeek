@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -30,14 +29,14 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
+    <form onSubmit={handleSubmit} className="flex w-full items-center">
       <div className="relative flex-1">
         <Input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for videos..."
-          className="w-full text-base bg-card border-2 border-border focus:border-primary focus:ring-primary pr-10"
+          className="w-full text-base bg-card border-2 border-border focus:border-primary focus:ring-primary pr-10 rounded-r-none"
           disabled={isLoading}
         />
         {query && !isLoading && (
@@ -53,13 +52,12 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
             </Button>
         )}
       </div>
-      <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90">
+      <Button type="submit" disabled={isLoading} variant="icon" className="rounded-l-none" aria-label="Search">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
           <Search className="h-5 w-5" />
         )}
-        <span className="hidden sm:inline">Search</span>
       </Button>
     </form>
   );
