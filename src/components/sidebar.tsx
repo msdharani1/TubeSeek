@@ -64,24 +64,6 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4 space-y-4">
-        <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:text-left">
-            <p>
-                Developed by{' '}
-                <a 
-                  href="http://www.dev.msdharani.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="font-bold text-primary hover:underline"
-                >
-                  MS Dharani
-                </a>
-            </p>
-            <p>
-                <Link href="/privacy-policy" onClick={() => setOpenMobile(false)} className="hover:text-primary underline">
-                    Privacy Policy
-                </Link>
-            </p>
-        </div>
         <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                 <Link href="http://github.com/msdharani1/" target="_blank">
@@ -98,6 +80,25 @@ export function AppSidebar() {
                     <Twitter className="h-4 w-4" />
                 </Link>
             </Button>
+        </div>
+        <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:text-left group-data-[collapsible=icon]:hidden">
+            <p>
+                Developed by{' '}
+                <a 
+                  href="http://www.dev.msdharani.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="font-bold text-primary hover:underline"
+                >
+                  MS Dharani
+                </a>
+                .
+            </p>
+            <p>
+                <Link href="/privacy-policy" onClick={() => setOpenMobile(false)} className="hover:text-primary underline">
+                    Privacy Policy
+                </Link>
+            </p>
         </div>
       </SidebarFooter>
     </Sidebar>
