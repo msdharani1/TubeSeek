@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
+import { Logo } from "./logo";
 
 export function AppSidebar() {
   const router = useRouter();
@@ -53,6 +54,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
+      <div className="p-4 border-b md:hidden">
+        <Link href="/search" className="flex items-center gap-2" onClick={() => setOpenMobile(false)}>
+            <Logo className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold tracking-tight text-foreground font-headline">
+                TubeSeek
+            </span>
+        </Link>
+      </div>
       <SidebarContent className="p-4">
         <SidebarMenu>
           {navItem("/playlists", <ListVideo />, "Playlists")}
@@ -63,25 +72,25 @@ export function AppSidebar() {
           {isAdmin && navItem("/admin", <Shield />, "Manage")}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4 space-y-4 relative md:mb-[70px] lg:mb-[70px]">
+      <SidebarFooter className="p-4 space-y-4 mt-auto">
         <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
-            <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
                 <Link href="http://github.com/msdharani1/" target="_blank">
                     <Github className="h-4 w-4" />
                 </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
                  <Link href="https://www.linkedin.com/in/tharanimca/" target="_blank">
                     <Linkedin className="h-4 w-4" />
                 </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-foreground" asChild>
                 <Link href="https://x.com/msdharani007" target="_blank">
                     <Twitter className="h-4 w-4" />
                 </Link>
             </Button>
         </div>
-        <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:text-left group-data-[collapsible=icon]:hidden">
+        <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:hidden">
             <p>
                 Developed by{' '}
                 <a 
