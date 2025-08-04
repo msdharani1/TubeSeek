@@ -8,11 +8,11 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon, Shield, History, Settings, Heart, Tv } from "lucide-react";
+import { LogOut, User as UserIcon } from "lucide-react";
 import { Logo } from "./logo";
-import { ListVideo } from "./icons";
 import { SearchBar } from "./search-bar";
 import type { SearchBarProps } from "./search-bar";
+import { SidebarTrigger } from "./ui/sidebar";
 
 type HeaderProps = Partial<SearchBarProps>;
 
@@ -33,36 +33,11 @@ export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
     router.push('/search');
   }
 
-  const handleManageClick = () => {
-    router.push('/admin');
-  }
-
-  const handleHistoryClick = () => {
-    router.push('/history');
-  }
-
-  const handlePlaylistsClick = () => {
-    router.push('/playlists');
-  }
-  
-  const handleLikedVideosClick = () => {
-    router.push('/liked');
-  }
-  
-  const handleSubscriptionsClick = () => {
-      router.push('/subscriptions');
-  }
-
-  const handleSettingsClick = () => {
-    router.push('/settings');
-  }
-  
-  const isAdmin = user?.email === "msdharaniofficial@gmail.com";
-
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-2">
+            {user && <SidebarTrigger />}
             <button onClick={handleLogoClick} aria-label="Go to homepage" className="flex items-center gap-2">
                 <Logo className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold tracking-tight text-foreground font-headline hidden sm:inline-block">
@@ -100,33 +75,6 @@ export function Header({ onSearch, isLoading, initialQuery }: HeaderProps) {
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handlePlaylistsClick} className="cursor-pointer">
-                  <ListVideo className="mr-2 h-4 w-4" />
-                  <span>Playlists</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleHistoryClick} className="cursor-pointer">
-                  <History className="mr-2 h-4 w-4" />
-                  <span>History</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLikedVideosClick} className="cursor-pointer">
-                  <Heart className="mr-2 h-4 w-4" />
-                  <span>Liked Videos</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSubscriptionsClick} className="cursor-pointer">
-                  <Tv className="mr-2 h-4 w-4" />
-                  <span>Subscriptions</span>
-              </DropdownMenuItem>
-               <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-              </DropdownMenuItem>
-              {isAdmin && (
-                <DropdownMenuItem onClick={handleManageClick} className="cursor-pointer">
-                  <Shield className="mr-2 h-4 w-4" />
-                  <span>Manage</span>
-                </DropdownMenuItem>
-              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />

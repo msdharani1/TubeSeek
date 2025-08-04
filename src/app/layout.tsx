@@ -4,7 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/context/auth-context';
-import { Footer } from '@/components/footer';
+import { AppLayout } from '@/components/app-layout';
 
 export const metadata: Metadata = {
   title: {
@@ -48,11 +48,10 @@ export default function RootLayout({
       </head>
       <body className={cn("font-body antialiased", 'flex flex-col min-h-screen')}>
         <AuthProvider>
-          <div className="flex-grow">
-            {children}
-          </div>
+           <AppLayout>
+              {children}
+           </AppLayout>
         </AuthProvider>
-        <Footer />
         <Toaster />
       </body>
     </html>
