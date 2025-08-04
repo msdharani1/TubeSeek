@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
@@ -211,7 +210,7 @@ function SearchPage() {
 
     return (
       <div className="flex-1">
-        <main className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8">
           {(hasSearched || isShowingSuggestions) && (
               <h1 className="text-2xl font-bold tracking-tight mb-8">{getPageTitle()}</h1>
           )}
@@ -238,7 +237,7 @@ function SearchPage() {
               </div>
           )}
 
-        </main>
+        </div>
         <VideoPlayer
           video={selectedVideo}
           suggestions={results.filter(r => r.videoId !== selectedVideo?.videoId)}
