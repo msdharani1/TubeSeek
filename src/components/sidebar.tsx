@@ -46,9 +46,11 @@ export function AppSidebar() {
   };
 
   const navItem = (path: string, icon: React.ReactNode, text: string) => {
-    const isActive = path === '/search' || path === '/' 
-        ? pathname === path 
-        : pathname.startsWith(path);
+    const isActive = path === '/admin' 
+        ? pathname === path
+        : (path === '/search' || path === '/' 
+            ? pathname === path 
+            : pathname.startsWith(path));
     
     return (
         <SidebarMenuItem>
