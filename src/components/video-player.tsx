@@ -399,9 +399,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   return (
     <div className={cn(
-        "fixed bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
-        isMobile ? "left-0" : "right-0",
-        !isMobile && sidebarState === 'expanded' ? "left-[var(--sidebar-width)]" : "left-0 lg:left-[var(--sidebar-width-icon)]"
+        "fixed bottom-0 top-16 right-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
+        "left-0 lg:left-[var(--sidebar-width-icon)]",
+        !isMobile && sidebarState === 'expanded' && "!left-[var(--sidebar-width)]"
         )}>
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
