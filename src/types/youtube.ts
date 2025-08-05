@@ -4,7 +4,8 @@ import { z } from 'zod';
 export const YoutubeSearchResponseSchema = z.object({
   items: z.array(z.object({
     id: z.object({
-      videoId: z.string(),
+      videoId: z.string().optional(), // videoId is optional now
+      channelId: z.string().optional(),
     }),
     snippet: z.object({
       title: z.string(),

@@ -62,19 +62,56 @@ async function fetchWithYouTubeKeyRotation(url: string): Promise<Response> {
 }
 
 export async function searchAndRefineVideos(
-  query: string,
+  q: string,
   filters: FilterOptions = {}
 ): Promise<{ data?: SearchResult[]; error?: string }> {
   try {
-    // Step 1: Search for videos to get video IDs
-    const searchParams = new URLSearchParams({
+    let finalQuery = q;
+    let channelIdForSearch: string | undefined = undefined;
+
+    // Step 1: Check if the query is a channel name
+    const channelSearchParams = new URLSearchParams({
       part: 'snippet',
-      q: query,
+      q: q,
+      maxResults: '1',
+      type: 'channel',
+    });
+
+    const channelSearchResponse = await fetchWithYouTubeKeyRotation(
+      `${YOUTUBE_API_BASE_URL}/search?${channelSearchParams.toString()}`
+    );
+    const channelSearchJson = await channelSearchResponse.json();
+
+    if (channelSearchJson.items && channelSearchJson.items.length > 0) {
+        const topChannel = channelSearchJson.items[0];
+        // If the channel title is a very close match to the query, assume the user is searching for that channel.
+        if (topChannel.snippet.title.toLowerCase().includes(q.toLowerCase())) {
+            channelIdForSearch = topChannel.id.channelId;
+        }
+    }
+    
+    // Step 2: Search for videos
+    const searchParamsObj: Record<string, string> = {
+      part: 'snippet',
       maxResults: '20',
       type: 'video',
-      ...filters,
-    });
-    
+    };
+
+    if (channelIdForSearch) {
+      searchParamsObj.channelId = channelIdForSearch;
+      // When searching a channel, it's best to show latest videos.
+      searchParamsObj.order = 'date'; 
+    } else {
+      searchParamsObj.q = finalQuery;
+      if (filters.order) {
+        searchParamsObj.order = filters.order;
+      }
+      if (filters.videoDuration && filters.videoDuration !== 'any') {
+        searchParamsObj.videoDuration = filters.videoDuration;
+      }
+    }
+
+    const searchParams = new URLSearchParams(searchParamsObj);
     const searchResponse = await fetchWithYouTubeKeyRotation(
         `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
     );
@@ -90,12 +127,12 @@ export async function searchAndRefineVideos(
       return { error: 'Received invalid data from YouTube.' };
     }
 
-    const videoIds = parsedSearch.data.items.map((item) => item.id.videoId);
+    const videoIds = parsedSearch.data.items.map((item) => item.id.videoId).filter(Boolean);
     if (videoIds.length === 0) {
       return { data: [] };
     }
 
-    // Step 2: Get video details for the found video IDs
+    // Step 3: Get video details for the found video IDs
     const videosParams = new URLSearchParams({
       part: 'snippet,contentDetails,statistics',
       id: videoIds.join(','),
@@ -116,7 +153,7 @@ export async function searchAndRefineVideos(
       return { error: 'Received invalid video data from YouTube.' };
     }
 
-    // Step 3: Format and return the results directly
+    // Step 4: Format and return the results
     const results: SearchResult[] = parsedVideos.data.items.map((item) => ({
       videoId: item.id,
       title: item.snippet.title,
@@ -130,13 +167,10 @@ export async function searchAndRefineVideos(
       channelTitle: item.snippet.channelTitle,
     }));
 
-    // Re-order results based on the original search order if a specific order was requested
-    if (filters.order && filters.order !== 'relevance') {
-      const orderedResults = videoIds.map(id => results.find(res => res.videoId === id)).filter(Boolean) as SearchResult[];
-      return { data: orderedResults };
-    }
+    // Re-order results to match the search order, which is especially important for ordered searches.
+    const orderedResults = videoIds.map(id => results.find(res => res.videoId === id)).filter(Boolean) as SearchResult[];
 
-    return { data: results };
+    return { data: orderedResults };
   } catch (error) {
     console.error(
       'An unexpected error occurred in searchAndRefineVideos:',
