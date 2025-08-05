@@ -17,6 +17,7 @@
       }
     },
     "user-playlists": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
         "playlists": {
@@ -29,12 +30,14 @@
       }
     },
     "user-likes": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
       }
     },
     "user-subscriptions": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
