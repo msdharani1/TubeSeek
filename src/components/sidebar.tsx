@@ -23,6 +23,10 @@ import {
   Linkedin,
   Twitter,
   Home,
+  LayoutDashboard,
+  Users,
+  Lightbulb,
+  LineChart,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
@@ -34,6 +38,7 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { setOpenMobile } = useSidebar();
   const isAdmin = user?.email === "msdharaniofficial@gmail.com";
+  const inAdminSection = pathname.startsWith("/admin");
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -41,7 +46,10 @@ export function AppSidebar() {
   };
 
   const navItem = (path: string, icon: React.ReactNode, text: string) => {
-    const isActive = path === '/search' ? pathname === path : pathname.startsWith(path);
+    const isActive = path === '/search' || path === '/' 
+        ? pathname === path 
+        : pathname.startsWith(path);
+    
     return (
         <SidebarMenuItem>
         <SidebarMenuButton
@@ -68,13 +76,25 @@ export function AppSidebar() {
       </div>
       <SidebarContent className="flex flex-col lg:h-[calc(100vh-theme(spacing.16))]">
         <SidebarMenu className="p-4">
-          {navItem("/search", <Home />, "Home")}
-          {navItem("/playlists", <ListVideo />, "Playlists")}
-          {navItem("/history", <History />, "History")}
-          {navItem("/liked", <Heart />, "Liked Videos")}
-          {navItem("/subscriptions", <Tv />, "Subscriptions")}
-          {navItem("/settings", <Settings />, "Settings")}
-          {isAdmin && navItem("/admin", <Shield />, "Admin")}
+           {isAdmin && inAdminSection ? (
+            <>
+              {navItem("/search", <Home />, "Home")}
+              {navItem("/admin", <LayoutDashboard />, "Dashboard")}
+              {navItem("/admin/history", <Users />, "User History")}
+              {navItem("/admin/suggestions", <Lightbulb />, "Suggestions")}
+              {navItem("/admin/track", <LineChart />, "Track")}
+            </>
+          ) : (
+            <>
+              {navItem("/search", <Home />, "Home")}
+              {navItem("/playlists", <ListVideo />, "Playlists")}
+              {navItem("/history", <History />, "History")}
+              {navItem("/liked", <Heart />, "Liked Videos")}
+              {navItem("/subscriptions", <Tv />, "Subscriptions")}
+              {navItem("/settings", <Settings />, "Settings")}
+              {isAdmin && navItem("/admin", <Shield />, "Admin")}
+            </>
+          )}
         </SidebarMenu>
         <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground md:mb-16">
             <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
