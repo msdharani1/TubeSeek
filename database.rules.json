@@ -2,52 +2,43 @@
 {
   "rules": {
     "user-searches": {
-      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
       }
     },
     "user-watch-history": {
-      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
         ".indexOn": "videoId"
       }
     },
     "user-playlists": {
-      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
         "playlists": {
-            ".read": "auth != null && auth.uid === $uid",
             ".indexOn": "name"
-        },
-        "items": {
-            ".read": "auth != null && auth.uid === $uid"
         }
       }
     },
     "user-likes": {
-      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
       }
     },
     "user-subscriptions": {
-      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
       }
     },
     "user-settings": {
-      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
-        ".read": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
       }
     }
   }
