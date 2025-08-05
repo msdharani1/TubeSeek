@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -25,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, User } from 'lucide-react';
+import { Loader2, User, History as HistoryIcon } from 'lucide-react';
 
 type UserSearchData = Record<string, { profile: UserInfo; searches: SearchQuery[] }>;
 
@@ -91,7 +90,10 @@ function UserHistoryPage() {
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Select a User</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <HistoryIcon className="h-5 w-5"/>
+                Select a User
+              </CardTitle>
               <div className="mt-4">
                 <Select onValueChange={setSelectedUser} disabled={userIds.length === 0}>
                   <SelectTrigger className="w-full md:w-[380px]">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
@@ -28,6 +27,7 @@ import {
   Lightbulb,
   LineChart,
   MousePointerClick,
+  Users2,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
@@ -83,7 +83,8 @@ export function AppSidebar() {
             <>
               {navItem("/search", <Home />, "Home")}
               {navItem("/admin", <LayoutDashboard />, "Dashboard")}
-              {navItem("/admin/history", <Users />, "User History")}
+              {navItem("/admin/history", <History />, "User History")}
+              {navItem("/admin/users", <Users2 />, "Users")}
               {navItem("/admin/suggestions", <Lightbulb />, "Suggestions")}
               {navItem("/admin/track", <LineChart />, "Track")}
               {navItem("/admin/clicks", <MousePointerClick />, "Clicks")}
