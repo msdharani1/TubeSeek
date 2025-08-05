@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { withAuth, useAuth } from '@/context/auth-context';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, ChevronLeft } from 'lucide-react';
+import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, ChevronLeft, Download } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,15 @@ import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists, clearLikedVideos, clearSubscriptions } from '@/app/actions/user-data';
 import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 function SettingsPage() {
     const { user } = useAuth();
     const router = useRouter();
@@ -35,6 +44,21 @@ function SettingsPage() {
     const [isDeletingPlaylists, setIsDeletingPlaylists] = useState(false);
     const [isDeletingLikes, setIsDeletingLikes] = useState(false);
     const [isDeletingSubs, setIsDeletingSubs] = useState(false);
+    const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: Event) => {
+            e.preventDefault();
+            setInstallPrompt(e as BeforeInstallPromptEvent);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
+
 
     if (!user) return null;
 
@@ -55,6 +79,17 @@ function SettingsPage() {
             description: "An error occurred while signing out. Please try again.",
           });
         }
+    };
+
+    const handleInstallClick = () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        installPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                toast({ title: 'App installed successfully!' });
+            }
+            setInstallPrompt(null);
+        });
     };
 
     const handleDeleteHistory = async () => {
@@ -139,6 +174,22 @@ function SettingsPage() {
                         <ThemeSwitcher />
                     </SettingsItem>
                 </SettingsCard>
+
+                 {/* Application Section */}
+                {installPrompt && (
+                  <SettingsCard title="Application" description="Install TubeSeek on your device for a native app experience.">
+                      <SettingsItem>
+                          <div>
+                              <p className="font-medium">Install App</p>
+                              <p className="text-sm text-muted-foreground">Get a better experience by installing the app.</p>
+                          </div>
+                          <Button onClick={handleInstallClick}>
+                              <Download className="mr-2 h-4 w-4" /> Install
+                          </Button>
+                      </SettingsItem>
+                  </SettingsCard>
+                )}
+
 
                 {/* About Section */}
                 <SettingsCard title="About" description="Information about the application.">
