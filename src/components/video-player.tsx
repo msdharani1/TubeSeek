@@ -399,8 +399,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   return (
     <div className={cn(
-        "fixed inset-x-0 bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
-        !isMobile && sidebarState === 'expanded' ? "pl-[var(--sidebar-width)]" : "pl-0 lg:pl-[var(--sidebar-width-icon)]"
+        "fixed bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
+        isMobile ? "inset-x-0" : "right-0",
+        !isMobile && sidebarState === 'expanded' ? "left-[var(--sidebar-width)]" : "lg:left-[var(--sidebar-width-icon)]"
         )}>
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
@@ -448,5 +449,3 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     </div>
   );
 }
-
-    
