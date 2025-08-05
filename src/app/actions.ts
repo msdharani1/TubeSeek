@@ -189,7 +189,7 @@ export async function saveSearchQuery(
   }
 }
 
-export async function getUsersForAdmin(adminEmail: string, startAfterKey?: string | null): Promise<{ data?: { users: (UserInfo & { id: string })[], nextCursor: string | null }; error?: string }> {
+export async function getAllUserSearches(adminEmail: string): Promise<{ data?: Record<string, { profile: UserInfo; searches: SearchQuery[] }>; error?: string }> {
     if (adminEmail !== 'msdharaniofficial@gmail.com') {
         return { error: 'Unauthorized access.' };
     }
@@ -197,101 +197,34 @@ export async function getUsersForAdmin(adminEmail: string, startAfterKey?: strin
         return { error: 'Database connection is not available.' };
     }
 
-    const PAGE_SIZE = 10;
     try {
         const usersRef = ref(db, 'user-searches');
-        let usersQuery;
+        const snapshot = await get(usersRef);
 
-        if (startAfterKey) {
-            usersQuery = query(usersRef, orderByKey(), startAfter(startAfterKey), limitToFirst(PAGE_SIZE + 1));
-        } else {
-            usersQuery = query(usersRef, orderByKey(), limitToFirst(PAGE_SIZE + 1));
-        }
-        
-        const snapshot = await get(usersQuery);
         if (snapshot.exists()) {
-            const allUsersData = snapshot.val();
-            const users: (UserInfo & { id: string })[] = [];
+            const allUserData = snapshot.val();
             
-            for (const userId in allUsersData) {
-                const profile = allUsersData[userId].profile || {};
-                users.push({
-                    id: userId,
-                    uid: userId,
-                    email: profile.email || "N/A",
-                    displayName: profile.displayName || "N/A",
-                    photoURL: profile.photoURL || null,
-                });
+            // Process the data to sort searches for each user
+            for (const userId in allUserData) {
+                if (allUserData[userId].searches) {
+                    const searches = Object.values(allUserData[userId].searches) as SearchQuery[];
+                    // Sort searches by timestamp descending
+                    searches.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                    allUserData[userId].searches = searches;
+                }
             }
 
-            let nextCursor: string | null = null;
-            if (users.length > PAGE_SIZE) {
-                const nextUser = users.pop(); 
-                nextCursor = nextUser!.id;
-            }
-            
-            return { data: { users, nextCursor } };
+            return { data: allUserData };
         } else {
-            return { data: { users: [], nextCursor: null } };
+            return { data: {} };
         }
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { error: `Failed to fetch users: ${errorMessage}` };
+        return { error: `Failed to fetch user searches: ${errorMessage}` };
     }
 }
 
-export async function getUserSearchHistoryForAdmin(adminEmail: string, userId: string, startAfterKey?: number | null): Promise<{ data?: { searches: SearchQuery[], nextCursor: number | null }; error?: string }> {
-     if (adminEmail !== 'msdharaniofficial@gmail.com') {
-        return { error: 'Unauthorized access.' };
-    }
-    if (!db) {
-        return { error: 'Database connection is not available.' };
-    }
-
-    const PAGE_SIZE = 10;
-
-    try {
-        const searchesRef = ref(db, `user-searches/${userId}/searches`);
-        
-        let searchesQuery;
-        // Firebase RTDB queries with limitToLast are tricky for pagination. 
-        // We fetch items sorted by timestamp. The oldest item in the current batch
-        // becomes the `endBefore` value for the next page fetch.
-        if (startAfterKey) {
-            searchesQuery = query(searchesRef, orderByChild('timestamp'), endBefore(startAfterKey), limitToLast(PAGE_SIZE));
-        } else {
-            searchesQuery = query(searchesRef, orderByChild('timestamp'), limitToLast(PAGE_SIZE));
-        }
-
-        const snapshot = await get(searchesQuery);
-        if (snapshot.exists()) {
-            const searchesData = snapshot.val();
-            const searches: SearchQuery[] = Object.entries(searchesData).map(([key, value]) => ({
-                id: key,
-                ...(value as Omit<SearchQuery, 'id'>)
-            }));
-            
-            // Firebase RTDB limitToLast returns in ascending order, so we reverse to show newest first.
-            searches.reverse(); 
-
-            let nextCursor: number | null = null;
-            if (searches.length === PAGE_SIZE) {
-               // The next cursor is the timestamp of the *oldest* item in the current batch.
-               const lastSearch = searches[searches.length - 1];
-               nextCursor = lastSearch.timestamp as any; 
-            }
-            
-            return { data: { searches, nextCursor } };
-        } else {
-            return { data: { searches: [], nextCursor: null } };
-        }
-
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { error: `Failed to fetch search history: ${errorMessage}` };
-    }
-}
 
 export async function saveVideoToHistory(
   userId: string,
@@ -523,3 +456,5 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
+
+    
