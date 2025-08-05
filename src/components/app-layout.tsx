@@ -7,12 +7,21 @@ import { AppSidebar } from "./sidebar";
 import { useAuth } from "@/context/auth-context";
 import { Header } from "./header";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { logUserClick } from "@/app/actions/clicks";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user, loading } = useAuth();
     
     const showNav = user && pathname !== '/login' && pathname !== '/privacy-policy';
+
+    useEffect(() => {
+        if (user && pathname) {
+            // We don't wait for the result, just fire and forget
+            logUserClick(user.uid, pathname);
+        }
+    }, [user, pathname]);
 
     if (loading) {
        return (

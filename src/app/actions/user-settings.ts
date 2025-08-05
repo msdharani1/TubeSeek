@@ -4,6 +4,8 @@
 import { db } from '@/lib/firebase';
 import { ref, get, set, child, serverTimestamp, update, query, orderByKey } from 'firebase/database';
 import type { UserInfo } from '@/types/youtube';
+import { subDays, format, isValid, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
+
 
 type UserWithSettings = UserInfo & { id: string; suggestionsEnabled: boolean };
 
@@ -128,5 +130,92 @@ export async function getUserSuggestionStatus(userId: string): Promise<{ data?: 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { error: `Failed to fetch user suggestion status: ${errorMessage}` };
+    }
+}
+
+
+// Admin action to get overall user activity
+type UserActivity = {
+    totalInteractions: number;
+    interactionsLast30Days: { date: string; count: number }[];
+    totalUsers: number;
+    totalSearches: number;
+    totalPlaylists: number;
+    totalLikes: number;
+};
+export async function getUserActivity(adminEmail: string): Promise<{ data?: UserActivity; error?: string }> {
+    if (adminEmail !== 'msdharaniofficial@gmail.com') {
+        return { error: 'Unauthorized access.' };
+    }
+
+    try {
+        const [
+            searchesSnapshot, 
+            historySnapshot, 
+            likesSnapshot,
+            playlistsSnapshot
+        ] = await Promise.all([
+            get(ref(db, 'user-searches')),
+            get(ref(db, 'user-watch-history')),
+            get(ref(db, 'user-likes')),
+            get(ref(db, 'user-playlists'))
+        ]);
+        
+        const searchesData = searchesSnapshot.val() || {};
+        const historyData = historySnapshot.val() || {};
+        const likesData = likesSnapshot.val() || {};
+        const playlistsData = playlistsSnapshot.val() || {};
+        
+        let totalSearches = 0;
+        Object.values(searchesData).forEach((user: any) => { totalSearches += Object.keys(user.searches || {}).length });
+        
+        let totalLikes = 0;
+        Object.values(likesData).forEach((user: any) => { totalLikes += Object.keys(user || {}).length });
+
+        let totalPlaylists = 0;
+        Object.values(playlistsData).forEach((user: any) => { totalPlaylists += Object.keys(user.playlists || {}).length });
+
+        const totalUsers = Object.keys(searchesData).length;
+
+        // For daily interactions, we'll check history, likes, and searches
+        const thirtyDaysAgo = startOfDay(subDays(new Date(), 29));
+        const today = endOfDay(new Date());
+        const dateRange = eachDayOfInterval({ start: thirtyDaysAgo, end: today });
+        const interactionsPerDay: { [key: string]: number } = {};
+        dateRange.forEach(date => {
+            interactionsPerDay[format(date, 'MMM dd')] = 0;
+        });
+        
+        const countInteraction = (timestamp: string | number) => {
+            const date = new Date(timestamp);
+            if (isValid(date) && date >= thirtyDaysAgo && date <= today) {
+                const dateStr = format(date, 'MMM dd');
+                if (interactionsPerDay[dateStr] !== undefined) {
+                    interactionsPerDay[dateStr]++;
+                }
+            }
+        };
+
+        Object.values(historyData).forEach((user: any) => Object.values(user).forEach((item: any) => countInteraction(item.watchedAt)));
+        Object.values(likesData).forEach((user: any) => Object.values(user).forEach((item: any) => countInteraction(item.likedAt)));
+        Object.values(searchesData).forEach((user: any) => Object.values(user.searches || {}).forEach((item: any) => countInteraction(item.timestamp)));
+        
+        const interactionsLast30Days = Object.entries(interactionsPerDay).map(([date, count]) => ({ date, count }));
+        const totalInteractions = totalSearches + totalLikes + Object.keys(historyData).reduce((acc, userId) => acc + Object.keys(historyData[userId]).length, 0);
+
+        const activity: UserActivity = {
+            totalInteractions,
+            interactionsLast30Days,
+            totalUsers,
+            totalSearches,
+            totalPlaylists,
+            totalLikes,
+        };
+
+        return { data: activity };
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { error: `Failed to fetch user activity: ${errorMessage}` };
     }
 }

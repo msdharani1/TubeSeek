@@ -27,6 +27,7 @@ import {
   Users,
   Lightbulb,
   LineChart,
+  MousePointerClick,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
@@ -85,6 +86,7 @@ export function AppSidebar() {
               {navItem("/admin/history", <Users />, "User History")}
               {navItem("/admin/suggestions", <Lightbulb />, "Suggestions")}
               {navItem("/admin/track", <LineChart />, "Track")}
+              {navItem("/admin/clicks", <MousePointerClick />, "Clicks")}
             </>
           ) : (
             <>

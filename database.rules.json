@@ -46,6 +46,12 @@
         ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
       }
+    },
+    "user-clicks": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid"
+      }
     }
   }
 }
