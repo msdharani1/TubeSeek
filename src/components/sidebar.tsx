@@ -74,7 +74,7 @@ export function AppSidebar() {
           {navItem("/liked", <Heart />, "Liked Videos")}
           {navItem("/subscriptions", <Tv />, "Subscriptions")}
           {navItem("/settings", <Settings />, "Settings")}
-          {isAdmin && navItem("/admin", <Shield />, "Manage")}
+          {isAdmin && navItem("/admin", <Shield />, "Admin")}
         </SidebarMenu>
         <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground md:mb-16">
             <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
