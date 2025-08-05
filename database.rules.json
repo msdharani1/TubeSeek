@@ -2,40 +2,46 @@
 {
   "rules": {
     "user-searches": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
+        ".read": "auth != null && auth.uid === $uid"
       }
     },
     "user-watch-history": {
+       ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
+        ".read": "auth != null && auth.uid === $uid",
         ".indexOn": "videoId"
       }
     },
     "user-playlists": {
+       ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
        "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
+        ".read": "auth != null && auth.uid === $uid",
         "playlists": {
             ".indexOn": "name"
         }
       }
     },
     "user-likes": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
+        ".read": "auth != null && auth.uid === $uid"
       }
     },
     "user-subscriptions": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
+        ".read": "auth != null && auth.uid === $uid"
       }
     },
     "user-settings": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
       "$uid": {
         ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')",
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'msdharaniofficial@gmail.com')"
