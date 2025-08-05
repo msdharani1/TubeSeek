@@ -14,6 +14,7 @@ import { saveVideoToHistory, updateVideoProgress } from "@/app/actions";
 import { getInteractionStatus, toggleLikeVideo, toggleSubscription } from "@/app/actions/video-interactions";
 import { AddToPlaylist } from "./add-to-playlist";
 import { Badge } from "./ui/badge";
+import { useSidebar } from "./ui/sidebar";
 
 // Helper to parse and style the description
 const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
@@ -201,6 +202,7 @@ type VideoPlayerProps = {
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isMobile, state: sidebarState } = useSidebar();
   const playerRef = useRef<any>(null); // To hold the YouTube player instance
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -396,7 +398,10 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0">
+    <div className={cn(
+        "fixed inset-x-0 bottom-0 top-16 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
+        !isMobile && sidebarState === 'expanded' ? "pl-[var(--sidebar-width)]" : "pl-0 lg:pl-[var(--sidebar-width-icon)]"
+        )}>
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
             <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
@@ -443,3 +448,5 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     </div>
   );
 }
+
+    
