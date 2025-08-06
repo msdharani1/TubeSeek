@@ -140,23 +140,23 @@ export function AppSidebar() {
               {navItem("/history", <History />, "History", isGuest)}
               {navItem("/liked", <Heart />, "Liked Videos", isGuest)}
               {navItem("/subscriptions", <Tv />, "Subscriptions", isGuest)}
-              {navItem("/settings", <Settings />, "Settings", isGuest)}
+              {navItem("/settings", <Settings />, "Settings")}
               {isAdmin && navItem("/admin", <Shield />, "Admin")}
             </>
           )}
         </SidebarMenu>
         
         {isGuest && (
-            <div className="p-4 mt-auto">
-                 <Button onClick={handleSignIn} className="w-full">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign In
+            <div className="p-4 mt-auto group-data-[collapsible=icon]:p-2">
+                 <Button onClick={handleSignIn} className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-2">
+                    <LogIn className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
+                    <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
                 </Button>
             </div>
         )}
 
-        <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground md:mb-16">
-          <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
+        <SidebarFooter className="p-4 space-y-4 text-muted-foreground md:mb-16 group-data-[collapsible=icon]:p-2">
+          <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:space-x-0 group-data-[collapsible=icon]:space-y-2">
             <Button
               variant="ghost"
               size="icon"
