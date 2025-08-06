@@ -136,28 +136,27 @@ export function AppSidebar() {
               {categoryNavItem("/music", <Music />, "Music")}
               {categoryNavItem("/news", <Newspaper />, "News")}
               {categoryNavItem("/kids", <Baby />, "Kids")}
-              {navItem("/playlists", <ListVideo />, "Playlists", isGuest)}
-              {navItem("/history", <History />, "History", isGuest)}
-              {navItem("/liked", <Heart />, "Liked Videos", isGuest)}
-              {navItem("/subscriptions", <Tv />, "Subscriptions", isGuest)}
+              {navItem("/playlists", <ListVideo />, "Playlists")}
+              {navItem("/history", <History />, "History")}
+              {navItem("/liked", <Heart />, "Liked Videos")}
+              {navItem("/subscriptions", <Tv />, "Subscriptions")}
               {navItem("/settings", <Settings />, "Settings")}
               {isAdmin && navItem("/admin", <Shield />, "Admin")}
             </>
           )}
         </SidebarMenu>
         
-
-        <SidebarFooter className="mt-auto p-4 space-y-4 text-muted-foreground md:mb-16 group-data-[collapsible=icon]:p-2">
+        <SidebarFooter className="mt-auto p-4 space-y-4 text-muted-foreground md:mb-16">
             {isGuest && (
                 <div className="md:hidden">
                     <Button onClick={handleSignIn} className="w-full">
                         <LogIn className="mr-2 h-4 w-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
+                        Sign In
                     </Button>
                 </div>
             )}
           <div className="flex flex-col items-center gap-4">
-              <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:space-x-0 group-data-[collapsible=icon]:space-y-2">
+              <div className="flex space-x-2 justify-center">
                 <Button
                   variant="ghost"
                   size="icon"
