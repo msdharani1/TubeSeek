@@ -64,31 +64,37 @@ async function fetchWithYouTubeKeyRotation(url: string): Promise<Response> {
 
 export async function searchAndRefineVideos(
   q: string,
-  filters: FilterOptions = {}
+  filters: FilterOptions = {},
+  isCategorySearch: boolean = false
 ): Promise<{ data?: SearchResult[]; error?: string }> {
   try {
     let finalQuery = q;
     let channelIdForSearch: string | undefined = undefined;
 
-    // Step 1: Check if the query is a channel name
-    const channelSearchParams = new URLSearchParams({
-      part: 'snippet',
-      q: q,
-      maxResults: '1',
-      type: 'channel',
-    });
+    // Step 1: For regular searches, check if the query is a channel name
+    if (!isCategorySearch) {
+        const channelSearchParams = new URLSearchParams({
+          part: 'snippet',
+          q: q,
+          maxResults: '1',
+          type: 'channel',
+        });
 
-    const channelSearchResponse = await fetchWithYouTubeKeyRotation(
-      `${YOUTUBE_API_BASE_URL}/search?${channelSearchParams.toString()}`
-    );
-    const channelSearchJson = await channelSearchResponse.json();
+        const channelSearchResponse = await fetchWithYouTubeKeyRotation(
+          `${YOUTUBE_API_BASE_URL}/search?${channelSearchParams.toString()}`
+        );
+        const channelSearchJson = await channelSearchResponse.json();
 
-    if (channelSearchJson.items && channelSearchJson.items.length > 0) {
-        const topChannel = channelSearchJson.items[0];
-        // If the channel title is a very close match to the query, assume the user is searching for that channel.
-        if (topChannel.snippet.title.toLowerCase().includes(q.toLowerCase())) {
-            channelIdForSearch = topChannel.id.channelId;
+        if (channelSearchJson.items && channelSearchJson.items.length > 0) {
+            const topChannel = channelSearchJson.items[0];
+            // If the channel title is a very close match to the query, assume the user is searching for that channel.
+            if (topChannel.snippet.title.toLowerCase().includes(q.toLowerCase())) {
+                channelIdForSearch = topChannel.id.channelId;
+            }
         }
+    } else {
+        // For category searches, prioritize language
+        finalQuery = `Latest Tamil ${q}`;
     }
     
     // Step 2: Search for videos
@@ -104,20 +110,31 @@ export async function searchAndRefineVideos(
       searchParamsObj.order = 'date'; 
     } else {
       searchParamsObj.q = finalQuery;
-      if (filters.order) {
-        searchParamsObj.order = filters.order;
-      }
+      // For category search, always sort by date. For regular search, use filters.
+      searchParamsObj.order = isCategorySearch ? 'date' : (filters.order || 'relevance');
+
       if (filters.videoDuration && filters.videoDuration !== 'any') {
         searchParamsObj.videoDuration = filters.videoDuration;
       }
     }
 
     const searchParams = new URLSearchParams(searchParamsObj);
-    const searchResponse = await fetchWithYouTubeKeyRotation(
+    let searchResponse = await fetchWithYouTubeKeyRotation(
         `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
     );
+    
+    // Fallback for category search if Tamil yields no results
+    let searchJson = await searchResponse.json();
+    if (isCategorySearch && searchJson.items.length === 0) {
+        console.log("No Tamil results, falling back to English for category:", q);
+        searchParams.set('q', `Latest English ${q}`);
+        searchResponse = await fetchWithYouTubeKeyRotation(
+            `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
+        );
+        searchJson = await searchResponse.json();
+    }
 
-    const searchJson = await searchResponse.json();
+
     const parsedSearch = YoutubeSearchResponseSchema.safeParse(searchJson);
 
     if (!parsedSearch.success) {
@@ -491,5 +508,3 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
-
-    
