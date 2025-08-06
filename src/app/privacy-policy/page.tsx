@@ -1,6 +1,7 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Eye, Database, Users, FileText, Mail } from 'lucide-react';
+import { Shield, Eye, Database, Users, FileText, Mail, Fingerprint, MousePointerClick } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
   const lastUpdated = new Date().toLocaleDateString('en-US', { 
@@ -25,7 +26,7 @@ export default function PrivacyPolicyPage() {
                 Privacy Policy
               </h1>
               <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
-                Your privacy is our priority. Learn how we collect, use, and protect your information when you use TubeSeek.
+                Your privacy is our priority. Learn how we collect, use, and protect your information when you use TubeSeek, whether as a guest or a signed-in user.
               </p>
             </div>
 
@@ -52,7 +53,7 @@ export default function PrivacyPolicyPage() {
                 </CardHeader>
                 <CardContent className="text-slate-700 dark:text-slate-300 leading-relaxed">
                   <p className="text-lg">
-                    Welcome to TubeSeek. We are committed to protecting your privacy and maintaining the highest standards of data security. This Privacy Policy explains our practices regarding the collection, use, and protection of your information when you use our application.
+                    Welcome to TubeSeek. We are committed to protecting your privacy. This Privacy Policy explains our practices regarding the collection, use, and protection of your information for both registered users and guests.
                   </p>
                   <p className="mt-4 font-medium text-slate-800 dark:text-slate-200">
                     By using TubeSeek, you acknowledge that you have read and agree to the collection and use of information in accordance with this policy.
@@ -72,36 +73,36 @@ export default function PrivacyPolicyPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-6">
-                    We collect and store information necessary to provide and improve our service. The data we collect includes:
+                    To provide and improve our service, we collect different types of information depending on how you use the app.
                   </p>
                   
                   <div className="grid gap-4">
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Google Account Information</h4>
+                     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2"><Fingerprint className="w-4 h-4"/>For Guest Users</h4>
                       <p className="text-slate-700 dark:text-slate-300 text-sm">
-                        When you sign in, we collect your User ID, email address, display name, and profile picture URL associated with your Google account for authentication and personalization.
+                        If you use TubeSeek without signing in, we assign a unique, anonymous guest ID that is stored in your browser's `localStorage`. This allows us to save your search history during your session. This data is not linked to any personal information.
                       </p>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2"><Users className="w-4 h-4"/>For Registered Users</h4>
+                      <p className="text-slate-700 dark:text-slate-300 text-sm">
+                        When you sign in with Google, we collect and store the following information tied to your account:
+                      </p>
+                       <ul className="text-sm list-disc pl-5 mt-2 space-y-1 text-slate-700 dark:text-slate-300">
+                          <li><span className="font-semibold">Account Info:</span> Your Google User ID, email, display name, and profile picture.</li>
+                          <li><span className="font-semibold">Watch History & Likes:</span> Videos you watch and like are saved to provide these features.</li>
+                          <li><span className="font-semibold">Playlists & Subscriptions:</span> Any playlists you create or channels you subscribe to are stored.</li>
+                      </ul>
                     </div>
                     
                     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Search History</h4>
-                      <p className="text-slate-700 dark:text-slate-300 text-sm">
-                        We store your search queries to personalize your experience, improve our search functionality, and provide relevant recommendations.
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Watch History</h4>
-                      <p className="text-slate-700 dark:text-slate-300 text-sm">
-                        We maintain a record of videos you watch, including video details and timestamps, to provide you with a comprehensive watch history feature.
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Playlists</h4>
-                      <p className="text-slate-700 dark:text-slate-300 text-sm">
-                        We store the playlists you create, including their names, descriptions, and the videos you add to them for playlist management functionality.
-                      </p>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2"><MousePointerClick className="w-4 h-4"/>For All Users</h4>
+                       <ul className="text-sm list-disc pl-5 mt-2 space-y-1 text-slate-700 dark:text-slate-300">
+                         <li><span className="font-semibold">Search Queries:</span> We store all search queries to improve our service and, for signed-in users, to provide suggestions.</li>
+                         <li><span className="font-semibold">Navigation Clicks:</span> We log clicks on main navigation links (e.g., Home, History, Playlists) for internal analytics to understand feature usage and improve the app layout. This data is tied to your user ID (or guest ID).</li>
+                         <li><span className="font-semibold">Client-Side Caching:</span> To improve performance, we temporarily store data like search results, playlists, and history in your browser's `localStorage`. This data is refreshed periodically.</li>
+                       </ul>
                     </div>
                   </div>
                 </CardContent>
@@ -124,12 +125,10 @@ export default function PrivacyPolicyPage() {
                   
                   <div className="space-y-3">
                     {[
-                      "Provide, operate, and maintain our core services and features",
-                      "Personalize your experience by remembering preferences and viewing history",
-                      "Enable playlist creation and management functionality",
-                      "Display your personalized watch history for easy access",
-                      "Monitor service usage for internal analysis and continuous improvement",
-                      "Manage your account and provide responsive customer support"
+                      "To provide, operate, and maintain our core services like search, history, and playlists.",
+                      "To personalize your experience by remembering your activity and providing relevant content suggestions.",
+                      "To monitor service usage for internal analysis and continuous improvement of features and performance.",
+                      "To manage your account, provide secure authentication, and enable data control features."
                     ].map((item, index) => (
                       <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg">
                         <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
@@ -152,33 +151,16 @@ export default function PrivacyPolicyPage() {
                 </CardHeader>
                 <CardContent className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4">
                   <p>
-                    Your personal information, search history, watch history, and playlists are stored securely in Firebase Realtime Database, which provides enterprise-grade security and reliability.
+                    Your personal information is stored securely in Firebase Realtime Database. Category content (like Trending and Music) is cached daily on our server to enhance performance. Data is also cached on your device in `localStorage` to speed up navigation.
                   </p>
                   <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                     <p className="text-amber-800 dark:text-amber-200 font-medium">
-                      🔒 We implement industry-standard security measures including encryption, access controls, and regular security audits to protect your information from unauthorized access, use, or disclosure.
+                      🔒 We implement industry-standard security measures including encryption and access controls to protect your information from unauthorized access, use, or disclosure.
                     </p>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Data Sharing Card */}
-              <Card className="border-0 shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-                <CardHeader className="pb-6">
-                  <CardTitle className="text-2xl font-semibold">Information Sharing Policy</CardTitle>
-                </CardHeader>
-                <CardContent className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4">
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p className="text-green-800 dark:text-green-200 font-semibold mb-2">
-                      ✓ We do not sell, trade, or transfer your personally identifiable information to third parties.
-                    </p>
-                  </div>
-                  <p>
-                    This commitment does not include trusted service providers who assist us in operating our platform, provided they agree to maintain confidentiality. We may also release information when required by law or to protect rights, property, or safety.
-                  </p>
-                </CardContent>
-              </Card>
-
+              
               {/* User Rights Card */}
               <Card className="border-0 shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
                 <CardHeader className="pb-6">
@@ -186,21 +168,21 @@ export default function PrivacyPolicyPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-6">
-                    We believe in empowering you with complete control over your data. Your rights include:
+                    We believe in empowering you with complete control over your data.
                   </p>
                   
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Data Deletion Rights</h4>
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">For Registered Users</h4>
                       <p className="text-blue-800 dark:text-blue-200 text-sm">
-                        You can permanently delete your watch history and all playlists directly from the "Settings" page. These actions are immediate and irreversible.
+                        You can permanently delete your watch history, liked videos, subscriptions, and all playlists directly from the "Settings" page. These actions are immediate and irreversible.
                       </p>
                     </div>
                     
                     <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
-                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-100 mb-2">Access & Correction Rights</h4>
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-100 mb-2">For All Users</h4>
                       <p className="text-indigo-800 dark:text-indigo-200 text-sm">
-                        You have the right to access and correct your personal information. For account deletion or data correction requests, please contact us directly.
+                        You can clear your browser's `localStorage` at any time to remove the anonymous guest ID and all cached data stored on your device.
                       </p>
                     </div>
                   </div>
@@ -214,13 +196,8 @@ export default function PrivacyPolicyPage() {
                 </CardHeader>
                 <CardContent className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4">
                   <p>
-                    We may periodically update this Privacy Policy to reflect changes in our practices or legal requirements. All updates will be posted on this page with a revised "Last Updated" date.
+                    We may periodically update this Privacy Policy. All updates will be posted on this page with a revised "Last Updated" date.
                   </p>
-                  <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <p className="text-slate-800 dark:text-slate-200 font-medium">
-                      📋 We recommend reviewing this Privacy Policy periodically to stay informed about how we protect your information.
-                    </p>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -246,9 +223,6 @@ export default function PrivacyPolicyPage() {
                       >
                         msdharaniofficial@gmail.com
                       </a>
-                    </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
-                      We typically respond within 24-48 hours during business days.
                     </p>
                   </div>
                 </CardContent>
