@@ -120,4 +120,5 @@ export type Subscription = z.infer<typeof SubscriptionSchema>;
 export type FilterOptions = {
   order?: 'date' | 'rating' | 'relevance' | 'title' | 'videoCount' | 'viewCount';
   videoDuration?: 'any' | 'long' | 'medium' | 'short';
+  publishedAfter?: string;
 };

@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 import type { SearchResult } from "@/types/youtube";
-import { searchAndRefineVideos } from "@/app/actions";
+import { getCategoryVideos } from "@/app/actions/categories";
 import { useToast } from "@/hooks/use-toast";
 import { withAuth } from '@/context/auth-context';
 
@@ -28,7 +28,7 @@ function TrendingPage() {
     const performSearch = useCallback(async () => {
       setIsLoading(true);
       try {
-        const response = await searchAndRefineVideos("Trending", {}, true);
+        const response = await getCategoryVideos("Trending");
         if (response.error) {
           throw new Error(response.error);
         }

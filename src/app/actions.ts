@@ -111,10 +111,13 @@ export async function searchAndRefineVideos(
     } else {
       searchParamsObj.q = finalQuery;
       // For category search, always sort by date. For regular search, use filters.
-      searchParamsObj.order = isCategorySearch ? 'date' : (filters.order || 'relevance');
+      searchParamsObj.order = isCategorySearch ? (filters.order || 'date') : (filters.order || 'relevance');
 
       if (filters.videoDuration && filters.videoDuration !== 'any') {
         searchParamsObj.videoDuration = filters.videoDuration;
+      }
+      if (filters.publishedAfter) {
+        searchParamsObj.publishedAfter = filters.publishedAfter;
       }
     }
 
@@ -202,7 +205,7 @@ export async function searchAndRefineVideos(
 }
 
 export async function saveSearchQuery(
-  user: UserInfo,
+  user: UserInfo | { uid: string, displayName: string },
   query: string,
   resultsCount: number
 ): Promise<{ success?: boolean; error?: string }> {
@@ -227,10 +230,14 @@ export async function saveSearchQuery(
     
     // Save or update user profile info
     const userInfoRef = ref(db, `user-searches/${user.uid}/profile`);
+    // 'email' may not exist on guest user object
+    const email = 'email' in user ? user.email : null;
+    const photoURL = 'photoURL' in user ? user.photoURL : null;
+    
     await set(userInfoRef, {
-        email: user.email,
+        email: email,
         displayName: user.displayName,
-        photoURL: user.photoURL
+        photoURL: photoURL
     });
 
     return { success: true };
@@ -426,13 +433,13 @@ async function getUserSearchHistory(userId: string): Promise<{ data?: SearchQuer
 
 export async function getSuggestedVideos(userId: string): Promise<{ data?: SearchResult[]; error?: string; suggestionsEnabled?: boolean }> {
     if (!userId) {
-        return { error: "User ID is required to get suggestions." };
+        return { data: [], suggestionsEnabled: true };
     }
 
     try {
         // 1. Check if suggestions are enabled for the user
         const statusRes = await getUserSuggestionStatus(userId);
-        if (statusRes.error || !statusRes.data) {
+        if (statusRes.error || statusRes.data === false) { // Note: check for explicitly false
             return { data: [], suggestionsEnabled: false, error: statusRes.error };
         }
 

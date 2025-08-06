@@ -32,52 +32,36 @@ import {
   Music,
   Flame,
   Newspaper,
+  LogIn,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
 import { Logo } from "./logo";
+import { auth } from "@/lib/firebase";
 
 export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, loading, guestId } = useAuth();
   const { setOpenMobile } = useSidebar();
   const isAdmin = user?.email === "msdharaniofficial@gmail.com";
   const inAdminSection = pathname.startsWith("/admin");
+  const isGuest = !user;
 
   const handleNavigation = (path: string) => {
     router.push(path);
     setOpenMobile(false);
   };
+  
+  const handleSignIn = () => {
+    router.push('/login');
+    setOpenMobile(false);
+  }
 
-  const navItem = (path: string, icon: React.ReactNode, text: string) => {
-    const isActive =
-      path === "/admin"
-        ? pathname === path
-        : path === "/search" || path === "/"
-        ? pathname === path ||
-          pathname === "/music" ||
-          pathname === "/trending" ||
-          pathname === "/news"
-        : pathname.startsWith(path);
-    
-    // A more specific check for the home/search link
-    const isHomeActive = (pathname === '/search' || pathname === '/' || pathname === '/music' || pathname === '/trending' || pathname === '/news');
-
-
+  const navItem = (path: string, icon: React.ReactNode, text: string, disabled: boolean = false) => {
+    let isActive = pathname.startsWith(path);
     if (path === '/search') {
-        return (
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                    onClick={() => handleNavigation(path)}
-                    className="w-full justify-start"
-                    isActive={isHomeActive}
-                >
-                    {icon}
-                    <span>{text}</span>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        )
+      isActive = (pathname === '/search' || pathname === '/');
     }
 
     return (
@@ -85,7 +69,9 @@ export function AppSidebar() {
         <SidebarMenuButton
           onClick={() => handleNavigation(path)}
           className="w-full justify-start"
-          isActive={pathname.startsWith(path)}
+          isActive={isActive}
+          disabled={disabled}
+          aria-disabled={disabled}
         >
           {icon}
           <span>{text}</span>
@@ -142,15 +128,25 @@ export function AppSidebar() {
               {categoryNavItem("/music", <Music />, "Music")}
               {categoryNavItem("/trending", <Flame />, "Trending")}
               {categoryNavItem("/news", <Newspaper />, "News")}
-              {navItem("/playlists", <ListVideo />, "Playlists")}
-              {navItem("/history", <History />, "History")}
-              {navItem("/liked", <Heart />, "Liked Videos")}
-              {navItem("/subscriptions", <Tv />, "Subscriptions")}
-              {navItem("/settings", <Settings />, "Settings")}
+              {navItem("/playlists", <ListVideo />, "Playlists", isGuest)}
+              {navItem("/history", <History />, "History", isGuest)}
+              {navItem("/liked", <Heart />, "Liked Videos", isGuest)}
+              {navItem("/subscriptions", <Tv />, "Subscriptions", isGuest)}
+              {navItem("/settings", <Settings />, "Settings", isGuest)}
               {isAdmin && navItem("/admin", <Shield />, "Admin")}
             </>
           )}
         </SidebarMenu>
+        
+        {isGuest && (
+            <div className="p-4 mt-auto">
+                 <Button onClick={handleSignIn} className="w-full">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                </Button>
+            </div>
+        )}
+
         <SidebarFooter className="p-4 space-y-4 mt-auto text-muted-foreground md:mb-16">
           <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:justify-start">
             <Button
