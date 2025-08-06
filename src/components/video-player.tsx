@@ -294,7 +294,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   const fetchStatus = useCallback(async () => {
     if (!user || !video) return;
-    setLikeCount(Number(video.likeCount) || 0);
     const { data, error } = await getInteractionStatus(user.uid, video.videoId, video.channelId);
     if (error) {
         console.error("Failed to get interaction status", error);
@@ -306,6 +305,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   
   useEffect(() => {
     if (video) {
+        setLikeCount(Number(video.likeCount) || 0);
         loadYouTubePlayer();
         if (user) {
             fetchStatus();
