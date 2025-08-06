@@ -149,70 +149,72 @@ export function AppSidebar() {
 
         <SidebarFooter className="mt-auto p-4 space-y-4 text-muted-foreground md:mb-16 group-data-[collapsible=icon]:p-2">
             {isGuest && (
-                <div className="group-data-[collapsible=icon]:p-2 md:hidden">
+                <div className="md:hidden">
                     <Button onClick={handleSignIn} className="w-full">
                         <LogIn className="mr-2 h-4 w-4" />
                         <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
                     </Button>
                 </div>
             )}
-          <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:space-x-0 group-data-[collapsible=icon]:space-y-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground"
-              asChild
-            >
-              <Link href="http://github.com/msdharani1/" target="_blank">
-                <Github className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground"
-              asChild
-            >
-              <Link
-                href="https://www.linkedin.com/in/tharanimca/"
-                target="_blank"
-              >
-                <Linkedin className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground"
-              asChild
-            >
-              <Link href="https://x.com/msdharani007" target="_blank">
-                <Twitter className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:hidden">
-            <p>
-              Developed by{" "}
-              <a
-                href="http://www.dev.msdharani.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-primary hover:underline"
-              >
-                MS Dharani
-              </a>
-              .
-            </p>
-            <p>
-              <Link
-                href="/privacy-policy"
-                onClick={() => setOpenMobile(false)}
-                className="hover:text-primary underline"
-              >
-                Privacy Policy
-              </Link>
-            </p>
+          <div className="flex flex-col items-center gap-4">
+              <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:space-x-0 group-data-[collapsible=icon]:space-y-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground"
+                  asChild
+                >
+                  <Link href="http://github.com/msdharani1/" target="_blank">
+                    <Github className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground"
+                  asChild
+                >
+                  <Link
+                    href="https://www.linkedin.com/in/tharanimca/"
+                    target="_blank"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 hover:bg-sidebar-accent hover:text-foreground"
+                  asChild
+                >
+                  <Link href="https://x.com/msdharani007" target="_blank">
+                    <Twitter className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1 text-center group-data-[collapsible=icon]:hidden">
+                <p>
+                  Developed by{" "}
+                  <a
+                    href="http://www.dev.msdharani.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-primary hover:underline"
+                  >
+                    MS Dharani
+                  </a>
+                  .
+                </p>
+                <p>
+                  <Link
+                    href="/privacy-policy"
+                    onClick={() => setOpenMobile(false)}
+                    className="hover:text-primary underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                </p>
+              </div>
           </div>
         </SidebarFooter>
       </SidebarContent>
