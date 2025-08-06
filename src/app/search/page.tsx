@@ -230,7 +230,7 @@ function SearchPage() {
     const showEmptyState = !isLoading && !query && (!user || !suggestionsEnabled || results.length === 0);
 
     const renderContent = () => {
-      if (isLoading) {
+      if (isLoading && hasSearched) {
         return <LoadingSkeleton />;
       }
       if ((hasSearched || isShowingSuggestions) && results.length > 0) {
