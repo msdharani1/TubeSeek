@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -26,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, User, History as HistoryIcon } from 'lucide-react';
 
-type UserSearchData = Record<string, { profile: UserInfo; searches: SearchQuery[] }>;
+type UserSearchData = Record<string, { profile?: UserInfo; searches: SearchQuery[] }>;
 
 function UserHistoryPage() {
   const { user, loading: authLoading } = useAuth();
@@ -100,17 +101,22 @@ function UserHistoryPage() {
                     <SelectValue placeholder="Select a user to view their history" />
                   </SelectTrigger>
                   <SelectContent>
-                    {userIds.map(userId => (
-                      <SelectItem key={userId} value={userId}>
-                        <div className="flex items-center gap-3">
-                           <Avatar className="h-6 w-6">
-                              <AvatarImage src={searchData[userId].profile.photoURL || undefined} />
-                              <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
-                           </Avatar>
-                           <span>{searchData[userId].profile.email}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {userIds.map(userId => {
+                      const profile = searchData[userId]?.profile;
+                      const displayName = profile?.email || `Guest ${userId.substring(0,6)}`;
+
+                      return (
+                        <SelectItem key={userId} value={userId}>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-6 w-6">
+                                <AvatarImage src={profile?.photoURL || undefined} />
+                                <AvatarFallback><User className="h-4 w-4"/></AvatarFallback>
+                            </Avatar>
+                            <span>{displayName}</span>
+                          </div>
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
               </div>
