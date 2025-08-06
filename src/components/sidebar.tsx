@@ -34,6 +34,7 @@ import {
   Newspaper,
   LogIn,
   Baby,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
@@ -64,6 +65,10 @@ export function AppSidebar() {
     if (path === '/search') {
       isActive = (pathname === '/search' || pathname === '/');
     }
+     if (path === '/admin') {
+      isActive = pathname === '/admin';
+    }
+
 
     return (
       <SidebarMenuItem>
@@ -122,6 +127,7 @@ export function AppSidebar() {
               {navItem("/admin/suggestions", <Lightbulb />, "Suggestions")}
               {navItem("/admin/track", <LineChart />, "Track")}
               {navItem("/admin/clicks", <MousePointerClick />, "Clicks")}
+              {navItem("/admin/api-limit", <KeyRound />, "API Limit")}
             </>
           ) : (
             <>
