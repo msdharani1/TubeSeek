@@ -30,7 +30,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
-        <script src="https://unpkg.com/uuid@latest/dist/umd/uuidv4.min.js"></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -60,4 +59,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-
+}
