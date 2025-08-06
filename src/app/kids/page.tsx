@@ -14,6 +14,13 @@ import { VideoPlayer } from "@/components/video-player";
 import { Loader2, Baby } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
 
+type CachedCategoryVideos = {
+    timestamp: number;
+    videos: SearchResult[];
+}
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 function KidsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -27,12 +34,36 @@ function KidsPage() {
 
     const performSearch = useCallback(async () => {
       setIsLoading(true);
+      const cacheKey = `kids_videos_cache`;
+      const cached = localStorage.getItem(cacheKey);
+
+      if (cached) {
+          try {
+              const { timestamp, videos: cachedVideos }: CachedCategoryVideos = JSON.parse(cached);
+              if (Date.now() - timestamp < CACHE_DURATION) {
+                  setResults(cachedVideos);
+                  setIsLoading(false);
+                  return;
+              }
+          } catch (e) {
+              console.error("Failed to parse kids videos cache", e);
+              localStorage.removeItem(cacheKey);
+          }
+      }
+
       try {
         const response = await getCategoryVideos("Kids");
         if (response.error) {
           throw new Error(response.error);
         }
-        setResults(response.data || []);
+        const freshVideos = response.data || [];
+        setResults(freshVideos);
+        const dataToCache: CachedCategoryVideos = {
+            timestamp: Date.now(),
+            videos: freshVideos
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         toast({
