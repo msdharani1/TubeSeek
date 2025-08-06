@@ -131,7 +131,6 @@ const VideoDetails = ({
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const [promptOpen, setPromptOpen] = useState(false);
-    const router = useRouter();
 
     const handleShareClick = () => {
         setIsSharing(true);
@@ -141,51 +140,19 @@ const VideoDetails = ({
     
     const publishedDate = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
 
-    const handleGuestAction = () => {
+    const handleGuestAction = (e: React.MouseEvent) => {
+        e.preventDefault();
         setPromptOpen(true);
-    }
-
-    if (isGuest) {
-        return (
-             <div className="p-6">
-                <LoginPromptDialog 
-                    open={promptOpen}
-                    onOpenChange={setPromptOpen}
-                    title="Login to unlock this feature"
-                    description="Liking videos, subscribing to channels, and creating playlists are available only to logged-in users. Please sign in to continue."
-                />
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                    {video.title}
-                </h1>
-                <div className="py-4 flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                        <Eye className="w-4 h-4"/>
-                        {formatCount(video.viewCount)} views
-                    </span>
-                    <span>&bull;</span>
-                    <span>{publishedDate}</span>
-                </div>
-                <div className="border-t py-4 my-4">
-                     <Button className="w-full" onClick={() => router.push('/login')}>
-                        <LogIn className="mr-2 h-4 w-4"/>
-                        Sign in to like, subscribe, and more
-                    </Button>
-                </div>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-muted/50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-foreground">Description</h3>
-                    <div className={cn("whitespace-pre-wrap break-words line-clamp-3")}>
-                        {formatDescription(video.description, seekTo)}
-                    </div>
-                     <Button variant="link" onClick={() => router.push('/login')} className="p-0 h-auto text-primary">
-                        Login to show more
-                    </Button>
-                </div>
-            </div>
-        )
     }
 
     return (
         <div className="p-6">
+            <LoginPromptDialog 
+                open={promptOpen}
+                onOpenChange={setPromptOpen}
+                title="Login to unlock this feature"
+                description="Liking videos, subscribing to channels, and creating playlists are available only to logged-in users. Please sign in to continue."
+            />
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {video.title}
             </h1>
@@ -200,7 +167,7 @@ const VideoDetails = ({
                 </div>
                 <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
                     <div className="flex items-center gap-2">
-                        <Button variant={isLiked ? 'secondary' : 'outline'} onClick={onLike} className="hover:bg-muted/50 flex-shrink-0">
+                        <Button variant={isLiked ? 'secondary' : 'outline'} onClick={isGuest ? handleGuestAction : onLike} className="hover:bg-muted/50 flex-shrink-0">
                             <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
                             {formatCount(likeCount)}
                         </Button>
@@ -216,7 +183,7 @@ const VideoDetails = ({
             </div>
             <div className="border-y py-4 my-4 flex items-center justify-between">
                 <h3 className="font-bold text-lg">{video.channelTitle}</h3>
-                <Button variant={isSubscribed ? 'default' : 'outline'} onClick={onSubscribe} className="hover:bg-muted/50">
+                <Button variant={isSubscribed ? 'default' : 'outline'} onClick={isGuest ? handleGuestAction : onSubscribe} className="hover:bg-muted/50">
                     {isSubscribed ? <BellRing className="mr-2 h-4 w-4" /> : <Bell className="mr-2 h-4 w-4" />}
                     {isSubscribed ? 'Subscribed' : 'Subscribe'}
                 </Button>
