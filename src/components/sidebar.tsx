@@ -33,6 +33,7 @@ import {
   Flame,
   Newspaper,
   LogIn,
+  Baby,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "./ui/button";
@@ -125,9 +126,10 @@ export function AppSidebar() {
           ) : (
             <>
               {navItem("/search", <Home />, "Home")}
-              {categoryNavItem("/music", <Music />, "Music")}
               {categoryNavItem("/trending", <Flame />, "Trending")}
+              {categoryNavItem("/music", <Music />, "Music")}
               {categoryNavItem("/news", <Newspaper />, "News")}
+              {categoryNavItem("/kids", <Baby />, "Kids")}
               {navItem("/playlists", <ListVideo />, "Playlists", isGuest)}
               {navItem("/history", <History />, "History", isGuest)}
               {navItem("/liked", <Heart />, "Liked Videos", isGuest)}

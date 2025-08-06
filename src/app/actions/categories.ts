@@ -13,7 +13,7 @@ type CachedCategory = {
 };
 
 export async function getCategoryVideos(
-    category: 'Music' | 'Trending' | 'News'
+    category: 'Music' | 'Trending' | 'News' | 'Kids'
 ): Promise<{ data?: SearchResult[]; error?: string }> {
     
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -33,17 +33,21 @@ export async function getCategoryVideos(
         // 2. If no valid cache, fetch fresh data from YouTube
         let publishedAfter: string | undefined;
         let order: 'viewCount' | 'date' = 'viewCount';
+        let query = category;
 
         if (category === 'Music') {
             publishedAfter = subDays(new Date(), 30).toISOString();
         } else if (category === 'Trending') {
             publishedAfter = subDays(new Date(), 7).toISOString();
+        } else if (category === 'Kids') {
+            query = "Kids cartoons rhymes";
+            order = 'viewCount';
         } else { // News
             order = 'date';
         }
 
         const { data: freshVideos, error } = await searchAndRefineVideos(
-            category,
+            query,
             { order, publishedAfter },
             true
         );
