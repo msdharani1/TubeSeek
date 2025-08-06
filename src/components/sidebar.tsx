@@ -147,9 +147,9 @@ export function AppSidebar() {
         </SidebarMenu>
         
         {isGuest && (
-            <div className="p-4 mt-auto group-data-[collapsible=icon]:p-2">
-                 <Button onClick={handleSignIn} className="w-full group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-2">
-                    <LogIn className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
+            <div className="p-4 mt-auto group-data-[collapsible=icon]:p-2 md:hidden">
+                 <Button onClick={handleSignIn} className="w-full">
+                    <LogIn className="mr-2 h-4 w-4" />
                     <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
                 </Button>
             </div>

@@ -49,7 +49,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
-      <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-16 items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 lg:px-8">
         
         {/* Left Section */}
         <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ export function Header() {
         </div>
         
         {/* Center Section - Search Bar */}
-        <div className="flex flex-1 justify-center px-4">
+        <div className="flex flex-1 justify-center px-0 sm:px-4">
           <div className="w-full max-w-2xl">
             <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query || ''} />
           </div>
@@ -103,7 +103,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-                <Button onClick={() => router.push('/login')}>
+                <Button onClick={() => router.push('/login')} className="hidden md:flex">
                     <LogIn className="mr-2 h-4 w-4"/>
                     Sign In
                 </Button>
