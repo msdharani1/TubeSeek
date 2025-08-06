@@ -146,16 +146,16 @@ export function AppSidebar() {
           )}
         </SidebarMenu>
         
-        {isGuest && (
-            <div className="p-4 mt-auto group-data-[collapsible=icon]:p-2 md:hidden">
-                 <Button onClick={handleSignIn} className="w-full">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
-                </Button>
-            </div>
-        )}
 
-        <SidebarFooter className="p-4 space-y-4 text-muted-foreground md:mb-16 group-data-[collapsible=icon]:p-2">
+        <SidebarFooter className="mt-auto p-4 space-y-4 text-muted-foreground md:mb-16 group-data-[collapsible=icon]:p-2">
+            {isGuest && (
+                <div className="group-data-[collapsible=icon]:p-2 md:hidden">
+                    <Button onClick={handleSignIn} className="w-full">
+                        <LogIn className="mr-2 h-4 w-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Sign In</span>
+                    </Button>
+                </div>
+            )}
           <div className="flex space-x-2 justify-center group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:space-x-0 group-data-[collapsible=icon]:space-y-2">
             <Button
               variant="ghost"
