@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -7,11 +6,12 @@ import { useRouter } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, BarChart3, Users, Search, ListVideo, Heart } from 'lucide-react';
+import { BarChart3, Users, Search, ListVideo, Heart } from 'lucide-react';
 import { getUserActivity } from '@/app/actions/user-settings';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 
 type UserActivity = {
     totalInteractions: number;
@@ -64,7 +64,7 @@ function TrackPage() {
   if (authLoading || isLoading) {
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <RippleWaveLoader />
             <p className="mt-4 text-muted-foreground">Loading Activity...</p>
         </div>
     );

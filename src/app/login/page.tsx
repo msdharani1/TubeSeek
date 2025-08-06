@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -10,9 +9,9 @@ import { auth, googleProvider } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
-import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
@@ -41,8 +40,8 @@ export default function LoginPage() {
 
   if (loading || user) {
       return (
-        <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex h-full w-full flex-col items-center justify-center text-center bg-background">
+            <RippleWaveLoader />
             <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
     );

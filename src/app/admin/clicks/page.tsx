@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -8,11 +7,12 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, MousePointerClick, BarChart3, FileJson, Link as LinkIcon } from 'lucide-react';
+import { MousePointerClick, BarChart3, FileJson, Link as LinkIcon } from 'lucide-react';
 import { getClickAnalytics } from '@/app/actions/clicks';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 
 type ClickAnalytics = {
     totalClicks: number;
@@ -62,7 +62,7 @@ function ClicksPage() {
   if (authLoading || isLoading) {
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <RippleWaveLoader />
             <p className="mt-4 text-muted-foreground">Loading Analytics...</p>
         </div>
     );

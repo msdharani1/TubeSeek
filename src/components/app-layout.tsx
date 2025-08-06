@@ -1,13 +1,12 @@
-
 "use client";
 
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "./sidebar";
 import { useAuth } from "@/context/auth-context";
 import { Header } from "./header";
-import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { logUserClick } from "@/app/actions/clicks";
+import { RippleWaveLoader } from "./ripple-wave-loader";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -23,7 +22,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     if (loading) {
        return (
          <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <RippleWaveLoader />
             <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
        )

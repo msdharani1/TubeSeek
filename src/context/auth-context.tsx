@@ -1,12 +1,11 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 
 interface AuthContextType {
   user: User | null;
@@ -58,12 +57,6 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>) =>
 
     const protectedRoutes = [
         '/admin',
-        // These are now handled within the page itself
-        // '/history', 
-        // '/liked', 
-        // '/playlists', 
-        // '/subscriptions',
-        // '/settings'
     ];
 
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
@@ -77,7 +70,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>) =>
     if (loading) {
         return (
             <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <RippleWaveLoader />
                 <p className="mt-4 text-muted-foreground">Loading...</p>
             </div>
         );
@@ -86,7 +79,7 @@ export const withAuth = <P extends object>(Component: React.ComponentType<P>) =>
     if (isProtectedRoute && !user) {
          return (
             <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <RippleWaveLoader />
                 <p className="mt-4 text-muted-foreground">Redirecting to login...</p>
             </div>
         );

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -25,7 +24,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, User, History as HistoryIcon } from 'lucide-react';
+import { User, History as HistoryIcon } from 'lucide-react';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 
 type UserSearchData = Record<string, { profile?: UserInfo; searches: SearchQuery[] }>;
 
@@ -68,7 +68,7 @@ function UserHistoryPage() {
   if (authLoading || (!user && !authLoading) || user?.email !== "msdharaniofficial@gmail.com") {
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <RippleWaveLoader />
             <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
     );
@@ -81,7 +81,7 @@ function UserHistoryPage() {
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <RippleWaveLoader />
           </div>
         ) : error ? (
           <Alert variant="destructive">

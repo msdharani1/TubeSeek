@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +9,8 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tv, Frown, Loader2, BellRing, LogIn } from "lucide-react";
+import { Tv, Frown, BellRing, LogIn } from "lucide-react";
+import { RippleWaveLoader } from "@/components/ripple-wave-loader";
 
 type CachedSubscriptions = {
     timestamp: number;
@@ -133,7 +133,7 @@ function SubscriptionsPage() {
             
             {isLoading ? (
                   <div className="flex justify-center items-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <RippleWaveLoader />
                 </div>
             ) : subscriptions.length > 0 ? (
                 <div className="space-y-4">

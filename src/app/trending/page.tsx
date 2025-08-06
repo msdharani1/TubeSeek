@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
@@ -11,9 +10,10 @@ import { withAuth } from '@/context/auth-context';
 
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
-import { Loader2, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { RippleWaveLoader } from "@/components/ripple-wave-loader";
 
 type CachedCategoryVideos = {
     timestamp: number;
@@ -134,7 +134,7 @@ function TrendingPage() {
 
 function TrendingPageWrapper() {
    return (
-      <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
+      <Suspense fallback={<div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background"><RippleWaveLoader /><p className="mt-4 text-muted-foreground">Loading...</p></div>}>
           <TrendingPage />
       </Suspense>
    )

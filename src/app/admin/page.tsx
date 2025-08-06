@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Users, Search, ListVideo, Heart, LineChart } from 'lucide-react';
+import { Users, Search, ListVideo, Heart, LineChart } from 'lucide-react';
 import { getDashboardStats } from '@/app/actions/admin';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart as RechartsLineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 
 type DashboardStats = {
     totalUsers: number;
@@ -62,7 +63,7 @@ function AdminDashboardPage() {
   if (authLoading || isLoading) {
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <RippleWaveLoader />
             <p className="mt-4 text-muted-foreground">Loading Dashboard...</p>
         </div>
     );
