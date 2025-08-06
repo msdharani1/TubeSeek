@@ -13,6 +13,7 @@ import { VideoPlayer } from "@/components/video-player";
 import { VideoCard } from "@/components/video-card";
 import { ListVideo, Frown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 function PlaylistDetailPage() {
     const { user } = useAuth();
@@ -29,6 +30,8 @@ function PlaylistDetailPage() {
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
 
     const videoId = searchParams.get('v');
+
+    usePageTitle(selectedVideo ? selectedVideo.title : playlistName);
 
     useEffect(() => {
         if (user && playlistId) {

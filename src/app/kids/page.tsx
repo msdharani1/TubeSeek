@@ -13,6 +13,7 @@ import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Loader2, Baby } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 type CachedCategoryVideos = {
     timestamp: number;
@@ -31,6 +32,8 @@ function KidsPage() {
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
     
     const videoId = searchParams.get('v');
+
+    usePageTitle(selectedVideo ? selectedVideo.title : 'Kids');
 
     const performSearch = useCallback(async () => {
       setIsLoading(true);

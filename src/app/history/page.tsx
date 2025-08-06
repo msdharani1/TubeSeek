@@ -13,6 +13,7 @@ import { VideoPlayer } from "@/components/video-player";
 import { VideoCard } from "@/components/video-card";
 import { History, Frown, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 type CachedHistory = {
     timestamp: number;
@@ -32,6 +33,8 @@ function HistoryPage() {
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
 
     const videoId = searchParams.get('v');
+    
+    usePageTitle(selectedVideo ? selectedVideo.title : 'Watch History');
 
     useEffect(() => {
         if (user) {

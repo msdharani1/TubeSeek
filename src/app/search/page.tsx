@@ -15,6 +15,7 @@ import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Loader2 } from "lucide-react";
 import { SearchFilter } from "@/components/search-filter";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 type CachedData = {
     timestamp: number;
@@ -58,6 +59,16 @@ function SearchPage() {
 
     const hasSearched = query !== null;
     const isShowingSuggestions = !hasSearched && !isLoading && !!user && suggestionsEnabled;
+
+    const getPageTitle = () => {
+        if (selectedVideo) return selectedVideo.title;
+        if (query) return `Results for "${query}"`;
+        if (isShowingSuggestions) return "Suggestions for You";
+        return "Search";
+    }
+
+    usePageTitle(getPageTitle());
+
 
     const performSearch = useCallback(async (searchQuery: string, newFilters?: FilterOptions) => {
       if (!searchQuery) return;
@@ -221,14 +232,6 @@ function SearchPage() {
       router.push(`/search?${params.toString()}`);
     };
 
-    const getPageTitle = () => {
-      if(query) return `Results for "${query}"`;
-      if(isShowingSuggestions) return "Suggestions for You";
-      return "";
-    }
-    
-    const showEmptyState = !isLoading && !query && (!user || !suggestionsEnabled || results.length === 0);
-
     const renderContent = () => {
       if (isLoading && hasSearched) {
         return <LoadingSkeleton />;
@@ -245,7 +248,7 @@ function SearchPage() {
           </div>
         );
       }
-      if (showEmptyState) {
+      if (!isLoading && !hasSearched && (!user || !suggestionsEnabled || results.length === 0)) {
         return (
           <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
             <Logo className="w-16 h-16 text-muted-foreground/50"/>
@@ -262,7 +265,9 @@ function SearchPage() {
         <div className="container mx-auto sm:px-4 py-8">
           {(hasSearched || isShowingSuggestions) && (
              <div className="flex items-center justify-between mb-8 px-4 sm:px-0">
-                 <h1 className="text-xl md:text-2xl font-bold tracking-tight">{getPageTitle()}</h1>
+                 <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">
+                    {query ? `Results for "${query}"` : "Suggestions for You"}
+                 </h1>
                   {hasSearched && (
                     <SearchFilter 
                       currentFilters={filters}

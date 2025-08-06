@@ -13,6 +13,7 @@ import { VideoPlayer } from "@/components/video-player";
 import { VideoCard } from "@/components/video-card";
 import { Heart, Frown, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 type CachedLikedVideos = {
     timestamp: number;
@@ -32,6 +33,8 @@ function LikedVideosPage() {
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
 
     const videoId = searchParams.get('v');
+
+    usePageTitle(selectedVideo ? selectedVideo.title : 'Liked Videos');
 
     useEffect(() => {
         if (user) {

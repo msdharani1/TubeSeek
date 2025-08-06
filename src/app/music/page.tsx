@@ -13,6 +13,7 @@ import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { Loader2, Music as MusicIcon } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
+import { usePageTitle } from "@/hooks/use-page-title";
 
 type CachedCategoryVideos = {
     timestamp: number;
@@ -31,6 +32,8 @@ function MusicPage() {
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
     
     const videoId = searchParams.get('v');
+
+    usePageTitle(selectedVideo ? selectedVideo.title : 'Music');
 
     const performSearch = useCallback(async () => {
       setIsLoading(true);
