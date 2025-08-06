@@ -13,8 +13,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user, loading } = useAuth();
     
-    const showNav = pathname !== '/login' && pathname !== '/privacy-policy';
-
     useEffect(() => {
         if (user && pathname) {
             // We don't wait for the result, just fire and forget
@@ -31,19 +29,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
        )
     }
 
-    if (showNav) {
-        return (
-            <div className="flex h-screen w-full flex-col">
-                <Header />
-                <div className="flex flex-1 overflow-hidden">
-                    <AppSidebar />
-                    <main className="flex-1 overflow-y-auto bg-background">
-                        {children}
-                    </main>
-                </div>
+    return (
+        <div className="flex h-screen w-full flex-col">
+            <Header />
+            <div className="flex flex-1 overflow-hidden">
+                <AppSidebar />
+                <main className="flex-1 overflow-y-auto bg-background">
+                    {children}
+                </main>
             </div>
-        )
-    }
-
-    return <>{children}</>;
+        </div>
+    )
 }
