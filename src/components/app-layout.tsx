@@ -13,7 +13,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user, loading } = useAuth();
     
-    const showNav = user && pathname !== '/login' && pathname !== '/privacy-policy';
+    const showNav = pathname !== '/login' && pathname !== '/privacy-policy';
 
     useEffect(() => {
         if (user && pathname) {
