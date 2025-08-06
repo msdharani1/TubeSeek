@@ -49,8 +49,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
-        <div className="flex flex-col items-center gap-4 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
             <Logo className="h-16 w-16 text-primary" />
             <h1 className="text-5xl font-bold tracking-tighter text-foreground font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
                 Welcome to TubeSeek
