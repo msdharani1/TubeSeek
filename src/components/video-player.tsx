@@ -3,18 +3,20 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
-import { cn, formatCount, formatDuration, isoDurationToSeconds } from "@/lib/utils";
+import { cn, formatCount, formatDuration } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { saveVideoToHistory, updateVideoProgress } from "@/app/actions";
 import { getInteractionStatus, toggleLikeVideo, toggleSubscription } from "@/app/actions/video-interactions";
 import { AddToPlaylist } from "./add-to-playlist";
 import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
+import { LoginPromptDialog } from "./login-prompt-dialog";
+import { useRouter } from "next/navigation";
 
 // Helper to parse and style the description
 const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
@@ -111,7 +113,8 @@ const VideoDetails = ({
     isSubscribed,
     onLike,
     onSubscribe,
-    likeCount
+    likeCount,
+    isGuest
 }: { 
     video: SearchResult, 
     onShare: () => void, 
@@ -123,9 +126,12 @@ const VideoDetails = ({
     onLike: () => void,
     onSubscribe: () => void,
     likeCount: number,
+    isGuest: boolean,
 }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
+    const [promptOpen, setPromptOpen] = useState(false);
+    const router = useRouter();
 
     const handleShareClick = () => {
         setIsSharing(true);
@@ -134,6 +140,49 @@ const VideoDetails = ({
     }
     
     const publishedDate = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
+
+    const handleGuestAction = () => {
+        setPromptOpen(true);
+    }
+
+    if (isGuest) {
+        return (
+             <div className="p-6">
+                <LoginPromptDialog 
+                    open={promptOpen}
+                    onOpenChange={setPromptOpen}
+                    title="Login to unlock this feature"
+                    description="Liking videos, subscribing to channels, and creating playlists are available only to logged-in users. Please sign in to continue."
+                />
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                    {video.title}
+                </h1>
+                <div className="py-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                        <Eye className="w-4 h-4"/>
+                        {formatCount(video.viewCount)} views
+                    </span>
+                    <span>&bull;</span>
+                    <span>{publishedDate}</span>
+                </div>
+                <div className="border-t py-4 my-4">
+                     <Button className="w-full" onClick={() => router.push('/login')}>
+                        <LogIn className="mr-2 h-4 w-4"/>
+                        Sign in to like, subscribe, and more
+                    </Button>
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-muted/50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-foreground">Description</h3>
+                    <div className={cn("whitespace-pre-wrap break-words line-clamp-3")}>
+                        {formatDescription(video.description, seekTo)}
+                    </div>
+                     <Button variant="link" onClick={() => router.push('/login')} className="p-0 h-auto text-primary">
+                        Login to show more
+                    </Button>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="p-6">
@@ -210,8 +259,11 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
 
+  const isGuest = !user;
+
   const onPlayerReady = useCallback((event: any) => {
-    const startSeconds = 'progressSeconds' in video! ? video.progressSeconds : 0;
+    if (!video) return;
+    const startSeconds = 'progressSeconds' in video ? video.progressSeconds : 0;
     if (startSeconds) {
         event.target.seekTo(startSeconds, true);
     }
@@ -219,6 +271,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   }, [video]);
   
   const onPlayerStateChange = useCallback((event: any) => {
+    if (isGuest) return;
+
     if (event.data === YT.PlayerState.PLAYING) {
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = setInterval(() => {
@@ -233,7 +287,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             progressIntervalRef.current = null;
         }
     }
-  }, [user, video]);
+  }, [user, video, isGuest]);
 
 
   const loadYouTubePlayer = useCallback(() => {
@@ -284,17 +338,19 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   }, [user, video]);
   
   useEffect(() => {
-    if (video && user) {
+    if (video) {
         loadYouTubePlayer();
-        fetchStatus();
-        saveVideoToHistory(user.uid, video)
-            .then(result => {
-                if(result.error) {
-                    console.warn("Could not save to history:", result.error)
-                } else {
-                    localStorage.removeItem(`history_cache_${user.uid}`);
-                }
-            })
+        if (user) {
+            fetchStatus();
+            saveVideoToHistory(user.uid, video)
+                .then(result => {
+                    if(result.error) {
+                        console.warn("Could not save to history:", result.error)
+                    } else {
+                        localStorage.removeItem(`history_cache_${user.uid}`);
+                    }
+                })
+        }
     }
     
     // Cleanup on component unmount
@@ -306,8 +362,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             playerRef.current.destroy();
         }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [video, user, fetchStatus]);
+  }, [video, user, fetchStatus, loadYouTubePlayer]);
 
   const seekTo = (seconds: number) => {
     if (playerRef.current) {
@@ -420,6 +475,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                     onLike={handleLike}
                     onSubscribe={handleSubscribe}
                     likeCount={likeCount}
+                    isGuest={isGuest}
                  />
             </div>
 

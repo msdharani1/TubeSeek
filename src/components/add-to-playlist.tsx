@@ -13,6 +13,7 @@ import { useAuth } from "@/context/auth-context";
 import { getPlaylists, createPlaylist, updateVideoInPlaylists, getPlaylistsForVideo } from "@/app/actions/playlist";
 import type { Playlist, SearchResult } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
+import { LoginPromptDialog } from "./login-prompt-dialog";
 
 const defaultFavoritePlaylist: Playlist = {
     id: 'favorite-default',
@@ -33,8 +34,15 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
     const [newPlaylistName, setNewPlaylistName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [promptOpen, setPromptOpen] = useState(false);
+
+    const isGuest = !user;
 
     const fetchAllData = useCallback(async () => {
+        if (isGuest) {
+            setIsLoading(false);
+            return;
+        }
         if (!user) return;
         setIsLoading(true);
 
@@ -77,7 +85,7 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         }
 
         setIsLoading(false);
-    }, [user, video.videoId]);
+    }, [user, video.videoId, isGuest]);
 
 
     useEffect(() => {
@@ -85,6 +93,14 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
             fetchAllData();
         }
     }, [open, fetchAllData]);
+
+    const handleOpenChange = (isOpen: boolean) => {
+        if (isGuest && isOpen) {
+            setPromptOpen(true);
+            return;
+        }
+        setOpen(isOpen);
+    }
 
     const handleCheckedChange = (playlistId: string) => {
         setSelectedPlaylists(prev => 
@@ -134,18 +150,15 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
         setIsSaving(false);
     }
 
-    // Determine the actual DB IDs for saving
-    const finalSelectedIds = selectedPlaylists.filter(id => id !== 'favorite-default');
-    const favoritePlaylistInDb = playlists.find(p => p.name === 'Favorite' && p.id !== 'favorite-default');
-    if (selectedPlaylists.includes('favorite-default') && favoritePlaylistInDb) {
-        if (!finalSelectedIds.includes(favoritePlaylistInDb.id)) {
-            finalSelectedIds.push(favoritePlaylistInDb.id);
-        }
-    }
-
-
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <>
+        <LoginPromptDialog 
+            open={promptOpen}
+            onOpenChange={setPromptOpen}
+            title="Login to Save to Playlists"
+            description="Create and manage your own playlists by signing in. It’s free!"
+        />
+        <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
                 <Button variant="outline" className="hover:bg-muted/50">
                     <ListPlus className="mr-2 h-4 w-4"/>
@@ -212,5 +225,6 @@ export function AddToPlaylist({ video }: { video: SearchResult }) {
                 </div>
             </PopoverContent>
         </Popover>
+        </>
     );
 }

@@ -7,7 +7,7 @@ import {
 } from '@/types/youtube';
 import type { SearchResult, SearchQuery, UserInfo, WatchedVideo, FilterOptions } from '@/types/youtube';
 import { db } from '@/lib/firebase';
-import { ref, push, set, get, child, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, orderByKey, startAfter, limitToFirst, endBefore, update } from 'firebase/database';
+import { ref, push, set, get, query, limitToLast, serverTimestamp, remove, orderByChild, equalTo, update } from 'firebase/database';
 import { getLikedVideos, getSubscriptions } from './actions/video-interactions';
 import { getUserSuggestionStatus } from './actions/user-settings';
 import { isoDurationToSeconds } from '@/lib/utils';
@@ -205,7 +205,7 @@ export async function searchAndRefineVideos(
 }
 
 export async function saveSearchQuery(
-  user: UserInfo | { uid: string, displayName: string },
+  user: UserInfo | { uid: string, displayName: string | null },
   query: string,
   resultsCount: number
 ): Promise<{ success?: boolean; error?: string }> {
@@ -228,17 +228,18 @@ export async function saveSearchQuery(
     const newUserSearchRef = push(userSearchesRef);
     await set(newUserSearchRef, searchData);
     
-    // Save or update user profile info
-    const userInfoRef = ref(db, `user-searches/${user.uid}/profile`);
-    // 'email' may not exist on guest user object
-    const email = 'email' in user ? user.email : null;
-    const photoURL = 'photoURL' in user ? user.photoURL : null;
-    
-    await set(userInfoRef, {
-        email: email,
-        displayName: user.displayName,
-        photoURL: photoURL
-    });
+    // Save or update user profile info only if they are not a guest
+    if ('email' in user) {
+        const userInfoRef = ref(db, `user-searches/${user.uid}/profile`);
+        const email = 'email' in user ? user.email : null;
+        const photoURL = 'photoURL' in user ? user.photoURL : null;
+        
+        await set(userInfoRef, {
+            email: email,
+            displayName: user.displayName,
+            photoURL: photoURL
+        });
+    }
 
     return { success: true };
   } catch (error) {

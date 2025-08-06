@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, LogIn } from "lucide-react";
 import { Logo } from "./logo";
 import { SearchBar } from "./search-bar";
 import { SidebarTrigger } from "./ui/sidebar";
@@ -62,26 +62,23 @@ export function Header() {
             </button>
         </div>
         
-        {/* Center Section - Visible on medium screens and up */}
-        <div className="hidden sm:flex flex-1 justify-center px-4">
+        {/* Center Section - Search Bar */}
+        <div className="flex flex-1 justify-center px-4">
           <div className="w-full max-w-2xl">
             <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query || ''} />
           </div>
         </div>
 
+
         {/* Right Section */}
         <div className="flex items-center gap-2">
-            {/* Search bar for small screens */}
-            <div className="sm:hidden flex-1">
-                 <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query || ''} />
-            </div>
-            <div className="hidden sm:flex items-center">
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 hover:bg-muted/50">
                     <div className="p-0.5 rounded-full bg-gradient-to-r from-primary via-accent to-primary">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+                          <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
                           <AvatarFallback>
                             <UserIcon/>
                           </AvatarFallback>
@@ -92,9 +89,9 @@ export function Header() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.displayName}</p>
+                      <p className="text-sm font-medium leading-none">{user.displayName}</p>
                       <p className="text-xs leading-none text-muted-foreground truncate">
-                        {user?.email}
+                        {user.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -105,7 +102,12 @@ export function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+            ) : (
+                <Button onClick={() => router.push('/login')}>
+                    <LogIn className="mr-2 h-4 w-4"/>
+                    Sign In
+                </Button>
+            )}
         </div>
       </div>
     </header>

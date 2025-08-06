@@ -37,7 +37,7 @@ const shuffleArray = (array: any[]) => {
 };
 
 function SearchPage() {
-    const { user, loading } = useAuth();
+    const { user, guestId } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -53,9 +53,11 @@ function SearchPage() {
     
     const query = searchParams.get('q');
     const videoId = searchParams.get('v');
+    
+    const currentUserId = user?.uid || guestId;
 
     const hasSearched = query !== null;
-    const isShowingSuggestions = !hasSearched && !isLoading && suggestionsEnabled;
+    const isShowingSuggestions = !hasSearched && !isLoading && !!user && suggestionsEnabled;
 
     const performSearch = useCallback(async (searchQuery: string, newFilters?: FilterOptions) => {
       if (!searchQuery) return;
@@ -96,19 +98,17 @@ function SearchPage() {
         };
         localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
         
-        if (user && !newFilters) { // Only save query on initial search, not filter change
-          const userInfo = {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL
-          };
-          saveSearchQuery(userInfo, searchQuery, searchResults.length)
-            .then(saveResult => {
-              if (saveResult.error) {
-                  console.warn("Failed to save search history:", saveResult.error);
-              }
-            });
+        if (currentUserId && !newFilters) { // Only save query on initial search, not filter change
+            const userInfo = user 
+                ? { uid: user.uid, email: user.email, displayName: user.displayName, photoURL: user.photoURL }
+                : { uid: currentUserId, displayName: `Guest ${currentUserId.substring(0,6)}` };
+
+            saveSearchQuery(userInfo, searchQuery, searchResults.length)
+                .then(saveResult => {
+                if (saveResult.error) {
+                    console.warn("Failed to save search history:", saveResult.error);
+                }
+                });
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
@@ -121,12 +121,17 @@ function SearchPage() {
       } finally {
         setIsLoading(false);
       }
-    }, [user, toast, filters]);
+    }, [currentUserId, user, toast, filters]);
 
     const fetchSuggestions = useCallback(async () => {
-        if (!user) return;
+        if (!user) {
+            setIsLoading(false);
+            setSuggestionsEnabled(false);
+            return;
+        }
         
         setResults([]);
+        setIsLoading(true);
         const { data, error, suggestionsEnabled: isEnabled } = await getSuggestedVideos(user.uid);
         
         setSuggestionsEnabled(isEnabled || false);
@@ -135,7 +140,6 @@ function SearchPage() {
             return;
         }
         
-        setIsLoading(true);
         const cacheKey = `suggestions_cache_${user.uid}`;
         const cached = localStorage.getItem(cacheKey);
 
@@ -205,12 +209,14 @@ function SearchPage() {
 
     const handleSelectVideo = (videoToPlay: SearchResult) => {
       const params = new URLSearchParams(window.location.search);
+      if (query) params.set('q', query);
       params.set('v', videoToPlay.videoId);
       router.push(`/search?${params.toString()}`);
     };
     
     const handleClosePlayer = () => {
       const params = new URLSearchParams(window.location.search);
+      if (query) params.set('q', query);
       params.delete('v');
       router.push(`/search?${params.toString()}`);
     };
@@ -221,7 +227,7 @@ function SearchPage() {
       return "";
     }
     
-    const showEmptyState = !isLoading && !query && (!suggestionsEnabled || results.length === 0);
+    const showEmptyState = !isLoading && !query && (!user || !suggestionsEnabled || results.length === 0);
 
     return (
       <div className="flex-1">

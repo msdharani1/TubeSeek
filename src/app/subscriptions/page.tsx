@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tv, Frown, Loader2, BellRing } from "lucide-react";
+import { Tv, Frown, Loader2, BellRing, LogIn } from "lucide-react";
 
 type CachedSubscriptions = {
     timestamp: number;
@@ -44,6 +44,9 @@ function SubscriptionsPage() {
     useEffect(() => {
         if (user) {
             fetchSubscriptions();
+        } else {
+            setIsLoading(false);
+            setSubscriptions([]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
@@ -103,6 +106,20 @@ function SubscriptionsPage() {
             localStorage.removeItem(`subscriptions_cache_${user.uid}`);
             toast({ title: `Unsubscribed from "${channel.channelTitle}"` });
         }
+    }
+
+    if (!user && !isLoading) {
+       return (
+         <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center gap-4 mt-20">
+            <Tv className="w-16 h-16 text-muted-foreground"/>
+            <h2 className="text-2xl font-semibold">Your Subscriptions</h2>
+            <p className="max-w-md text-muted-foreground">Sign in to subscribe to your favorite channels. New videos from your subscriptions will show up in your feed.</p>
+            <Button onClick={() => router.push('/login')}>
+                <LogIn className="mr-2 h-4 w-4"/>
+                Sign In
+            </Button>
+        </div>
+       )
     }
 
     return (

@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { VideoPlayer } from "@/components/video-player";
 import { VideoCard } from "@/components/video-card";
-import { Heart, Frown } from "lucide-react";
+import { Heart, Frown, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type CachedLikedVideos = {
@@ -36,6 +36,9 @@ function LikedVideosPage() {
     useEffect(() => {
         if (user) {
             fetchLikedVideos();
+        } else {
+            setIsLoading(false);
+            setLikedVideos([]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
@@ -99,6 +102,20 @@ function LikedVideosPage() {
         params.delete('v');
         router.push(`/liked?${params.toString()}`);
     };
+
+    if (!user && !isLoading) {
+       return (
+         <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center gap-4 mt-20">
+            <Heart className="w-16 h-16 text-muted-foreground"/>
+            <h2 className="text-2xl font-semibold">Your Liked Videos</h2>
+            <p className="max-w-md text-muted-foreground">Sign in to save videos you like. They'll all show up here.</p>
+            <Button onClick={() => router.push('/login')}>
+                <LogIn className="mr-2 h-4 w-4"/>
+                Sign In
+            </Button>
+        </div>
+       )
+    }
 
     return (
         <>

@@ -8,7 +8,7 @@ import { getPlaylists } from "@/app/actions/playlist";
 import type { Playlist } from "@/types/youtube";
 
 import { Button } from "@/components/ui/button";
-import { ListVideo, Frown } from "lucide-react";
+import { ListVideo, Frown, LogIn } from "lucide-react";
 import { PlaylistCard } from "@/components/playlist-card";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,6 +36,9 @@ function PlaylistsPage() {
     useEffect(() => {
         if (user) {
             fetchPlaylists();
+        } else {
+            setIsLoading(false);
+            setPlaylists([]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
@@ -99,6 +102,20 @@ function PlaylistsPage() {
         if (b.name === 'Favorite') return 1;
         return (b.createdAt || 0) - (a.createdAt || 0);
     });
+
+    if (!user && !isLoading) {
+       return (
+         <div className="container mx-auto px-4 py-8 text-center flex flex-col items-center gap-4 mt-20">
+            <ListVideo className="w-16 h-16 text-muted-foreground"/>
+            <h2 className="text-2xl font-semibold">Your Custom Playlists</h2>
+            <p className="max-w-md text-muted-foreground">Sign in to create and manage playlists. Organize videos your way.</p>
+            <Button onClick={() => router.push('/login')}>
+                <LogIn className="mr-2 h-4 w-4"/>
+                Sign In
+            </Button>
+        </div>
+       )
+    }
 
     return (
         <>
