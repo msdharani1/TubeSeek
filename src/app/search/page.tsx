@@ -229,6 +229,34 @@ function SearchPage() {
     
     const showEmptyState = !isLoading && !query && (!user || !suggestionsEnabled || results.length === 0);
 
+    const renderContent = () => {
+      if (isLoading) {
+        return <LoadingSkeleton />;
+      }
+      if ((hasSearched || isShowingSuggestions) && results.length > 0) {
+        return <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />;
+      }
+      if (hasSearched && results.length === 0) {
+        return (
+          <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
+            <Logo className="w-16 h-16 text-muted-foreground/50"/>
+            <h2 className="text-2xl font-semibold">No Results Found</h2>
+            <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query or adjust your filters.</p>
+          </div>
+        );
+      }
+      if (showEmptyState) {
+        return (
+          <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
+            <Logo className="w-16 h-16 text-muted-foreground/50"/>
+            <h2 className="text-2xl font-semibold">Ready to dive in?</h2>
+            <p className="max-w-md">Use the search bar above to find exactly what you're looking for.</p>
+          </div>
+        );
+      }
+      return null;
+    }
+
     return (
       <div className="flex-1">
         <div className="container mx-auto sm:px-4 py-8">
@@ -244,27 +272,7 @@ function SearchPage() {
              </div>
           )}
           
-          {isLoading && <LoadingSkeleton />}
-
-          {!isLoading && (hasSearched || isShowingSuggestions) && results.length > 0 && (
-            <VideoGrid videos={results} onPlayVideo={handleSelectVideo} />
-          )}
-          
-          {!isLoading && hasSearched && results.length === 0 && (
-               <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
-                  <Logo className="w-16 h-16 text-muted-foreground/50"/>
-                  <h2 className="text-2xl font-semibold">No Results Found</h2>
-                  <p className="max-w-md">We couldn't find any relevant videos for your search. Please try a different query or adjust your filters.</p>
-              </div>
-          )}
-
-          {showEmptyState && (
-              <div className="text-center text-muted-foreground flex flex-col items-center gap-4 mt-20 px-4 sm:px-0">
-                  <Logo className="w-16 h-16 text-muted-foreground/50"/>
-                  <h2 className="text-2xl font-semibold">Ready to dive in?</h2>
-                  <p className="max-w-md">Use the search bar above to find exactly what you're looking for.</p>
-              </div>
-          )}
+          {renderContent()}
 
         </div>
         <VideoPlayer
