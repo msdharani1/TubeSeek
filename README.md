@@ -3,7 +3,7 @@
 
 [![TubeSeek Logo](https://res.cloudinary.com/diwu3avy6/image/upload/v1716384592/logo_tube_seek_g262so.png)](https://tubeseek.dev.msdharani.com/)
 
-**TubeSeek** is a modern, feature-rich web application built with Next.js that offers an enhanced, distraction-free interface for searching and watching YouTube videos. It serves as an intelligent portal to YouTube, prioritizing user experience with features like playlist management, personalized history, and robust user data controls, all wrapped in a sleek, customizable UI.
+**TubeSeek** is a modern, feature-rich web application built with Next.js that offers an enhanced, distraction-free interface for searching and watching YouTube videos. It serves as an intelligent portal to YouTube, prioritizing user experience with features like real-time search suggestions, playlist management, and robust user data controls, all wrapped in a sleek, customizable UI.
 
 This project is not just a YouTube client; it's a demonstration of building a full-stack application with modern web technologies, including server-side rendering, secure authentication, third-party API integration, and real-time database management.
 
@@ -30,27 +30,27 @@ This project is not just a YouTube client; it's a demonstration of building a fu
 
 ## Key Features
 
-- **📺 Enhanced Video Search**: Utilizes the YouTube Data API v3 to provide relevant video search results.
+- **⚡ Real-time Search Suggestions**: Get instant search suggestions as you type, powered by Google's autocomplete API.
+- **📺 Enhanced Video Search**: Utilizes the YouTube Data API v3 and intelligently detects if a query matches a channel name to provide more relevant results.
 - **💡 Personalized Suggestions**: A smart, non-AI-based recommendation system that analyzes your watch history, likes, and subscriptions to suggest relevant content on the homepage.
-- **✨ Distraction-Free Player**: A custom, full-featured video player that keeps you focused on the content, with "Up Next" suggestions.
+- **✨ Distraction-Free Player**: A custom, full-featured video player that keeps you focused on the content, complete with an "Up Next" suggestions sidebar.
 - **🕒 Clickable Timestamps**: Automatically detects and makes timestamps in video descriptions clickable for easy navigation.
 - **📂 Playlist Management**:
-  - Create custom playlists.
-  - Add or remove any video from multiple playlists with a user-friendly interface.
-  - A special "Favorite" playlist for quick access.
+  - Create custom playlists with a single click.
+  - Add or remove any video from multiple playlists simultaneously.
+  - A special "Favorite" playlist is available by default and created automatically when you first add a video to it.
 - **❤️ Like Videos**: Like and unlike any video. View all your liked videos in a dedicated "Liked Videos" page.
 - **🔔 Channel Subscriptions**: Subscribe or unsubscribe from any channel. View all your subscriptions in a dedicated page.
-- **📜 Personalized Watch History**: Automatically saves videos you watch and displays them in a dedicated history page, sorted by most recent.
-- **🔐 Secure Authentication**: Employs Google Sign-In via Firebase Authentication for a secure and seamless login experience.
+- **📜 Personalized Watch History**: Automatically saves videos you watch and displays them in a dedicated history page, sorted by most recent. It even tracks your viewing progress for each video.
+- **🔐 Secure Authentication**: Employs Google Sign-In via Firebase Authentication for a secure and seamless login experience. Guest users are supported with a unique anonymous ID.
 - **🎨 Customizable Themes**: Choose between **Light**, **Dark**, and **System** themes to personalize your viewing experience.
 - **⚙️ User Data Control**: The settings page gives users full control over their data, including the ability to:
   - View account information and membership date.
-  - **Permanently delete** their entire watch history.
-  - **Permanently delete** all of their playlists.
-- **🔒 Privacy-Focused**: Requires user agreement to the Privacy Policy before sign-in.
+  - **Permanently delete** their entire watch history, liked videos, subscriptions, or all playlists with a single click.
+- **🔒 Privacy-Focused**: Requires user agreement to the Privacy Policy before sign-in, and respects user privacy with clear data handling practices.
 - **🚀 Performance Optimized**: Implements client-side caching for API responses to reduce load times and API usage on repeated searches.
 - **📱 Fully Responsive Design**: A beautiful, modern interface built with Tailwind CSS and shadcn/ui that works on all devices.
-- **👑 Admin Dashboard**: A special, access-controlled dashboard for the admin user to view user search histories.
+- **👑 Admin Dashboard**: A special, access-controlled dashboard for the admin user to view user search histories, manage features, and track site analytics.
 
 ## Live Demo
 
@@ -64,6 +64,7 @@ Experience TubeSeek live: [tubeseek.dev.msdharani.com](https://tubeseek.dev.msdh
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
 - **Database**: [Firebase Realtime Database](https://firebase.google.com/docs/database)
@@ -95,7 +96,7 @@ Follow these steps to set up and run the project locally.
     - Go to "APIs & Services" > "Credentials".
     - Click "Create credentials" > "API key".
     - **Important**: Go to the "Enabled APIs & services" tab and ensure the **YouTube Data API v3** is enabled for your project.
-4.  **Populate `.env`**: Add your keys to the `.env` file.
+4.  **Populate `.env`**: Add your keys to the `.env` file. It supports up to 5 keys for automatic rotation.
 
 ```
 # Firebase Configuration
@@ -108,8 +109,12 @@ NEXT_PUBLIC_FIREBASE_APP_ID="YOUR_FIREBASE_APP_ID"
 NEXT_PUBLIC_FIREBASE_DATABASE_URL="YOUR_FIREBASE_DB_URL" # e.g., https://your-project-id-default-rtdb.firebaseio.com
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="YOUR_MEASUREMENT_ID" # Optional
 
-# YouTube API Key
-YOUTUBE_API_KEY="YOUR_YOUTUBE_API_KEY"
+# YouTube API Key(s)
+YOUTUBE_API_KEY="YOUR_YOUTUBE_API_KEY_1"
+YOUTUBE_API_KEY2="YOUR_YOUTUBE_API_KEY_2" # Optional
+YOUTUBE_API_KEY3="YOUR_YOUTUBE_API_KEY_3" # Optional
+YOUTUBE_API_KEY4="YOUR_YOUTUBE_API_KEY_4" # Optional
+YOUTUBE_API_KEY5="YOUR_YOUTUBE_API_KEY_5" # Optional
 ```
 
 ### Installation & Running
@@ -134,15 +139,16 @@ The frontend is built using **Next.js with the App Router**. Components are serv
 -   **`src/components`**: Contains reusable React components, including UI elements from `shadcn/ui` and custom components like `VideoPlayer`, `VideoCard`, etc.
 -   **`src/context/auth-context.tsx`**: Manages the user's authentication state globally using React Context.
 -   **`src/lib`**: Contains utility functions (`utils.ts`) and Firebase initialization (`firebase.ts`).
--   **`src/hooks`**: Contains custom React hooks like `use-toast.ts`.
+-   **`src/hooks`**: Contains custom React hooks like `use-toast.ts` and `use-page-title.ts`.
 
 ### Backend (Server Actions)
 
 The application uses **Next.js Server Actions** for all backend logic, eliminating the need for traditional API routes. These actions are secure, server-only functions that can be called directly from client components.
 
--   **`src/app/actions.ts`**: Handles YouTube API calls, saving user search history, and generating suggestions.
+-   **`src/app/actions.ts`**: Handles core YouTube API calls, saving user search history, and generating suggestions.
 -   **`src/app/actions/playlist.ts`**: Contains all logic for creating, reading, and updating user playlists in Firebase.
--   **`src/app/actions/user-data.ts`**: Contains logic for deleting user history and playlists.
+-   **`src/app/actions/user-data.ts`**: Contains logic for deleting user data like history and playlists.
+-   **`src/app/actions/suggestions.ts`**: Fetches real-time search suggestions.
 
 ### Database
 
@@ -183,7 +189,7 @@ The application interacts with two main endpoints of the YouTube Data API v3:
 1.  **/search**: Used to get a list of video IDs for a given search query.
 2.  **/videos**: Used to fetch detailed information (like statistics and duration) for a list of video IDs obtained from the search endpoint.
 
-This two-step process ensures we get comprehensive data for each video shown to the user. All API calls are made from the server via Server Actions to protect the API key.
+This two-step process ensures we get comprehensive data for each video shown to the user. All API calls are made from the server via Server Actions to protect the API key. The system also supports **automatic API key rotation** to mitigate quota limits.
 
 ### Client-Side Caching
 
@@ -232,4 +238,4 @@ The `database.rules.json` file enforces security. Key rules include:
 
 -   Users can only read and write their own data (e.g., `user-playlists/$uid`, `user-watch-history/$uid`).
 -   Data is indexed on specific fields (like `videoId`) for efficient querying.
--   The admin user (`msdharaniofficial@gmail.com`) has special read access to all `user-searches` for the admin dashboard..
+-   The admin user (`msdharaniofficial@gmail.com`) has special read access to all user data for the admin dashboard.
