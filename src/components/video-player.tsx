@@ -463,7 +463,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
             <button
                 onClick={onClose}
-                className="absolute right-4 top-4 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors z-20"
+                className="absolute right-4 top-4 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors z-20 hidden sm:block"
                 aria-label="Close video player"
             >
                 <X className="h-5 w-5" />
