@@ -23,8 +23,10 @@ export function ThemeSwitcher() {
         if (t === 'system') {
             const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             document.documentElement.classList.toggle('dark', systemTheme === 'dark');
+            document.documentElement.style.colorScheme = systemTheme;
         } else {
             document.documentElement.classList.toggle('dark', t === 'dark');
+            document.documentElement.style.colorScheme = t;
         }
     }
     
@@ -46,18 +48,19 @@ export function ThemeSwitcher() {
     localStorage.setItem('theme', newTheme);
   };
 
-  const buttonBaseClass = "rounded-full w-full h-8 hover:bg-accent/20 text-foreground";
+  const buttonBaseClass = "rounded-full h-8 flex-1 sm:flex-initial sm:w-auto hover:bg-accent/20 text-foreground";
+  const iconBaseClass = "h-4 w-4";
 
   return (
-    <div className="flex items-center gap-2 p-1 rounded-full bg-muted">
+    <div className="flex items-center gap-2 p-1 rounded-full bg-muted w-full sm:w-auto">
        <Button 
          variant="ghost" 
          size="sm"
          onClick={() => handleThemeChange('light')}
          className={cn(buttonBaseClass, theme === 'light' && "bg-background shadow-sm hover:bg-background")}
        >
-         <Sun className="h-4 w-4 mr-2"/>
-         Light
+         <Sun className={cn(iconBaseClass, theme === 'light' ? 'sm:mr-2' : 'mr-0 sm:mr-2')} />
+         <span className={cn(theme !== 'light' && 'hidden sm:inline')}>Light</span>
        </Button>
        <Button 
          variant="ghost" 
@@ -65,8 +68,8 @@ export function ThemeSwitcher() {
          onClick={() => handleThemeChange('dark')}
          className={cn(buttonBaseClass, theme === 'dark' && "bg-background shadow-sm hover:bg-background")}
        >
-         <Moon className="h-4 w-4 mr-2"/>
-         Dark
+         <Moon className={cn(iconBaseClass, theme === 'dark' ? 'sm:mr-2' : 'mr-0 sm:mr-2')} />
+         <span className={cn(theme !== 'dark' && 'hidden sm:inline')}>Dark</span>
        </Button>
        <Button 
          variant="ghost" 
@@ -74,8 +77,8 @@ export function ThemeSwitcher() {
          onClick={() => handleThemeChange('system')}
          className={cn(buttonBaseClass, theme === 'system' && "bg-background shadow-sm hover:bg-background")}
        >
-         <Monitor className="h-4 w-4 mr-2"/>
-         System
+         <Monitor className={cn(iconBaseClass, theme === 'system' ? 'sm:mr-2' : 'mr-0 sm:mr-2')} />
+         <span className={cn(theme !== 'system' && 'hidden sm:inline')}>System</span>
        </Button>
     </div>
   );
