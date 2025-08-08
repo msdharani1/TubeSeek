@@ -121,8 +121,9 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
       </Button>
 
        {showSuggestions && (query.length > 1) && (
-        <Card className="absolute sm:absolute top-full mt-2 w-full max-h-80 overflow-y-auto z-50
-                fixed left-0 sm:left-auto sm:right-auto sm:w-full">
+        <Card className={cn(
+            "fixed sm:absolute top-16 sm:top-full mt-0 sm:mt-2 w-full max-h-80 overflow-y-auto z-50 left-0"
+        )}>
             {isSuggestionsLoading ? (
                  <div className="p-4 text-center text-muted-foreground">Loading suggestions...</div>
             ) : suggestions.length > 0 ? (
