@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Eye, Clock } from "lucide-react";
 import { formatDistanceToNowStrict } from 'date-fns';
+import { useAuth } from "@/context/auth-context";
 
 type VideoCardProps = {
   video: SearchResult | WatchedVideo;
@@ -14,9 +15,13 @@ type VideoCardProps = {
 };
 
 export function VideoCard({ video, onPlay, id }: VideoCardProps) {
+    const { history } = useAuth();
+    const watchedInfo = history.find(h => h.videoId === video.videoId);
+
     const isWatchedVideo = 'watchedAt' in video && video.watchedAt;
-    const progress = isWatchedVideo && video.durationSeconds && video.progressSeconds
-        ? (video.progressSeconds / video.durationSeconds) * 100
+    
+    const progress = watchedInfo && watchedInfo.durationSeconds && watchedInfo.progressSeconds
+        ? (watchedInfo.progressSeconds / watchedInfo.durationSeconds) * 100
         : 0;
 
     let timeAgo: string | null = null;

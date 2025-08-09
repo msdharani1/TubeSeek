@@ -217,7 +217,7 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshHistory } = useAuth();
   const { isMobile, state: sidebarState } = useSidebar();
   const playerRef = useRef<any>(null); // To hold the YouTube player instance
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -242,10 +242,11 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
     if (event.data === YT.PlayerState.PLAYING) {
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = setInterval(() => {
+        progressIntervalRef.current = setInterval(async () => {
             const currentTime = event.target.getCurrentTime();
             if (user && video) {
-                updateVideoProgress(user.uid, video.videoId, currentTime);
+                await updateVideoProgress(user.uid, video.videoId, currentTime);
+                await refreshHistory(); // Refresh global history
             }
         }, 5000); // Save progress every 5 seconds
     } else {
@@ -254,7 +255,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             progressIntervalRef.current = null;
         }
     }
-  }, [user, video, isGuest]);
+  }, [user, video, isGuest, refreshHistory]);
 
 
   const loadYouTubePlayer = useCallback(() => {
@@ -310,11 +311,11 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         if (user) {
             fetchStatus();
             saveVideoToHistory(user.uid, video)
-                .then(result => {
+                .then(async (result) => {
                     if(result.error) {
                         console.warn("Could not save to history:", result.error)
                     } else {
-                        localStorage.removeItem(`history_cache_${user.uid}`);
+                       await refreshHistory(); // Refresh global history
                     }
                 })
         }
@@ -329,7 +330,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             playerRef.current.destroy();
         }
     }
-  }, [video, user, fetchStatus, loadYouTubePlayer]);
+  }, [video, user, fetchStatus, loadYouTubePlayer, refreshHistory]);
 
   const seekTo = (seconds: number) => {
     if (playerRef.current) {
@@ -428,7 +429,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
             <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
-                <div className="w-full aspect-video shrink-0 bg-black sticky top-0 z-10">
+                <div className="w-full aspect-video shrink-0 bg-black z-10 lg:relative sticky top-0">
                     <div id="youtube-player" className="w-full h-full"></div>
                 </div>
                  <VideoDetails 
@@ -448,7 +449,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
             <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 lg:overflow-y-auto no-scrollbar border-t lg:border-t-0">
                 <div className="p-4">
-                    <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2 sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
+                    <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2  sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
                        {getUpNextIcon()}
                        {getUpNextTitle()}
                     </h3>

@@ -15,20 +15,12 @@ import { History, Frown, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
 
-type CachedHistory = {
-    timestamp: number;
-    history: WatchedVideo[];
-}
-
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-
 function HistoryPage() {
-    const { user } = useAuth();
+    const { user, history, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [history, setHistory] = useState<WatchedVideo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedVideo, setSelectedVideo] = useState<SearchResult | null>(null);
 
@@ -37,14 +29,10 @@ function HistoryPage() {
     usePageTitle(selectedVideo ? selectedVideo.title : 'Watch History');
 
     useEffect(() => {
-        if (user) {
-            fetchHistory();
-        } else {
+        if (!authLoading) {
             setIsLoading(false);
-            setHistory([]);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
+    }, [authLoading]);
 
     useEffect(() => {
         if (videoId && history.length > 0) {
@@ -55,44 +43,6 @@ function HistoryPage() {
         }
     }, [videoId, history]);
 
-    const fetchHistory = async () => {
-        setIsLoading(true);
-        if (!user) return;
-
-        const cacheKey = `history_cache_${user.uid}`;
-        const cached = localStorage.getItem(cacheKey);
-
-        if (cached) {
-            try {
-                const { timestamp, history: cachedHistory }: CachedHistory = JSON.parse(cached);
-                if (Date.now() - timestamp < CACHE_DURATION) {
-                    setHistory(cachedHistory);
-                    setIsLoading(false);
-                    return;
-                }
-            } catch (e) {
-                console.error("Failed to parse history cache", e);
-                localStorage.removeItem(cacheKey);
-            }
-        }
-        
-        const { data, error } = await getUserHistory(user.uid);
-        if (error) {
-            toast({
-                variant: "destructive",
-                title: "Failed to load history",
-                description: error,
-            });
-        } else if (data) {
-            setHistory(data);
-            const dataToCache: CachedHistory = {
-                timestamp: Date.now(),
-                history: data
-            };
-            localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
-        }
-        setIsLoading(false);
-    };
 
     const handleSelectVideo = (videoToPlay: SearchResult) => {
         const params = new URLSearchParams(window.location.search);

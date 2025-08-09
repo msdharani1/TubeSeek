@@ -1,47 +1,72 @@
+
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { RippleWaveLoader } from '@/components/ripple-wave-loader';
+import type { WatchedVideo } from '@/types/youtube';
+import { getUserHistory } from '@/app/actions';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   guestId: string | null;
+  history: WatchedVideo[];
+  refreshHistory: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, guestId: null });
+const AuthContext = createContext<AuthContextType>({ 
+  user: null, 
+  loading: true, 
+  guestId: null,
+  history: [],
+  refreshHistory: async () => {} 
+});
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [guestId, setGuestId] = useState<string | null>(null);
+  const [history, setHistory] = useState<WatchedVideo[]>([]);
+
+  const fetchHistory = useCallback(async (uid: string) => {
+    const { data } = await getUserHistory(uid);
+    setHistory(data || []);
+  }, []);
+
+  const refreshHistory = useCallback(async () => {
+    if (user) {
+      await fetchHistory(user.uid);
+    }
+  }, [user, fetchHistory]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (!user) {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        fetchHistory(currentUser.uid);
+        localStorage.removeItem('guestId');
+        setGuestId(null);
+      } else {
         let currentGuestId = localStorage.getItem('guestId');
         if (!currentGuestId) {
             currentGuestId = `guest-${uuidv4()}`;
             localStorage.setItem('guestId', currentGuestId);
         }
         setGuestId(currentGuestId);
-      } else {
-        localStorage.removeItem('guestId');
-        setGuestId(null);
+        setHistory([]);
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchHistory]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, guestId }}>
+    <AuthContext.Provider value={{ user, loading, guestId, history, refreshHistory }}>
       {children}
     </AuthContext.Provider>
   );
