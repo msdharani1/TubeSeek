@@ -332,6 +332,32 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     }
   }, [video, user, fetchStatus, loadYouTubePlayer, refreshHistory]);
 
+  // Handle Page Visibility for background playback
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+        if (!playerRef.current || !playerRef.current.getPlayerState) return;
+
+        const playerState = playerRef.current.getPlayerState();
+
+        if (document.hidden) {
+            // Page is hidden, do nothing, let it play if the browser allows.
+        } else {
+            // Page is visible again. If it was playing, ensure it continues.
+            if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.BUFFERING) {
+                // This check is a bit tricky. We only want to auto-play if the user had it playing before.
+                // For simplicity, we can try to play it. The browser might block this if the user didn't interact first.
+                playerRef.current.playVideo();
+            }
+        }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const seekTo = (seconds: number) => {
     if (playerRef.current) {
         playerRef.current.seekTo(seconds, true);
@@ -426,7 +452,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         "left-0 lg:left-[var(--sidebar-width-icon)]",
         !isMobile && sidebarState === 'expanded' && "!left-[var(--sidebar-width)]"
         )}>
-        <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
+        <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row lg:overflow-hidden border-t">
             
             <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
                 <div className="w-full aspect-video shrink-0 bg-black z-10 lg:relative sticky top-0">
