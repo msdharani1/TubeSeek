@@ -115,6 +115,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     setQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
+    onSearch("");
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -173,7 +174,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
             </Button>
         )}
       </div>
-      <Button type="submit" disabled={isLoading} variant="icon" className="rounded-l-none" aria-label="Search">
+      <Button type="submit" disabled={isLoading || !query} variant="icon" className="rounded-l-none" aria-label="Search">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
@@ -198,7 +199,10 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
                             <li key={i}>
                             <button
                                 type="button"
-                                onClick={() => handleSuggestionClick(s)}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSuggestionClick(s);
+                                }}
                                 className={cn(
                                     "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
                                     i === highlightedIndex && "bg-muted/80"
