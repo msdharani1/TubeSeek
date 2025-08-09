@@ -10,7 +10,7 @@ export type FeedbackData = {
     name?: string;
     email?: string;
     message: string;
-    attachmentUrl?: string | null;
+    attachmentUrls?: string[] | null;
     userId?: string | null;
     userAgent: string;
     status?: 'open' | 'fixed';

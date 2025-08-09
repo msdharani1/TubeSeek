@@ -10,14 +10,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, UploadCloud, Trash2, Send, Star } from 'lucide-react';
+import { Loader2, UploadCloud, Trash2, Send, Star, Image as ImageIcon, Video } from 'lucide-react';
 import { submitFeedback } from '@/app/actions/feedback';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 type FeedbackDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
+const MAX_IMAGES = 5;
+const MAX_VIDEOS = 5;
+const MAX_FILE_SIZE_MB = 10;
 
 function StarRating({ rating, setRating, disabled }: { rating: number, setRating: (r: number) => void, disabled: boolean }) {
     return (
@@ -46,8 +51,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [rating, setRating] = useState(0);
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,33 +63,58 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       setName('');
       setEmail('');
     }
-  }, [user]);
+  }, [user, open]);
   
   useEffect(() => {
       if (!open) {
-          // Reset form on close
           setMessage('');
-          setFile(null);
-          setFilePreview(null);
+          setFiles([]);
           setActiveTab('feedback');
           setRating(0);
       }
   }, [open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-        if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
-            toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file smaller than 5MB.' });
-            return;
-        }
-        setFile(selectedFile);
-        setFilePreview(URL.createObjectURL(selectedFile));
-    }
-  };
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
 
-  const uploadFile = async (): Promise<string | null> => {
-    if (!file) return null;
+    let newFiles = [...files];
+    let imageCount = files.filter(f => f.type.startsWith('image/')).length;
+    let videoCount = files.filter(f => f.type.startsWith('video/')).length;
+    
+    for (const file of selectedFiles) {
+        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            toast({ variant: 'destructive', title: 'File too large', description: `${file.name} is larger than ${MAX_FILE_SIZE_MB}MB.` });
+            continue;
+        }
+
+        if (file.type.startsWith('image/')) {
+            if (imageCount >= MAX_IMAGES) {
+                toast({ variant: 'destructive', title: 'Image limit reached', description: `You can only upload up to ${MAX_IMAGES} images.`});
+                continue;
+            }
+            imageCount++;
+        } else if (file.type.startsWith('video/')) {
+            if (videoCount >= MAX_VIDEOS) {
+                toast({ variant: 'destructive', title: 'Video limit reached', description: `You can only upload up to ${MAX_VIDEOS} videos.`});
+                continue;
+            }
+            videoCount++;
+        } else {
+             toast({ variant: 'destructive', title: 'Unsupported file type', description: `${file.name} is not a supported file type.` });
+             continue;
+        }
+        newFiles.push(file);
+    }
+    setFiles(newFiles);
+  };
+  
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const uploadFiles = async (): Promise<string[] | null> => {
+    if (files.length === 0) return null;
     
     setIsUploading(true);
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -97,24 +126,26 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
         return null;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
+    const uploadPromises = files.map(file => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+        return fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+            method: 'POST',
+            body: formData,
+        }).then(async response => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || `Failed to upload ${file.name}.`);
+            }
+            return response.json();
+        });
+    });
 
     try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error.message || 'Failed to upload file.');
-      }
-      
-      const data = await response.json();
+      const results = await Promise.all(uploadPromises);
       setIsUploading(false);
-      return data.secure_url;
+      return results.map(result => result.secure_url);
     } catch (error) {
       console.error('Upload failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during upload.';
@@ -126,7 +157,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || isUploading) return;
     if (activeTab === 'feedback' && rating === 0) {
         toast({ variant: 'destructive', title: 'Rating required', description: 'Please select a rating before submitting.' });
         return;
@@ -136,13 +167,12 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
         return;
     }
 
-
     setIsSubmitting(true);
-    let attachmentUrl = null;
+    let attachmentUrls = null;
 
-    if (activeTab === 'bug' && file) {
-      attachmentUrl = await uploadFile();
-      if (!attachmentUrl) {
+    if (activeTab === 'bug' && files.length > 0) {
+      attachmentUrls = await uploadFiles();
+      if (!attachmentUrls) {
         setIsSubmitting(false);
         return; // Upload failed, stop submission
       }
@@ -154,7 +184,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       name: name.trim(),
       email: email.trim(),
       message: message.trim(),
-      attachmentUrl,
+      attachmentUrls,
       userId: user?.uid,
       userAgent: navigator.userAgent,
     };
@@ -172,7 +202,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   };
   
   const isLoading = isUploading || isSubmitting;
-  const isSubmitDisabled = isLoading || (activeTab === 'feedback' ? rating === 0 || !message.trim() : !message.trim());
+  const isSubmitDisabled = isLoading || (activeTab === 'feedback' ? rating === 0 && !message.trim() : !message.trim());
 
 
   return (
@@ -187,8 +217,8 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
         <form onSubmit={handleSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="feedback">Feedback</TabsTrigger>
-                <TabsTrigger value="bug">Bug Report</TabsTrigger>
+                <TabsTrigger value="feedback" disabled={isLoading}>Feedback</TabsTrigger>
+                <TabsTrigger value="bug" disabled={isLoading}>Bug Report</TabsTrigger>
             </TabsList>
 
             <TabsContent value="feedback" className="mt-4 space-y-4">
@@ -197,8 +227,8 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
                     <StarRating rating={rating} setRating={setRating} disabled={isLoading} />
                  </div>
                  <div className="space-y-2">
-                    <Label htmlFor="message-feedback">Tell us what you think (optional)</Label>
-                    <Textarea id="message-feedback" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`What went well? What could be improved?`} minLength={10} />
+                    <Label htmlFor="message-feedback">Tell us what you think</Label>
+                    <Textarea id="message-feedback" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`What went well? What could be improved?`} minLength={10} disabled={isLoading}/>
                 </div>
             </TabsContent>
 
@@ -206,51 +236,51 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required disabled={!!user?.displayName} />
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required disabled={!!user?.displayName || isLoading} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required disabled={!!user?.email} />
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required disabled={!!user?.email || isLoading} />
                     </div>
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="message-bug">Describe the bug</Label>
-                    <Textarea id="message-bug" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`Please be as detailed as possible...`} required minLength={10} />
+                    <Textarea id="message-bug" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`Please be as detailed as possible...`} required minLength={10} disabled={isLoading}/>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="file-upload">Attach Screenshot/Video (Optional)</Label>
-                    {filePreview ? (
-                        <div className="relative w-full aspect-video border rounded-md overflow-hidden">
-                            {file?.type.startsWith('image/') ? (
-                                <img src={filePreview} alt="Preview" className="w-full h-full object-contain" />
-                            ) : (
-                                <video src={filePreview} className="w-full h-full object-contain" controls />
-                            )}
-                            <Button 
-                                type="button" 
-                                variant="destructive" 
-                                size="icon" 
-                                className="absolute top-2 right-2 h-7 w-7"
-                                onClick={() => { setFile(null); setFilePreview(null); }}
-                                disabled={isLoading}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ) : (
-                         <label htmlFor="file-upload" className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
-                                <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
-                                <p className="text-xs text-muted-foreground">Image or Video (MAX. 5MB)</p>
+                    <Label htmlFor="file-upload">Attach Files (Optional)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                        {files.map((file, index) => (
+                           <div key={index} className="relative group aspect-square border rounded-md overflow-hidden">
+                                {file.type.startsWith('image/') ? (
+                                    <Image src={URL.createObjectURL(file)} alt={`preview ${index}`} fill className="object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-2">
+                                        <Video className="w-6 h-6 text-muted-foreground"/>
+                                        <span className="text-xs text-muted-foreground text-center line-clamp-2 mt-1">{file.name}</span>
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <Button type="button" variant="destructive" size="icon" className="h-7 w-7" onClick={() => removeFile(index)} disabled={isLoading}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
-                            <Input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*" disabled={isLoading}/>
-                        </label>
-                    )}
+                        ))}
+                    </div>
+                    
+                    <label htmlFor="file-upload" className={cn("relative flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg mt-2", isLoading ? "cursor-not-allowed bg-muted/50" : "cursor-pointer hover:bg-muted/50")}>
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                            <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
+                            <p className="text-xs text-muted-foreground">Up to 5 images & 5 videos</p>
+                        </div>
+                        <Input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*" multiple disabled={isLoading}/>
+                    </label>
                 </div>
             </TabsContent>
 
-             <DialogFooter className="mt-4">
+             <DialogFooter className="mt-6">
                 <Button type="submit" className="w-full" disabled={isSubmitDisabled}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isUploading ? 'Uploading...' : isSubmitting ? 'Submitting...' : 'Send Message'}

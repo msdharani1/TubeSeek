@@ -164,14 +164,14 @@ function FeedbackPage() {
                                   </div>
                                </div>
                                <div className="flex md:flex-col items-start md:items-end justify-between gap-2">
-                                    <div className="flex items-center gap-2">
-                                    {item.attachmentUrl && (
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={item.attachmentUrl} target="_blank">
-                                                <ImageIcon className="h-4 w-4 mr-2"/> View Attachment
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                    {item.attachmentUrls && item.attachmentUrls.map((url, index) => (
+                                        <Button asChild variant="outline" size="sm" key={index}>
+                                            <Link href={url} target="_blank">
+                                                <ImageIcon className="h-4 w-4 mr-2"/> View Attachment {index + 1}
                                             </Link>
                                         </Button>
-                                     )}
+                                     ))}
                                     {item.status === 'fixed' ? (
                                         <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
                                             <Check className="h-3 w-3 mr-1"/> Fixed
