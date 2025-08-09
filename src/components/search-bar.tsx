@@ -35,11 +35,13 @@ const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
+  const [originalQuery, setOriginalQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLFormElement>(null);
+  const suggestionsListRef = useRef<HTMLUListElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
 
   useEffect(() => {
@@ -81,6 +83,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
       setIsSuggestionsLoading(true);
       const { data } = await getSearchSuggestions(searchQuery);
       setSuggestions(data || []);
+      setOriginalQuery(searchQuery);
       setIsSuggestionsLoading(false);
       setHighlightedIndex(-1); // Reset highlight when suggestions change
   }, []);
@@ -94,15 +97,19 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     return () => clearTimeout(debounceTimer);
   }, [query, showSuggestions, fetchSuggestions]);
 
+  useEffect(() => {
+    if (suggestionsListRef.current && highlightedIndex >= 0) {
+      const highlightedElement = suggestionsListRef.current.children[highlightedIndex] as HTMLLIElement;
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [highlightedIndex]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
-        handleSuggestionClick(suggestions[highlightedIndex]);
-    } else {
-        setShowSuggestions(false);
-        onSearch(query);
-    }
+    setShowSuggestions(false);
+    onSearch(query);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -123,14 +130,20 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
     if (e.key === "ArrowDown") {
         e.preventDefault();
-        setHighlightedIndex(prevIndex => 
-            prevIndex < suggestions.length - 1 ? prevIndex + 1 : 0
-        );
+        const newIndex = highlightedIndex + 1;
+        if (newIndex < suggestions.length) {
+            setHighlightedIndex(newIndex);
+            setQuery(suggestions[newIndex]);
+        }
     } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setHighlightedIndex(prevIndex => 
-            prevIndex > 0 ? prevIndex - 1 : suggestions.length - 1
-        );
+        const newIndex = highlightedIndex - 1;
+        setHighlightedIndex(newIndex);
+        if (newIndex >= 0) {
+            setQuery(suggestions[newIndex]);
+        } else {
+            setQuery(originalQuery);
+        }
     }
   };
 
@@ -147,6 +160,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
+            setHighlightedIndex(-1); // Reset on manual typing
             if(e.target.value.length > 1) {
                 setShowSuggestions(true);
                 updatePosition();
@@ -194,7 +208,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
                 {isSuggestionsLoading ? (
                     <div className="p-4 text-center text-muted-foreground">Loading suggestions...</div>
                 ) : suggestions.length > 0 ? (
-                    <ul>
+                    <ul ref={suggestionsListRef}>
                         {suggestions.map((s, i) => (
                             <li key={i}>
                             <button
@@ -203,6 +217,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
                                     e.preventDefault();
                                     handleSuggestionClick(s);
                                 }}
+                                onMouseEnter={() => setHighlightedIndex(i)}
                                 className={cn(
                                     "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
                                     i === highlightedIndex && "bg-muted/80"

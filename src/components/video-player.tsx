@@ -16,6 +16,7 @@ import { AddToPlaylist } from "./add-to-playlist";
 import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { LoginPromptDialog } from "./login-prompt-dialog";
+import { useRouter } from "next/navigation";
 
 // Helper to parse and style the description
 const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
@@ -91,10 +92,10 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
                     {formatDuration(video.duration)}
                 </Badge>
             </div>
-            <div className="flex flex-col text-sm min-w-0">
+            <div className="flex flex-col text-sm">
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="text-muted-foreground mt-1 text-xs">
-                    <p className="truncate">{video.channelTitle}</p>
+                    <p className="line-clamp-1">{video.channelTitle}</p>
                     <p>{formatCount(video.viewCount)} views &bull; {timeAgo}</p>
                 </div>
             </div>
@@ -152,7 +153,7 @@ const VideoDetails = ({
                 title="Login to unlock this feature"
                 description="Liking videos, subscribing to channels, and creating playlists are available only to logged-in users. Please sign in to continue."
             />
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {video.title}
             </h1>
             <div className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -216,9 +217,9 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
-  const { user, refreshHistory, history } = useAuth();
+  const { user } = useAuth();
   const { isMobile, state: sidebarState } = useSidebar();
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<any>(null); // To hold the YouTube player instance
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const [isLiked, setIsLiked] = useState(false);
@@ -229,28 +230,28 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   const onPlayerReady = useCallback((event: any) => {
     if (!video) return;
-    
-    const watchedInfo = history.find(h => h.videoId === video.videoId);
-    const startSeconds = watchedInfo?.progressSeconds || 0;
-
-    if (startSeconds > 1) {
+    const startSeconds = 'progressSeconds' in video ? video.progressSeconds : 0;
+    if (startSeconds) {
         event.target.seekTo(startSeconds, true);
     }
     event.target.playVideo();
-  }, [video, history]);
+  }, [video]);
   
   const onPlayerStateChange = useCallback((event: any) => {
     if (isGuest) return;
 
     if (event.data === YT.PlayerState.PLAYING) {
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = setInterval(async () => {
+        progressIntervalRef.current = setInterval(() => {
             const currentTime = event.target.getCurrentTime();
             if (user && video) {
+<<<<<<< HEAD
                 // Fire and forget, no need to await
+=======
+>>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
                 updateVideoProgress(user.uid, video.videoId, currentTime);
             }
-        }, 5000);
+        }, 5000); // Save progress every 5 seconds
     } else {
         if (progressIntervalRef.current) {
             clearInterval(progressIntervalRef.current);
@@ -258,6 +259,10 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         }
     }
   }, [user, video, isGuest]);
+<<<<<<< HEAD
+=======
+
+>>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
 
   const loadYouTubePlayer = useCallback(() => {
     if (!video) return;
@@ -271,6 +276,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             playerVars: {
                 autoplay: 1,
                 rel: 0,
+                start: 'progressSeconds' in video && video.progressSeconds ? Math.floor(video.progressSeconds) : 0
             },
             events: {
                 'onReady': onPlayerReady,
@@ -320,21 +326,35 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     if (video) {
         setLikeCount(Number(video.likeCount) || 0);
         loadYouTubePlayer();
+<<<<<<< HEAD
         saveHistoryCallback();
         if (user) {
             fetchStatus();
+=======
+        if (user) {
+            fetchStatus();
+            saveVideoToHistory(user.uid, video)
+                .then(result => {
+                    if(result.error) {
+                        console.warn("Could not save to history:", result.error)
+                    } else {
+                        localStorage.removeItem(`history_cache_${user.uid}`);
+                    }
+                })
+>>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
         }
     }
     
+    // Cleanup on component unmount
     return () => {
         if (progressIntervalRef.current) {
             clearInterval(progressIntervalRef.current);
         }
         if (playerRef.current && typeof playerRef.current.destroy === 'function') {
-             playerRef.current.destroy();
-             playerRef.current = null;
+            playerRef.current.destroy();
         }
     }
+<<<<<<< HEAD
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video]); // Only re-run when the video prop changes
 
@@ -359,6 +379,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+=======
+  }, [video, user, fetchStatus, loadYouTubePlayer]);
+>>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
 
   const seekTo = (seconds: number) => {
     if (playerRef.current) {
@@ -450,14 +473,14 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   return (
     <div className={cn(
-        "fixed bottom-0 top-0 right-0 z-50 bg-background flex items-center justify-center animate-in fade-in-0",
+        "fixed bottom-0 top-16 right-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
         "left-0 lg:left-[var(--sidebar-width-icon)]",
         !isMobile && sidebarState === 'expanded' && "!left-[var(--sidebar-width)]"
         )}>
-        <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row lg:overflow-hidden border-t">
+        <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
-            <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-auto no-scrollbar">
-                <div className="w-full aspect-video shrink-0 bg-black z-10 lg:relative sticky top-0">
+            <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-scroll no-scrollbar">
+                <div className="w-full aspect-video shrink-0 bg-black lg:relative sticky top-0 z-10">
                     <div id="youtube-player" className="w-full h-full"></div>
                 </div>
                  <VideoDetails 
@@ -489,14 +512,14 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                     </div>
                 </div>
             </div>
-            
-            <Button
+
+            <button
                 onClick={onClose}
-                className="absolute right-4 top-4 z-20 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors h-auto w-auto"
+                className="absolute right-4 top-4 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors z-20 hidden sm:block"
                 aria-label="Close video player"
             >
                 <X className="h-5 w-5" />
-            </Button>
+            </button>
         </div>
     </div>
   );
