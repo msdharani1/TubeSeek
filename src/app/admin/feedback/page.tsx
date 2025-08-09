@@ -1,0 +1,200 @@
+
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { withAuth, useAuth } from '@/context/auth-context';
+import { getAllFeedback, updateBugStatus, type FeedbackEntry } from '@/app/actions/feedback';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { MessageSquare, Bug, Star, Image as ImageIcon, Video, Check, User, Mail, Calendar } from 'lucide-react';
+import { RippleWaveLoader } from '@/components/ripple-wave-loader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow } from 'date-fns';
+
+function FeedbackPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+  
+  const [allSubmissions, setAllSubmissions] = useState<FeedbackEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user || user.email !== "msdharaniofficial@gmail.com") {
+        router.replace('/search');
+      } else {
+        fetchData();
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, router]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    if (user?.email) {
+      const { data, error } = await getAllFeedback(user.email);
+      if (error) {
+        setError(error);
+      } else if (data) {
+        setAllSubmissions(data);
+      }
+    }
+    setIsLoading(false);
+  };
+  
+  const handleMarkAsFixed = async (id: string) => {
+    if(!user?.email) return;
+    
+    // Optimistic UI update
+    setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: 'fixed'} : item));
+
+    const { success, error } = await updateBugStatus(user.email, id, 'fixed');
+    if(success) {
+        toast({ title: "Bug marked as fixed." });
+    } else {
+        // Revert on failure
+        setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: 'open'} : item));
+        toast({ variant: 'destructive', title: "Update Failed", description: error });
+    }
+  }
+
+  const feedbacks = allSubmissions.filter(s => s.type === 'feedback');
+  const bugReports = allSubmissions.filter(s => s.type === 'bug');
+
+  if (authLoading || (!user && !authLoading) || user?.email !== "msdharaniofficial@gmail.com") {
+    return (
+        <div className="flex h-screen w-full flex-col items-center justify-center text-center bg-background">
+            <RippleWaveLoader />
+            <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+    );
+  }
+
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold tracking-tight mb-6">Feedback & Bug Reports</h1>
+
+      {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <RippleWaveLoader />
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : (
+        <Tabs defaultValue="feedback" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="feedback"><MessageSquare className="mr-2 h-4 w-4"/>Feedback ({feedbacks.length})</TabsTrigger>
+                <TabsTrigger value="bug"><Bug className="mr-2 h-4 w-4"/>Bug Reports ({bugReports.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="feedback" className="mt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>User Feedback</CardTitle>
+                        <CardDescription>General feedback and ratings submitted by users.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Rating</TableHead>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Message</TableHead>
+                                    <TableHead className="text-right">Submitted</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {feedbacks.length > 0 ? feedbacks.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-1">
+                                                {Array.from({length: item.rating || 0}).map((_, i) => (
+                                                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400"/>
+                                                ))}
+                                                {Array.from({length: 5 - (item.rating || 0)}).map((_, i) => (
+                                                     <Star key={i} className="h-4 w-4 text-muted-foreground/50"/>
+                                                ))}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="font-medium">{item.name || 'Anonymous'}</div>
+                                            <div className="text-xs text-muted-foreground">{item.email}</div>
+                                        </TableCell>
+                                        <TableCell className="max-w-md">{item.message}</TableCell>
+                                        <TableCell className="text-right whitespace-nowrap">{formatDistanceToNow(new Date(item.submittedAt), { addSuffix: true })}</TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">No feedback submitted yet.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="bug" className="mt-6">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Bug Reports</CardTitle>
+                        <CardDescription>Reports submitted by users, potentially with attachments.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       {bugReports.length > 0 ? bugReports.map(item => (
+                           <Card key={item.id} className={item.status === 'fixed' ? 'bg-muted/30' : ''}>
+                            <CardContent className="p-4 grid md:grid-cols-3 gap-4">
+                               <div className="md:col-span-2 space-y-3">
+                                  <p className="text-sm">{item.message}</p>
+                                  <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    <span className="flex items-center gap-1.5"><User className="h-3 w-3"/>{item.name || 'Anonymous'}</span>
+                                    <span className="flex items-center gap-1.5"><Mail className="h-3 w-3"/>{item.email}</span>
+                                    <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3"/>{formatDistanceToNow(new Date(item.submittedAt), { addSuffix: true })}</span>
+                                  </div>
+                               </div>
+                               <div className="flex md:flex-col items-start md:items-end justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                    {item.attachmentUrl && (
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={item.attachmentUrl} target="_blank">
+                                                <ImageIcon className="h-4 w-4 mr-2"/> View Attachment
+                                            </Link>
+                                        </Button>
+                                     )}
+                                    {item.status === 'fixed' ? (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                                            <Check className="h-3 w-3 mr-1"/> Fixed
+                                        </Badge>
+                                    ) : (
+                                        <Button size="sm" onClick={() => handleMarkAsFixed(item.id)}>
+                                            <Check className="h-4 w-4 mr-2"/> Mark as Fixed
+                                        </Button>
+                                    )}
+                                    </div>
+                               </div>
+                            </CardContent>
+                           </Card>
+                       )) : (
+                          <div className="h-24 text-center flex items-center justify-center text-muted-foreground">No bug reports submitted yet.</div>
+                       )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
+        )}
+    </main>
+  );
+}
+
+export default withAuth(FeedbackPage);

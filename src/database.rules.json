@@ -59,7 +59,10 @@
     },
     "feedback": {
       ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
-      ".write": true
+      ".write": true,
+      "$feedbackId": {
+          ".indexOn": "status"
+      }
     }
   }
 }

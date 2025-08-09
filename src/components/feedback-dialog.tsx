@@ -10,13 +10,32 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, UploadCloud, File, Trash2, Send } from 'lucide-react';
+import { Loader2, UploadCloud, Trash2, Send, Star } from 'lucide-react';
 import { submitFeedback } from '@/app/actions/feedback';
+import { cn } from '@/lib/utils';
 
 type FeedbackDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
+
+function StarRating({ rating, setRating, disabled }: { rating: number, setRating: (r: number) => void, disabled: boolean }) {
+    return (
+        <div className="flex items-center justify-center gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                    key={star}
+                    className={cn(
+                        "h-8 w-8 cursor-pointer transition-colors",
+                        star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30',
+                        !disabled && "hover:text-yellow-300"
+                    )}
+                    onClick={() => !disabled && setRating(star)}
+                />
+            ))}
+        </div>
+    )
+}
 
 export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   const { user } = useAuth();
@@ -26,6 +45,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [rating, setRating] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -48,6 +68,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
           setFile(null);
           setFilePreview(null);
           setActiveTab('feedback');
+          setRating(0);
       }
   }, [open]);
 
@@ -105,7 +126,16 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isSubmitting) return;
+    if (isSubmitting) return;
+    if (activeTab === 'feedback' && rating === 0) {
+        toast({ variant: 'destructive', title: 'Rating required', description: 'Please select a rating before submitting.' });
+        return;
+    }
+    if (!message.trim()) {
+        toast({ variant: 'destructive', title: 'Message required', description: 'Please enter a message.' });
+        return;
+    }
+
 
     setIsSubmitting(true);
     let attachmentUrl = null;
@@ -120,6 +150,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
     
     const feedbackData = {
       type: activeTab as 'feedback' | 'bug',
+      rating: activeTab === 'feedback' ? rating : undefined,
       name: name.trim(),
       email: email.trim(),
       message: message.trim(),
@@ -131,7 +162,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
     const { success, error } = await submitFeedback(feedbackData);
 
     if (success) {
-      toast({ title: 'Feedback submitted', description: "Thanks for helping us improve!" });
+      toast({ title: 'Submission received', description: "Thanks for helping us improve!" });
       onOpenChange(false);
     } else {
       toast({ variant: 'destructive', title: 'Submission Failed', description: error });
@@ -141,6 +172,8 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
   };
   
   const isLoading = isUploading || isSubmitting;
+  const isSubmitDisabled = isLoading || (activeTab === 'feedback' ? rating === 0 || !message.trim() : !message.trim());
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,7 +190,19 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
                 <TabsTrigger value="feedback">Feedback</TabsTrigger>
                 <TabsTrigger value="bug">Bug Report</TabsTrigger>
             </TabsList>
-            <div className="py-4 space-y-4">
+
+            <TabsContent value="feedback" className="mt-4 space-y-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="rating" className="text-center block">How would you rate your experience?</Label>
+                    <StarRating rating={rating} setRating={setRating} disabled={isLoading} />
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="message-feedback">Tell us what you think (optional)</Label>
+                    <Textarea id="message-feedback" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`What went well? What could be improved?`} minLength={10} />
+                </div>
+            </TabsContent>
+
+            <TabsContent value="bug" className="mt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
@@ -169,46 +214,45 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
                     </div>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`Tell us what you think...`} required minLength={10} />
+                    <Label htmlFor="message-bug">Describe the bug</Label>
+                    <Textarea id="message-bug" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`Please be as detailed as possible...`} required minLength={10} />
                 </div>
-                <TabsContent value="bug" className="m-0 p-0">
-                    <div className="space-y-2">
-                        <Label htmlFor="file-upload">Attach Screenshot/Video (Optional)</Label>
-                        {filePreview ? (
-                            <div className="relative w-full aspect-video border rounded-md overflow-hidden">
-                                {file?.type.startsWith('image/') ? (
-                                    <img src={filePreview} alt="Preview" className="w-full h-full object-contain" />
-                                ) : (
-                                    <video src={filePreview} className="w-full h-full object-contain" controls />
-                                )}
-                                <Button 
-                                    type="button" 
-                                    variant="destructive" 
-                                    size="icon" 
-                                    className="absolute top-2 right-2 h-7 w-7"
-                                    onClick={() => { setFile(null); setFilePreview(null); }}
-                                    disabled={isLoading}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                <div className="space-y-2">
+                    <Label htmlFor="file-upload">Attach Screenshot/Video (Optional)</Label>
+                    {filePreview ? (
+                        <div className="relative w-full aspect-video border rounded-md overflow-hidden">
+                            {file?.type.startsWith('image/') ? (
+                                <img src={filePreview} alt="Preview" className="w-full h-full object-contain" />
+                            ) : (
+                                <video src={filePreview} className="w-full h-full object-contain" controls />
+                            )}
+                            <Button 
+                                type="button" 
+                                variant="destructive" 
+                                size="icon" 
+                                className="absolute top-2 right-2 h-7 w-7"
+                                onClick={() => { setFile(null); setFilePreview(null); }}
+                                disabled={isLoading}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ) : (
+                         <label htmlFor="file-upload" className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
+                                <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
+                                <p className="text-xs text-muted-foreground">Image or Video (MAX. 5MB)</p>
                             </div>
-                        ) : (
-                             <label htmlFor="file-upload" className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
-                                    <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
-                                    <p className="text-xs text-muted-foreground">Image or Video (MAX. 5MB)</p>
-                                </div>
-                                <Input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*" disabled={isLoading}/>
-                            </label>
-                        )}
-                    </div>
-                </TabsContent>
-            </div>
-             <DialogFooter>
-                <Button type="submit" className="w-full" disabled={isLoading || !message.trim()}>
-                    {(isUploading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*" disabled={isLoading}/>
+                        </label>
+                    )}
+                </div>
+            </TabsContent>
+
+             <DialogFooter className="mt-4">
+                <Button type="submit" className="w-full" disabled={isSubmitDisabled}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isUploading ? 'Uploading...' : isSubmitting ? 'Submitting...' : 'Send Message'}
                 </Button>
             </DialogFooter>
