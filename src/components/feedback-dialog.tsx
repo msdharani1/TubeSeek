@@ -221,26 +221,39 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
                 <TabsTrigger value="bug" disabled={isLoading}>Bug Report</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="feedback" className="mt-4 space-y-4">
+            <TabsContent value="feedback" className="mt-4">
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-4">
                  <div className="space-y-2">
                     <Label htmlFor="rating" className="text-center block">How would you rate your experience?</Label>
                     <StarRating rating={rating} setRating={setRating} disabled={isLoading} />
                  </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="name-feedback">Name</Label>
+                        <Input id="name-feedback" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required disabled={!!user?.displayName || isLoading} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="email-feedback">Email</Label>
+                        <Input id="email-feedback" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required disabled={!!user?.email || isLoading} />
+                    </div>
+                </div>
                  <div className="space-y-2">
                     <Label htmlFor="message-feedback">Tell us what you think</Label>
                     <Textarea id="message-feedback" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={`What went well? What could be improved?`} minLength={10} disabled={isLoading}/>
                 </div>
+              </div>
             </TabsContent>
 
-            <TabsContent value="bug" className="mt-4 space-y-4">
+            <TabsContent value="bug" className="mt-4">
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required disabled={!!user?.displayName || isLoading} />
+                        <Label htmlFor="name-bug">Name</Label>
+                        <Input id="name-bug" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" required disabled={!!user?.displayName || isLoading} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required disabled={!!user?.email || isLoading} />
+                        <Label htmlFor="email-bug">Email</Label>
+                        <Input id="email-bug" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required disabled={!!user?.email || isLoading} />
                     </div>
                 </div>
                  <div className="space-y-2">
@@ -278,6 +291,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
                         <Input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*,video/*" multiple disabled={isLoading}/>
                     </label>
                 </div>
+              </div>
             </TabsContent>
 
              <DialogFooter className="mt-6">
