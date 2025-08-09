@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MessageSquare, Bug, Star, Image as ImageIcon, Video, Check, User, Mail, Calendar, RotateCcw } from 'lucide-react';
+import { MessageSquare, Bug, Star, Image as ImageIcon, Video, Check, User, Mail, Calendar, RotateCcw, Verified } from 'lucide-react';
 import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 function FeedbackPage() {
   const { user, loading: authLoading } = useAuth();
@@ -73,7 +74,7 @@ function FeedbackPage() {
     const { success, error } = await updateBugStatus(user.email, id, newStatus);
     
     if(success) {
-        toast({ title: `Bug marked as ${newStatus}.` });
+        toast({ title: `Bug status updated to ${newStatus}.` });
     } else {
         // Revert on failure
         setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: currentStatus} : item));
@@ -240,7 +241,7 @@ function FeedbackPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                        {filteredAndSortedBugs.length > 0 ? filteredAndSortedBugs.map(item => (
-                           <Card key={item.id} className={item.status === 'fixed' ? 'bg-muted/30' : ''}>
+                           <Card key={item.id} className={item.status === 'fixed' ? 'bg-green-500/10 border-green-500/20' : ''}>
                             <CardContent className="p-4 grid md:grid-cols-3 gap-4">
                                <div className="md:col-span-2 space-y-3">
                                   <p className="text-sm">{item.message}</p>
@@ -263,8 +264,9 @@ function FeedbackPage() {
                                <div className="flex md:flex-col items-start md:items-end justify-between gap-2">
                                     <div className="flex items-center gap-2 flex-wrap">
                                     {item.status === 'fixed' ? (
-                                        <Button variant="secondary" size="sm" onClick={() => handleStatusChange(item.id, 'fixed')}>
-                                            <RotateCcw className="h-4 w-4 mr-2"/> Mark as Open
+                                        <Button variant="secondary" size="sm" onClick={() => handleStatusChange(item.id, 'fixed')}
+                                          className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50">
+                                            <Verified className="h-4 w-4 mr-2"/> Fixed
                                         </Button>
                                     ) : (
                                         <Button size="sm" onClick={() => handleStatusChange(item.id, 'open')}>
