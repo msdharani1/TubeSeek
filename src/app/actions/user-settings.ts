@@ -7,7 +7,11 @@ import type { UserInfo } from '@/types/youtube';
 import { subDays, format, isValid, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
 
 
-type UserWithSettings = UserInfo & { id: string; suggestionsEnabled: boolean };
+type UserWithSettings = UserInfo & { 
+    id: string; 
+    suggestionsEnabled: boolean;
+    joinDate: string;
+};
 
 // Admin action to get all users and their settings
 export async function getAllUsersWithSettings(adminEmail: string): Promise<{ data?: UserWithSettings[]; error?: string }> {
@@ -32,15 +36,31 @@ export async function getAllUsersWithSettings(adminEmail: string): Promise<{ dat
         const allSettingsData = settingsSnapshot.val() || {};
 
         const result: UserWithSettings[] = Object.keys(allUsersData).map(userId => {
-            const profile = allUsersData[userId].profile || {};
+            const userData = allUsersData[userId];
+            const profile = userData.profile || {};
             const settings = allSettingsData[userId] || {};
+            
+            let joinDate = new Date().toISOString(); // Fallback to now
+            if (userData.searches && Object.keys(userData.searches).length > 0) {
+                 try {
+                    const firstSearch = Object.values(userData.searches).reduce((earliest: any, current: any) => {
+                        return new Date(current.timestamp) < new Date(earliest.timestamp) ? current : earliest;
+                    });
+                    const creationDate = new Date(firstSearch.timestamp);
+                    if (isValid(creationDate)) {
+                        joinDate = creationDate.toISOString();
+                    }
+                 } catch (e) { /* ignore */ }
+            }
+
             return {
                 id: userId,
                 uid: userId,
                 email: profile.email || "N/A",
                 displayName: profile.displayName || "N/A",
                 photoURL: profile.photoURL || null,
-                suggestionsEnabled: settings.suggestionsEnabled === true // Default to false
+                suggestionsEnabled: settings.suggestionsEnabled === true,
+                joinDate: joinDate,
             };
         });
 
