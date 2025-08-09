@@ -56,7 +56,7 @@ export function Footer() {
             >
               MS Dharani
             </Link>
-            . This project is for educational purposes only.
+            . This project is for educational and non-commercial purposes only.
           </p>
         </div>
       </div>

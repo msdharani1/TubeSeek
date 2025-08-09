@@ -5,7 +5,7 @@
 
 **TubeSeek** is a modern, feature-rich web application built with Next.js that offers an enhanced, distraction-free interface for searching and watching YouTube videos. It serves as an intelligent portal to YouTube, prioritizing user experience with features like real-time search suggestions, playlist management, and robust user data controls, all wrapped in a sleek, customizable UI.
 
-This project is not just a YouTube client; it's a demonstration of building a full-stack application with modern web technologies, including server-side rendering, secure authentication, third-party API integration, and real-time database management.
+This project is not just a YouTube client; it's a demonstration of building a full-stack application with modern web technologies, including server-side rendering, secure authentication, third-party API integration, and real-time database management. It is intended for educational and non-commercial use only.
 
 ## Table of Contents
 
