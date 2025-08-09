@@ -247,8 +247,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         progressIntervalRef.current = setInterval(async () => {
             const currentTime = event.target.getCurrentTime();
             if (user && video) {
-                await updateVideoProgress(user.uid, video.videoId, currentTime);
-                await refreshHistory();
+                // Fire and forget, no need to await
+                updateVideoProgress(user.uid, video.videoId, currentTime);
             }
         }, 5000);
     } else {
@@ -257,7 +257,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             progressIntervalRef.current = null;
         }
     }
-  }, [user, video, isGuest, refreshHistory]);
+  }, [user, video, isGuest]);
 
   const loadYouTubePlayer = useCallback(() => {
     if (!video) return;
@@ -292,7 +292,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     }
   }, [video, onPlayerReady, onPlayerStateChange]);
 
-
   const fetchStatus = useCallback(async () => {
     if (!user || !video) return;
     const { data, error } = await getInteractionStatus(user.uid, video.videoId, video.channelId);
@@ -304,21 +303,26 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     }
   }, [user, video]);
   
+  const saveHistoryCallback = useCallback(() => {
+    if (video && user) {
+        saveVideoToHistory(user.uid, video)
+            .then(async (result) => {
+                if(result.error) {
+                    console.warn("Could not save to history:", result.error)
+                } else {
+                    await refreshHistory(); // Refresh history after saving
+                }
+            });
+    }
+  }, [video, user, refreshHistory]);
+
   useEffect(() => {
     if (video) {
         setLikeCount(Number(video.likeCount) || 0);
         loadYouTubePlayer();
-        
+        saveHistoryCallback();
         if (user) {
             fetchStatus();
-            saveVideoToHistory(user.uid, video)
-                .then(async (result) => {
-                    if(result.error) {
-                        console.warn("Could not save to history:", result.error)
-                    } else {
-                       await refreshHistory();
-                    }
-                })
         }
     }
     
@@ -331,7 +335,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
              playerRef.current = null;
         }
     }
-  }, [video, user, fetchStatus, loadYouTubePlayer, refreshHistory]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [video]); // Only re-run when the video prop changes
 
   useEffect(() => {
     const handleVisibilityChange = () => {
