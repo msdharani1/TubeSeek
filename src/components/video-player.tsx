@@ -245,10 +245,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         progressIntervalRef.current = setInterval(() => {
             const currentTime = event.target.getCurrentTime();
             if (user && video) {
-<<<<<<< HEAD
-                // Fire and forget, no need to await
-=======
->>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
                 updateVideoProgress(user.uid, video.videoId, currentTime);
             }
         }, 5000); // Save progress every 5 seconds
@@ -259,10 +255,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         }
     }
   }, [user, video, isGuest]);
-<<<<<<< HEAD
-=======
 
->>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
 
   const loadYouTubePlayer = useCallback(() => {
     if (!video) return;
@@ -298,6 +291,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     }
   }, [video, onPlayerReady, onPlayerStateChange]);
 
+
   const fetchStatus = useCallback(async () => {
     if (!user || !video) return;
     const { data, error } = await getInteractionStatus(user.uid, video.videoId, video.channelId);
@@ -309,28 +303,10 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     }
   }, [user, video]);
   
-  const saveHistoryCallback = useCallback(() => {
-    if (video && user) {
-        saveVideoToHistory(user.uid, video)
-            .then(async (result) => {
-                if(result.error) {
-                    console.warn("Could not save to history:", result.error)
-                } else {
-                    await refreshHistory(); // Refresh history after saving
-                }
-            });
-    }
-  }, [video, user, refreshHistory]);
-
   useEffect(() => {
     if (video) {
         setLikeCount(Number(video.likeCount) || 0);
         loadYouTubePlayer();
-<<<<<<< HEAD
-        saveHistoryCallback();
-        if (user) {
-            fetchStatus();
-=======
         if (user) {
             fetchStatus();
             saveVideoToHistory(user.uid, video)
@@ -341,7 +317,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                         localStorage.removeItem(`history_cache_${user.uid}`);
                     }
                 })
->>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
         }
     }
     
@@ -354,34 +329,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             playerRef.current.destroy();
         }
     }
-<<<<<<< HEAD
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [video]); // Only re-run when the video prop changes
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-        if (!playerRef.current || !playerRef.current.getPlayerState) return;
-
-        const playerState = playerRef.current.getPlayerState();
-
-        if (document.hidden) {
-            // Page is hidden, do nothing
-        } else {
-            if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.BUFFERING) {
-                playerRef.current.playVideo();
-            }
-        }
-    };
-    
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    
-    return () => {
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-=======
   }, [video, user, fetchStatus, loadYouTubePlayer]);
->>>>>>> ca19679 (if the user click the up or down arrow in the search input box, that the)
 
   const seekTo = (seconds: number) => {
     if (playerRef.current) {
