@@ -7,6 +7,7 @@ import { withAuth, useAuth } from '@/context/auth-context';
 import { getAllFeedback, updateBugStatus, type FeedbackEntry } from '@/app/actions/feedback';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,6 +17,7 @@ import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatDistanceToNow } from 'date-fns';
 
 function FeedbackPage() {
@@ -26,6 +28,7 @@ function FeedbackPage() {
   const [allSubmissions, setAllSubmissions] = useState<FeedbackEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewingAttachment, setViewingAttachment] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading) {
@@ -55,14 +58,12 @@ function FeedbackPage() {
   const handleMarkAsFixed = async (id: string) => {
     if(!user?.email) return;
     
-    // Optimistic UI update
     setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: 'fixed'} : item));
 
     const { success, error } = await updateBugStatus(user.email, id, 'fixed');
     if(success) {
         toast({ title: "Bug marked as fixed." });
     } else {
-        // Revert on failure
         setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: 'open'} : item));
         toast({ variant: 'destructive', title: "Update Failed", description: error });
     }
@@ -70,6 +71,9 @@ function FeedbackPage() {
 
   const feedbacks = allSubmissions.filter(s => s.type === 'feedback');
   const bugReports = allSubmissions.filter(s => s.type === 'bug');
+
+  const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url);
+  const isImage = (url: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
 
   if (authLoading || (!user && !authLoading) || user?.email !== "msdharaniofficial@gmail.com") {
     return (
@@ -81,6 +85,22 @@ function FeedbackPage() {
   }
 
   return (
+    <>
+      <Dialog open={!!viewingAttachment} onOpenChange={(isOpen) => !isOpen && setViewingAttachment(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Attachment Preview</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {viewingAttachment && isImage(viewingAttachment) && (
+              <Image src={viewingAttachment} alt="Attachment preview" width={1280} height={720} className="rounded-md max-h-[80vh] w-auto object-contain mx-auto" />
+            )}
+            {viewingAttachment && isVideo(viewingAttachment) && (
+              <video src={viewingAttachment} controls autoPlay className="rounded-md max-h-[80vh] w-full" />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold tracking-tight mb-6">Feedback & Bug Reports</h1>
 
@@ -157,7 +177,17 @@ function FeedbackPage() {
                             <CardContent className="p-4 grid md:grid-cols-3 gap-4">
                                <div className="md:col-span-2 space-y-3">
                                   <p className="text-sm">{item.message}</p>
-                                  <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1">
+                                   <div className="flex flex-wrap gap-2 items-center mt-2">
+                                     {item.attachmentUrls && item.attachmentUrls.map((url, index) => (
+                                        <Button asChild variant="outline" size="sm" key={index} onClick={() => setViewingAttachment(url)}>
+                                            <div className="cursor-pointer">
+                                                {isVideo(url) ? <Video className="h-4 w-4 mr-2"/> : <ImageIcon className="h-4 w-4 mr-2"/>}
+                                                View Attachment {index + 1}
+                                            </div>
+                                        </Button>
+                                     ))}
+                                    </div>
+                                  <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t mt-3">
                                     <span className="flex items-center gap-1.5"><User className="h-3 w-3"/>{item.name || 'Anonymous'}</span>
                                     <span className="flex items-center gap-1.5"><Mail className="h-3 w-3"/>{item.email}</span>
                                     <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3"/>{formatDistanceToNow(new Date(item.submittedAt), { addSuffix: true })}</span>
@@ -165,13 +195,6 @@ function FeedbackPage() {
                                </div>
                                <div className="flex md:flex-col items-start md:items-end justify-between gap-2">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                    {item.attachmentUrls && item.attachmentUrls.map((url, index) => (
-                                        <Button asChild variant="outline" size="sm" key={index}>
-                                            <Link href={url} target="_blank">
-                                                <ImageIcon className="h-4 w-4 mr-2"/> View Attachment {index + 1}
-                                            </Link>
-                                        </Button>
-                                     ))}
                                     {item.status === 'fixed' ? (
                                         <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
                                             <Check className="h-3 w-3 mr-1"/> Fixed
@@ -194,6 +217,7 @@ function FeedbackPage() {
         </Tabs>
         )}
     </main>
+    </>
   );
 }
 
