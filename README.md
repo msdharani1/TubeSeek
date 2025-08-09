@@ -22,6 +22,7 @@ This project is not just a YouTube client; it's a demonstration of building a fu
   - [Database](#database)
 - [API & Logic](#api--logic)
   - [YouTube Data API](#youtube-data-api)
+  - [Search Suggestions API](#search-suggestions-api)
   - [Client-Side Caching](#client-side-caching)
   - [Suggestion Engine](#suggestion-engine)
 - [Firebase Setup](#firebase-setup)
@@ -30,19 +31,20 @@ This project is not just a YouTube client; it's a demonstration of building a fu
 
 ## Key Features
 
-- **⚡ Real-time Search Suggestions**: Get instant search suggestions as you type, powered by Google's autocomplete API.
-- **📺 Enhanced Video Search**: Utilizes the YouTube Data API v3 and intelligently detects if a query matches a channel name to provide more relevant results.
+- **⚡ Real-time Search Suggestions**: Get instant search suggestions as you type. Navigate them with arrow keys and press Enter to search, providing a seamless and efficient search experience.
+- **📺 Enhanced Video Search**: Utilizes the YouTube Data API v3 and intelligently detects if a query matches a channel name to provide more relevant results. Includes advanced filtering options for sorting and duration.
+- **▶️ Picture-in-Picture Mini Player**: When a video is playing, you can navigate to other parts of the site, and the video will continue to play in a minimized player in the bottom-right corner. Includes close and expand controls. On mobile, a simple swipe-down gesture minimizes the player.
 - **💡 Personalized Suggestions**: A smart, non-AI-based recommendation system that analyzes your watch history, likes, and subscriptions to suggest relevant content on the homepage.
 - **✨ Distraction-Free Player**: A custom, full-featured video player that keeps you focused on the content, complete with an "Up Next" suggestions sidebar.
-- **🕒 Clickable Timestamps**: Automatically detects and makes timestamps in video descriptions clickable for easy navigation.
+- **🕒 Clickable Timestamps & Links**: Automatically detects and makes timestamps in video descriptions clickable for easy navigation. URLs and #hashtags are also converted to clickable links.
 - **📂 Playlist Management**:
   - Create custom playlists with a single click.
   - Add or remove any video from multiple playlists simultaneously.
   - A special "Favorite" playlist is available by default and created automatically when you first add a video to it.
 - **❤️ Like Videos**: Like and unlike any video. View all your liked videos in a dedicated "Liked Videos" page.
 - **🔔 Channel Subscriptions**: Subscribe or unsubscribe from any channel. View all your subscriptions in a dedicated page.
-- **📜 Personalized Watch History**: Automatically saves videos you watch and displays them in a dedicated history page, sorted by most recent. It even tracks your viewing progress for each video.
-- **🔐 Secure Authentication**: Employs Google Sign-In via Firebase Authentication for a secure and seamless login experience. Guest users are supported with a unique anonymous ID.
+- **📜 Personalized Watch History**: Automatically saves videos you watch and displays them in a dedicated history page, sorted by most recent. It even tracks your viewing progress for each video, showing a red progress bar on video thumbnails across the app.
+- **🔐 Secure Authentication**: Employs Google Sign-In via Firebase Authentication for a secure and seamless login experience. Guest users are supported with a unique anonymous ID for session-based history.
 - **🎨 Customizable Themes**: Choose between **Light**, **Dark**, and **System** themes to personalize your viewing experience.
 - **⚙️ User Data Control**: The settings page gives users full control over their data, including the ability to:
   - View account information and membership date.
@@ -184,18 +186,78 @@ The application uses **Next.js Server Actions** for all backend logic, eliminati
 
 ### YouTube Data API
 
-The application interacts with two main endpoints of the YouTube Data API v3:
+The application interacts with two main endpoints of the YouTube Data API v3. All calls are made from the server via Server Actions to protect the API key, which also supports automatic key rotation to mitigate quota limits.
 
-1.  **/search**: Used to get a list of video IDs for a given search query.
-2.  **/videos**: Used to fetch detailed information (like statistics and duration) for a list of video IDs obtained from the search endpoint.
+#### 1. Search Endpoint (`/search`)
 
-This two-step process ensures we get comprehensive data for each video shown to the user. All API calls are made from the server via Server Actions to protect the API key. The system also supports **automatic API key rotation** to mitigate quota limits.
+This endpoint is used to find videos based on a query or category. The app intelligently checks if a query matches a channel name to provide more focused results.
+
+-   **Sample URL (with filters):**
+    ```
+    https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&type=video&q=tech+reviews&order=viewCount&videoDuration=medium&key=YOUR_API_KEY
+    ```
+-   **Filter Options:**
+    -   `order`: `relevance` (default), `date`, `viewCount`, `rating`.
+    -   `videoDuration`: `any` (default), `short` (< 4 min), `medium` (4-20 min), `long` (> 20 min).
+-   **Category Searches:** For pages like "Trending" or "Music", a modified query (e.g., `"Latest Tamil Trending"`) is used with filters like `publishedAfter` to get fresh, relevant content.
+
+#### 2. Videos Endpoint (`/videos`)
+
+After the `/search` endpoint returns a list of video IDs, the `/videos` endpoint is called to fetch detailed information for those specific videos.
+
+-   **Sample URL:**
+    ```
+    https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=VIDEO_ID_1,VIDEO_ID_2&key=YOUR_API_KEY
+    ```
+-   **Purpose:** This provides crucial details like video duration, view count, and like count, which are not available in the initial search result.
+
+#### 3. Combined API Output
+
+The application combines the data from both endpoints to create a unified `SearchResult` object for each video, which looks like this:
+
+```json
+{
+  "videoId": "string",
+  "title": "string",
+  "description": "string",
+  "thumbnail": "string (URL)",
+  "duration": "string (ISO 8601)",
+  "viewCount": "string",
+  "likeCount": "string",
+  "publishedAt": "string (ISO 8601)",
+  "channelId": "string",
+  "channelTitle": "string"
+}
+```
+
+### Search Suggestions API
+
+To provide real-time search suggestions, the app uses an unofficial Google/YouTube suggestions endpoint. This is a lightweight, low-cost way to get relevant autocompletions.
+
+-   **Endpoint URL:** `https://suggestqueries.google.com/complete/search`
+-   **Sample Request:**
+    ```
+    https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=nextjs
+    ```
+-   **Sample Output:** The response is a JSON array where the second element contains the list of suggestions.
+    ```json
+    [
+      "nextjs",
+      [
+        "nextjs",
+        "nextjs tutorial",
+        "nextjs 14",
+        "nextjs vs react",
+        "nextjs auth"
+      ]
+    ]
+    ```
 
 ### Client-Side Caching
 
 To enhance performance and reduce API usage, the app implements a simple client-side caching strategy using `localStorage`.
 
--   When a search is performed, the app first checks `localStorage` for a cached result for that specific query.
+-   When a search is performed, the app first checks `localStorage` for a cached result for that specific query and filter combination.
 -   Each cache entry is stored with a timestamp.
 -   If a cached result exists and is less than **1 hour old**, it is used directly.
 -   Otherwise, a fresh API call is made, and the new result is stored in the cache.
