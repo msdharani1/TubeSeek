@@ -26,11 +26,18 @@ export async function submitFeedback(data: FeedbackData): Promise<{ success: boo
         const feedbackRef = ref(db, 'feedback');
         const newFeedbackRef = push(feedbackRef);
 
-        const payload = {
+        const payload: any = {
             ...data,
             submittedAt: serverTimestamp(),
-            status: data.type === 'bug' ? 'open' : undefined, // Bugs are 'open' by default
         };
+        
+        if (data.type === 'bug') {
+            payload.status = 'open'; // Bugs are 'open' by default
+        } else {
+            // For 'feedback' type, we don't want a status field.
+            // By deleting it from the original data copy, we avoid sending 'undefined'.
+            delete payload.status;
+        }
 
         await set(newFeedbackRef, payload);
 
