@@ -34,7 +34,7 @@ const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 
 export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarProps) {
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(initialQuery || '');
   const [originalQuery, setOriginalQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
@@ -45,7 +45,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
 
   useEffect(() => {
-    setQuery(initialQuery);
+    setQuery(initialQuery || '');
   }, [initialQuery]);
 
   const updatePosition = useCallback(() => {
@@ -149,7 +149,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
   const handleFocus = () => {
     updatePosition();
-    if(query.length > 1) setShowSuggestions(true);
+    if(query && query.length > 1) setShowSuggestions(true);
   }
 
   return (
