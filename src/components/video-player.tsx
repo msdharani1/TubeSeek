@@ -93,10 +93,10 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
                     {formatDuration(video.duration)}
                 </Badge>
             </div>
-            <div className="flex flex-col text-sm">
+            <div className="flex flex-col text-sm min-w-0">
                 <h4 className="font-semibold line-clamp-2 leading-snug">{video.title}</h4>
                 <div className="text-muted-foreground mt-1 text-xs">
-                    <p className="line-clamp-1">{video.channelTitle}</p>
+                    <p className="truncate">{video.channelTitle}</p>
                     <p>{formatCount(video.viewCount)} views &bull; {timeAgo}</p>
                 </div>
             </div>
