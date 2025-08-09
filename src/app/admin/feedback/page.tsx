@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { MessageSquare, Bug, Star, Image as ImageIcon, Video, Check, User, Mail, Calendar, ArrowUpDown } from 'lucide-react';
+import { MessageSquare, Bug, Star, Image as ImageIcon, Video, Check, User, Mail, Calendar, RotateCcw } from 'lucide-react';
 import { RippleWaveLoader } from '@/components/ripple-wave-loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -62,16 +62,21 @@ function FeedbackPage() {
     setIsLoading(false);
   };
   
-  const handleMarkAsFixed = async (id: string) => {
+  const handleStatusChange = async (id: string, currentStatus: 'open' | 'fixed') => {
     if(!user?.email) return;
-    
-    setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: 'fixed'} : item));
 
-    const { success, error } = await updateBugStatus(user.email, id, 'fixed');
+    const newStatus = currentStatus === 'open' ? 'fixed' : 'open';
+    
+    // Optimistic UI update
+    setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: newStatus} : item));
+
+    const { success, error } = await updateBugStatus(user.email, id, newStatus);
+    
     if(success) {
-        toast({ title: "Bug marked as fixed." });
+        toast({ title: `Bug marked as ${newStatus}.` });
     } else {
-        setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: 'open'} : item));
+        // Revert on failure
+        setAllSubmissions(prev => prev.map(item => item.id === id ? {...item, status: currentStatus} : item));
         toast({ variant: 'destructive', title: "Update Failed", description: error });
     }
   }
@@ -258,11 +263,11 @@ function FeedbackPage() {
                                <div className="flex md:flex-col items-start md:items-end justify-between gap-2">
                                     <div className="flex items-center gap-2 flex-wrap">
                                     {item.status === 'fixed' ? (
-                                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                                            <Check className="h-3 w-3 mr-1"/> Fixed
-                                        </Badge>
+                                        <Button variant="secondary" size="sm" onClick={() => handleStatusChange(item.id, 'fixed')}>
+                                            <RotateCcw className="h-4 w-4 mr-2"/> Mark as Open
+                                        </Button>
                                     ) : (
-                                        <Button size="sm" onClick={() => handleMarkAsFixed(item.id)}>
+                                        <Button size="sm" onClick={() => handleStatusChange(item.id, 'open')}>
                                             <Check className="h-4 w-4 mr-2"/> Mark as Fixed
                                         </Button>
                                     )}

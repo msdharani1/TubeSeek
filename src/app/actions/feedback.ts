@@ -80,7 +80,7 @@ export async function getAllFeedback(adminEmail: string): Promise<{ data?: Feedb
 }
 
 
-export async function updateBugStatus(adminEmail: string, feedbackId: string, status: 'fixed'): Promise<{ success: boolean; error?: string }> {
+export async function updateBugStatus(adminEmail: string, feedbackId: string, status: 'open' | 'fixed'): Promise<{ success: boolean; error?: string }> {
      if (adminEmail !== 'msdharaniofficial@gmail.com') {
         return { error: 'Unauthorized access.' };
     }
