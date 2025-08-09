@@ -34,7 +34,7 @@ const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 
 export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarProps) {
-  const [query, setQuery] = useState(initialQuery || '');
+  const [query, setQuery] = useState(initialQuery);
   const [originalQuery, setOriginalQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
@@ -166,6 +166,15 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         }
     }
   };
+  
+  const formatSuggestion = (suggestion: string, query: string) => {
+    const wordCount = query.trim().split(/\s+/).length;
+    if ((wordCount === 3 || wordCount === 4) && suggestion.toLowerCase().startsWith(query.toLowerCase())) {
+      return `...${suggestion.substring(query.length)}`;
+    }
+    return suggestion;
+  }
+
 
   const handleFocus = () => {
     updatePosition();
@@ -235,7 +244,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
                                 )}
                             >
                                 <Search className="h-4 w-4 text-muted-foreground"/>
-                                <span className="flex-1">{s}</span>
+                                <span className="flex-1">{formatSuggestion(s, originalQuery)}</span>
                             </button>
                             </li>
                         ))}
