@@ -56,6 +56,10 @@
     "cached-categories": {
       ".read": true,
       ".write": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'"
+    },
+    "feedback": {
+      ".read": "auth != null && auth.token.email === 'msdharaniofficial@gmail.com'",
+      ".write": true
     }
   }
 }

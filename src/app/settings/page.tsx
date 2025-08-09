@@ -8,7 +8,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, ChevronLeft, Download, LogIn } from 'lucide-react';
+import { User, LogOut, Trash2, ShieldAlert, Settings as SettingsIcon, ChevronLeft, Download, LogIn, MessageSquareQuote } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import packageJson from '../../../package.json';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists, clearLikedVideos, clearSubscriptions } from '@/app/actions/user-data';
 import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
+import { FeedbackDialog } from '@/components/feedback-dialog';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -45,6 +46,7 @@ function SettingsPage() {
     const [isDeletingLikes, setIsDeletingLikes] = useState(false);
     const [isDeletingSubs, setIsDeletingSubs] = useState(false);
     const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
@@ -139,6 +141,8 @@ function SettingsPage() {
         : 'N/A';
 
     return (
+        <>
+        <FeedbackDialog open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
         <main className="container mx-auto px-4 py-8 max-w-2xl">
             <div className="flex items-center mb-8">
                 <Button variant="ghost" size="icon" className="mr-2" onClick={() => router.back()}>
@@ -199,11 +203,21 @@ function SettingsPage() {
 
 
                 {/* About Section */}
-                <SettingsCard title="About" description="Information about the application.">
+                <SettingsCard title="About & Support" description="Information about the application and how to get help.">
                     <div className="divide-y">
                         <SettingsItem>
                             <p className="font-medium">App Version</p>
                             <p className="text-muted-foreground">{appVersion}</p>
+                        </SettingsItem>
+                        <SettingsItem>
+                            <div>
+                                <p className="font-medium">Feedback & Support</p>
+                                <p className="text-sm text-muted-foreground">Report a bug or share your feedback.</p>
+                            </div>
+                            <Button variant="outline" onClick={() => setIsFeedbackOpen(true)}>
+                                <MessageSquareQuote className="mr-2 h-4 w-4" />
+                                Contact Us
+                            </Button>
                         </SettingsItem>
                         <SettingsLinkItem href="/privacy-policy">
                             Privacy Policy
@@ -342,6 +356,7 @@ function SettingsPage() {
                 )}
             </div>
         </main>
+        </>
     );
 }
 

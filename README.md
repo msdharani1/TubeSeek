@@ -1,4 +1,3 @@
-
 # TubeSeek: An Intelligent YouTube Portal
 
 [![TubeSeek Logo](https://res.cloudinary.com/diwu3avy6/image/upload/Screenshot_from_2025-08-09_15-05-46-removebg-preview_jr2i2t?_a=DATAdtAAZAA0)](https://tubeseek.dev.msdharani.com/)
@@ -33,10 +32,9 @@ This project is not just a YouTube client; it's a demonstration of building a fu
 
 - **⚡ Real-time Search Suggestions**: Get instant search suggestions as you type. Navigate them with arrow keys and press Enter to search, providing a seamless and efficient search experience.
 - **📺 Enhanced Video Search**: Utilizes the YouTube Data API v3 and intelligently detects if a query matches a channel name to provide more relevant results. Includes advanced filtering options for sorting and duration.
-- **▶️ Picture-in-Picture Mini Player**: When a video is playing, you can navigate to other parts of the site, and the video will continue to play in a minimized player in the bottom-right corner. Includes close and expand controls. On mobile, a simple swipe-down gesture minimizes the player.
+- **▶️ Distraction-Free Player**: A custom, full-featured video player that keeps you focused on the content, complete with an "Up Next" suggestions sidebar.
 - **💡 Personalized Suggestions**: A smart, non-AI-based recommendation system that analyzes your watch history, likes, and subscriptions to suggest relevant content on the homepage.
-- **✨ Distraction-Free Player**: A custom, full-featured video player that keeps you focused on the content, complete with an "Up Next" suggestions sidebar.
-- **🕒 Clickable Timestamps & Links**: Automatically detects and makes timestamps in video descriptions clickable for easy navigation. URLs and #hashtags are also converted to clickable links.
+- **✨ Clickable Timestamps & Links**: Automatically detects and makes timestamps in video descriptions clickable for easy navigation. URLs and #hashtags are also converted to clickable links.
 - **📂 Playlist Management**:
   - Create custom playlists with a single click.
   - Add or remove any video from multiple playlists simultaneously.
@@ -49,6 +47,7 @@ This project is not just a YouTube client; it's a demonstration of building a fu
 - **⚙️ User Data Control**: The settings page gives users full control over their data, including the ability to:
   - View account information and membership date.
   - **Permanently delete** their entire watch history, liked videos, subscriptions, or all playlists with a single click.
+- **📝 Feedback & Bug Reports**: A built-in modal for users to submit feedback or bug reports, with an option to upload screenshots for easier debugging.
 - **🔒 Privacy-Focused**: Requires user agreement to the Privacy Policy before sign-in, and respects user privacy with clear data handling practices.
 - **🚀 Performance Optimized**: Implements client-side caching for API responses to reduce load times and API usage on repeated searches.
 - **📱 Fully Responsive Design**: A beautiful, modern interface built with Tailwind CSS and shadcn/ui that works on all devices.
@@ -82,6 +81,7 @@ Follow these steps to set up and run the project locally.
 - Node.js (v18 or later)
 - npm or yarn
 - A Google Account to create Firebase projects and YouTube API keys.
+- A Cloudinary account for handling file uploads in the feedback form.
 
 ### Environment Variables
 
@@ -98,7 +98,13 @@ Follow these steps to set up and run the project locally.
     - Go to "APIs & Services" > "Credentials".
     - Click "Create credentials" > "API key".
     - **Important**: Go to the "Enabled APIs & services" tab and ensure the **YouTube Data API v3** is enabled for your project.
-4.  **Populate `.env`**: Add your keys to the `.env` file. It supports up to 5 keys for automatic rotation.
+4. **Get Cloudinary Config**:
+   - Go to your [Cloudinary Dashboard](https://cloudinary.com/console).
+   - Your **Cloud Name** is displayed on the dashboard.
+   - Navigate to Settings (gear icon) > Upload.
+   - Scroll down to "Upload presets", click "Add upload preset".
+   - Change the "Signing Mode" from "Signed" to **"Unsigned"**. Note the **Upload preset name**.
+5.  **Populate `.env`**: Add your keys to the `.env` file. It supports up to 5 keys for automatic rotation.
 
 ```
 # Firebase Configuration
@@ -117,6 +123,11 @@ YOUTUBE_API_KEY2="YOUR_YOUTUBE_API_KEY_2" # Optional
 YOUTUBE_API_KEY3="YOUR_YOUTUBE_API_KEY_3" # Optional
 YOUTUBE_API_KEY4="YOUR_YOUTUBE_API_KEY_4" # Optional
 YOUTUBE_API_KEY5="YOUR_YOUTUBE_API_KEY_5" # Optional
+
+# Cloudinary (for feedback/bug report uploads)
+# Create an unsigned upload preset in your Cloudinary settings for this to work.
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="YOUR_CLOUDINARY_CLOUD_NAME"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET="YOUR_CLOUDINARY_UPLOAD_PRESET"
 ```
 
 ### Installation & Running
