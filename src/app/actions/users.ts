@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -47,8 +48,8 @@ export async function getAllUsers(adminEmail: string): Promise<{ data?: UserWith
             return {
                 id: userId,
                 uid: userId,
-                email: profile.email || "N/A",
-                displayName: profile.displayName || "N/A",
+                email: profile.email || null,
+                displayName: profile.displayName || null,
                 photoURL: profile.photoURL || null,
                 joinDate: joinDate,
             };

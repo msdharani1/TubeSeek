@@ -56,8 +56,8 @@ export async function getAllUsersWithSettings(adminEmail: string): Promise<{ dat
             return {
                 id: userId,
                 uid: userId,
-                email: profile.email || "N/A",
-                displayName: profile.displayName || "N/A",
+                email: profile.email || null,
+                displayName: profile.displayName || null,
                 photoURL: profile.photoURL || null,
                 suggestionsEnabled: settings.suggestionsEnabled === true,
                 joinDate: joinDate,
