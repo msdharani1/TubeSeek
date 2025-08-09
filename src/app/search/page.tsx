@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from "react";
@@ -218,6 +219,7 @@ function SearchPage() {
     }, [selectedVideo]);
 
     const handleSelectVideo = (videoToPlay: SearchResult) => {
+      setSelectedVideo(videoToPlay);
       const params = new URLSearchParams(window.location.search);
       if (query) params.set('q', query);
       params.set('v', videoToPlay.videoId);
@@ -225,6 +227,7 @@ function SearchPage() {
     };
     
     const handleClosePlayer = () => {
+      setSelectedVideo(null);
       const params = new URLSearchParams(window.location.search);
       if (query) params.set('q', query);
       params.delete('v');
@@ -279,13 +282,13 @@ function SearchPage() {
           {renderContent()}
 
         </div>
-        <VideoPlayer
+        {selectedVideo && <VideoPlayer
           video={selectedVideo}
           suggestions={results.filter(r => r.videoId !== selectedVideo?.videoId)}
           onPlaySuggestion={handleSelectVideo}
           onClose={handleClosePlayer}
           source="search"
-        />
+        />}
       </div>
     );
 }

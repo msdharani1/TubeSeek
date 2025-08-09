@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from "react";
 import type { SearchResult, WatchedVideo } from "@/types/youtube";
-import { getUserHistory } from "@/app/actions";
 import { withAuth, useAuth } from '@/context/auth-context';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -51,6 +50,7 @@ function HistoryPage() {
     };
     
     const handleClosePlayer = () => {
+        setSelectedVideo(null);
         const params = new URLSearchParams(window.location.search);
         params.delete('v');
         router.push(`/history?${params.toString()}`);
@@ -97,13 +97,13 @@ function HistoryPage() {
                     </div>
                 )}
             </main>
-            <VideoPlayer
+            {selectedVideo && <VideoPlayer
                 video={selectedVideo}
                 source="history"
                 suggestions={history.filter(r => r.videoId !== selectedVideo?.videoId)}
                 onPlaySuggestion={handleSelectVideo}
                 onClose={handleClosePlayer}
-            />
+            />}
         </>
     );
 }

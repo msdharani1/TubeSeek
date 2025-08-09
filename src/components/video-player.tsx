@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn, Minus, Maximize } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -16,8 +16,6 @@ import { AddToPlaylist } from "./add-to-playlist";
 import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { LoginPromptDialog } from "./login-prompt-dialog";
-import { motion, PanInfo } from "framer-motion";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 // Helper to parse and style the description
 const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
@@ -218,31 +216,28 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
-  const { user, refreshHistory, history, playerState, setPlayerState, activeVideo, setActiveVideo } = useAuth();
-  const { isMobile: isMobileDevice, state: sidebarState } = useSidebar();
-  const playerRef = useRef<any>(null); // To hold the YouTube player instance
+  const { user, refreshHistory, history } = useAuth();
+  const { isMobile, state: sidebarState } = useSidebar();
+  const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const playerContainerRef = useRef<HTMLDivElement>(null);
   
   const [isLiked, setIsLiked] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
 
   const isGuest = !user;
-  const isMobile = isMobileDevice;
 
   const onPlayerReady = useCallback((event: any) => {
-    if (!activeVideo) return;
+    if (!video) return;
     
-    // Find the latest progress for the current video from global history
-    const watchedInfo = history.find(h => h.videoId === activeVideo.videoId);
+    const watchedInfo = history.find(h => h.videoId === video.videoId);
     const startSeconds = watchedInfo?.progressSeconds || 0;
 
-    if (startSeconds > 1) { // Only seek if progress is more than a second
+    if (startSeconds > 1) {
         event.target.seekTo(startSeconds, true);
     }
     event.target.playVideo();
-  }, [activeVideo, history]);
+  }, [video, history]);
   
   const onPlayerStateChange = useCallback((event: any) => {
     if (isGuest) return;
@@ -251,28 +246,28 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = setInterval(async () => {
             const currentTime = event.target.getCurrentTime();
-            if (user && activeVideo) {
-                await updateVideoProgress(user.uid, activeVideo.videoId, currentTime);
-                await refreshHistory(); // Refresh global history
+            if (user && video) {
+                await updateVideoProgress(user.uid, video.videoId, currentTime);
+                await refreshHistory();
             }
-        }, 5000); // Save progress every 5 seconds
+        }, 5000);
     } else {
         if (progressIntervalRef.current) {
             clearInterval(progressIntervalRef.current);
             progressIntervalRef.current = null;
         }
     }
-  }, [user, activeVideo, isGuest, refreshHistory]);
+  }, [user, video, isGuest, refreshHistory]);
 
   const loadYouTubePlayer = useCallback(() => {
-    if (!activeVideo) return;
+    if (!video) return;
 
     const createPlayer = () => {
         if (playerRef.current) {
             playerRef.current.destroy();
         }
         playerRef.current = new YT.Player('youtube-player', {
-            videoId: activeVideo.videoId,
+            videoId: video.videoId,
             playerVars: {
                 autoplay: 1,
                 rel: 0,
@@ -295,57 +290,49 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         }
         (window as any).onYouTubeIframeAPIReady = createPlayer;
     }
-  }, [activeVideo, onPlayerReady, onPlayerStateChange]);
+  }, [video, onPlayerReady, onPlayerStateChange]);
 
 
   const fetchStatus = useCallback(async () => {
-    if (!user || !activeVideo) return;
-    const { data, error } = await getInteractionStatus(user.uid, activeVideo.videoId, activeVideo.channelId);
+    if (!user || !video) return;
+    const { data, error } = await getInteractionStatus(user.uid, video.videoId, video.channelId);
     if (error) {
         console.error("Failed to get interaction status", error);
     } else if (data) {
         setIsLiked(data.isLiked);
         setIsSubscribed(data.isSubscribed);
     }
-  }, [user, activeVideo]);
+  }, [user, video]);
   
   useEffect(() => {
     if (video) {
-      setActiveVideo(video);
-      setPlayerState('playing');
-    }
-  // This effect should only run when the external `video` prop changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [video]);
-  
-  useEffect(() => {
-    if (playerState !== 'hidden' && activeVideo) {
-        setLikeCount(Number(activeVideo.likeCount) || 0);
-        if (playerState === 'playing') {
-          loadYouTubePlayer();
-        }
+        setLikeCount(Number(video.likeCount) || 0);
+        loadYouTubePlayer();
+        
         if (user) {
             fetchStatus();
-            saveVideoToHistory(user.uid, activeVideo)
+            saveVideoToHistory(user.uid, video)
                 .then(async (result) => {
                     if(result.error) {
                         console.warn("Could not save to history:", result.error)
                     } else {
-                       await refreshHistory(); // Refresh global history
+                       await refreshHistory();
                     }
                 })
         }
     }
     
-    // Cleanup on component unmount
     return () => {
         if (progressIntervalRef.current) {
             clearInterval(progressIntervalRef.current);
         }
+        if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+             playerRef.current.destroy();
+             playerRef.current = null;
+        }
     }
-  }, [playerState, activeVideo, user, fetchStatus, loadYouTubePlayer, refreshHistory]);
+  }, [video, user, fetchStatus, loadYouTubePlayer, refreshHistory]);
 
-  // Handle Page Visibility for background playback
   useEffect(() => {
     const handleVisibilityChange = () => {
         if (!playerRef.current || !playerRef.current.getPlayerState) return;
@@ -353,12 +340,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
         const playerState = playerRef.current.getPlayerState();
 
         if (document.hidden) {
-            // Page is hidden, do nothing, let it play if the browser allows.
+            // Page is hidden, do nothing
         } else {
-            // Page is visible again. If it was playing, ensure it continues.
             if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.BUFFERING) {
-                // This check is a bit tricky. We only want to auto-play if the user had it playing before.
-                // For simplicity, we can try to play it. The browser might block this if the user didn't interact first.
                 playerRef.current.playVideo();
             }
         }
@@ -378,8 +362,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   };
 
   const handleShare = () => {
-    if (!activeVideo) return;
-    const url = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${activeVideo.videoId}`;
+    if (!video) return;
+    const url = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${video.videoId}`;
     navigator.clipboard.writeText(url).then(() => {
       toast({
         title: "Link Copied!",
@@ -396,13 +380,13 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   };
 
   const handleLike = async () => {
-      if (!user || !activeVideo) return;
+      if (!user || !video) return;
       
       const wasLiked = isLiked;
       setIsLiked(!wasLiked);
       setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
       
-      const { error } = await toggleLikeVideo(user.uid, activeVideo);
+      const { error } = await toggleLikeVideo(user.uid, video);
       if (error) {
           setIsLiked(wasLiked);
           setLikeCount(prev => wasLiked ? prev + 1 : prev - 1);
@@ -413,9 +397,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   }
 
   const handleSubscribe = async () => {
-      if (!user || !activeVideo) return;
+      if (!user || !video) return;
       setIsSubscribed(!isSubscribed);
-      const { error } = await toggleSubscription(user.uid, activeVideo.channelId, activeVideo.channelTitle);
+      const { error } = await toggleSubscription(user.uid, video.channelId, video.channelTitle);
       if (error) {
           setIsSubscribed(!isSubscribed);
           toast({ variant: "destructive", title: "Failed to subscribe", description: error });
@@ -424,58 +408,8 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
       }
   }
 
-  const handleClose = () => {
-    if (playerRef.current && typeof playerRef.current.destroy === 'function') {
-      playerRef.current.destroy();
-      playerRef.current = null;
-    }
-    setPlayerState('hidden');
-    onClose();
-  }
-  
-  const handleMinimize = () => setPlayerState('minimized');
-  const handleExpand = () => setPlayerState('playing');
-  
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (isMobile && info.offset.y > 100 && info.velocity.y > 20) {
-      handleMinimize();
-    }
-  };
-
-  if (playerState === 'hidden' || !activeVideo) {
+  if (!video) {
     return null;
-  }
-
-  if (playerState === 'minimized') {
-      return (
-        <div className="fixed bottom-4 right-4 z-50">
-            <motion.div
-                className="w-80 h-20 bg-card/80 backdrop-blur-sm rounded-lg shadow-2xl flex items-center gap-2 pr-2 border"
-                layoutId="video-player"
-                initial={{ opacity: 0, y: 100 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <div className="relative w-28 h-full shrink-0 cursor-pointer" onClick={handleExpand}>
-                     <Image
-                        src={activeVideo.thumbnail}
-                        alt={activeVideo.title}
-                        fill
-                        className="object-cover rounded-l-lg"
-                        data-ai-hint="video thumbnail"
-                      />
-                </div>
-                <div className="flex-1 overflow-hidden" onClick={handleExpand}>
-                    <p className="text-sm font-semibold truncate">{activeVideo.title}</p>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleExpand}>
-                    <Maximize className="w-4 h-4"/>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleClose}>
-                    <X className="w-4 h-4"/>
-                </Button>
-            </motion.div>
-        </div>
-      )
   }
 
   const showShareButton = source === 'search';
@@ -510,28 +444,19 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
   }
 
   return (
-    <motion.div 
-        layoutId="video-player"
-        className={cn(
-        "fixed bottom-0 top-0 right-0 z-50 bg-background flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
+    <div className={cn(
+        "fixed bottom-0 top-0 right-0 z-50 bg-background flex items-center justify-center animate-in fade-in-0",
         "left-0 lg:left-[var(--sidebar-width-icon)]",
         !isMobile && sidebarState === 'expanded' && "!left-[var(--sidebar-width)]"
         )}>
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row lg:overflow-hidden border-t">
             
             <div className="lg:w-[70%] lg:flex-shrink-0 lg:overflow-y-auto no-scrollbar">
-                 <motion.div 
-                    className="w-full aspect-video shrink-0 bg-black z-10 lg:relative sticky top-0"
-                    drag="y"
-                    dragConstraints={{ top: 0, bottom: 0 }}
-                    dragElastic={{ top: 0, bottom: 0.5 }}
-                    onDragEnd={handleDragEnd}
-                    ref={playerContainerRef}
-                  >
+                <div className="w-full aspect-video shrink-0 bg-black z-10 lg:relative sticky top-0">
                     <div id="youtube-player" className="w-full h-full"></div>
-                </motion.div>
+                </div>
                  <VideoDetails 
-                    video={activeVideo} 
+                    video={video} 
                     onShare={handleShare} 
                     showShareButton={showShareButton} 
                     showAddToPlaylistButton={showAddToPlaylistButton} 
@@ -547,7 +472,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
             <div className="flex-1 lg:w-[30%] lg:border-l flex flex-col min-h-0 lg:overflow-y-auto no-scrollbar border-t lg:border-t-0">
                 <div className="p-4">
-                    <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2  sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
+                    <h3 className="text-lg font-bold mb-4 px-2 flex items-center gap-2 sticky top-0 bg-card/80 backdrop-blur-sm py-2 z-10">
                        {getUpNextIcon()}
                        {getUpNextTitle()}
                     </h3>
@@ -560,25 +485,14 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 </div>
             </div>
             
-            <div className="absolute right-4 top-4 z-20 hidden md:flex items-center gap-2">
-                 <Button
-                    onClick={handleMinimize}
-                    className="rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors h-auto w-auto"
-                    aria-label="Minimize video player"
-                 >
-                    <Minus className="h-5 w-5" />
-                </Button>
-                <Button
-                    onClick={handleClose}
-                    className="rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors h-auto w-auto"
-                    aria-label="Close video player"
-                >
-                    <X className="h-5 w-5" />
-                </Button>
-            </div>
+            <Button
+                onClick={onClose}
+                className="absolute right-4 top-4 z-20 rounded-full p-2 bg-background/50 hover:bg-background/80 transition-colors h-auto w-auto"
+                aria-label="Close video player"
+            >
+                <X className="h-5 w-5" />
+            </Button>
         </div>
-    </motion.div>
+    </div>
   );
 }
-
-    

@@ -101,6 +101,7 @@ function LikedVideosPage() {
     };
     
     const handleClosePlayer = () => {
+        setSelectedVideo(null);
         const params = new URLSearchParams(window.location.search);
         params.delete('v');
         router.push(`/liked?${params.toString()}`);
@@ -147,13 +148,13 @@ function LikedVideosPage() {
                     </div>
                 )}
             </main>
-            <VideoPlayer
+            {selectedVideo && <VideoPlayer
                 video={selectedVideo}
                 source="liked"
                 suggestions={likedVideos.filter(r => r.videoId !== selectedVideo?.videoId)}
                 onPlaySuggestion={handleSelectVideo}
                 onClose={handleClosePlayer}
-            />
+            />}
         </>
     );
 }

@@ -7,10 +7,8 @@ import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { RippleWaveLoader } from '@/components/ripple-wave-loader';
-import type { WatchedVideo, SearchResult } from '@/types/youtube';
+import type { WatchedVideo } from '@/types/youtube';
 import { getUserHistory } from '@/app/actions';
-
-type PlayerState = 'hidden' | 'playing' | 'minimized';
 
 interface AuthContextType {
   user: User | null;
@@ -18,10 +16,6 @@ interface AuthContextType {
   guestId: string | null;
   history: WatchedVideo[];
   refreshHistory: () => Promise<void>;
-  playerState: PlayerState;
-  setPlayerState: (state: PlayerState) => void;
-  activeVideo: SearchResult | null;
-  setActiveVideo: (video: SearchResult | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -30,10 +24,6 @@ const AuthContext = createContext<AuthContextType>({
   guestId: null,
   history: [],
   refreshHistory: async () => {},
-  playerState: 'hidden',
-  setPlayerState: () => {},
-  activeVideo: null,
-  setActiveVideo: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -41,8 +31,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [guestId, setGuestId] = useState<string | null>(null);
   const [history, setHistory] = useState<WatchedVideo[]>([]);
-  const [playerState, setPlayerState] = useState<PlayerState>('hidden');
-  const [activeVideo, setActiveVideo] = useState<SearchResult | null>(null);
 
   const fetchHistory = useCallback(async (uid: string) => {
     const { data } = await getUserHistory(uid);
@@ -83,11 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading, 
         guestId, 
         history, 
-        refreshHistory,
-        playerState,
-        setPlayerState,
-        activeVideo,
-        setActiveVideo
+        refreshHistory
     }}>
       {children}
     </AuthContext.Provider>

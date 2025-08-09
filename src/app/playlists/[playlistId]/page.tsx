@@ -74,6 +74,7 @@ function PlaylistDetailPage() {
     };
     
     const handleClosePlayer = () => {
+        setSelectedVideo(null);
         const params = new URLSearchParams(window.location.search);
         params.delete('v');
         router.push(`/playlists/${playlistId}?${params.toString()}`);
@@ -106,14 +107,14 @@ function PlaylistDetailPage() {
                     </div>
                 )}
             </main>
-            <VideoPlayer
+            {selectedVideo && <VideoPlayer
                 video={selectedVideo}
                 source="playlist"
                 playlistName={playlistName}
                 suggestions={videos.filter(r => r.videoId !== selectedVideo?.videoId)}
                 onPlaySuggestion={handleSelectVideo}
                 onClose={handleClosePlayer}
-            />
+            />}
         </>
     );
 }
