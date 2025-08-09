@@ -154,7 +154,7 @@ const VideoDetails = ({
                 title="Login to unlock this feature"
                 description="Liking videos, subscribing to channels, and creating playlists are available only to logged-in users. Please sign in to continue."
             />
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">
                 {video.title}
             </h1>
             <div className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -459,8 +459,9 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                      <Image
                         src={activeVideo.thumbnail}
                         alt={activeVideo.title}
-                        layout="fill"
+                        fill
                         className="object-cover rounded-l-lg"
+                        data-ai-hint="video thumbnail"
                       />
                 </div>
                 <div className="flex-1 overflow-hidden" onClick={handleExpand}>
