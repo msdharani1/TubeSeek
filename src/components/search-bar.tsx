@@ -183,8 +183,13 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
        {showSuggestions && (query.length > 1) && (
         <Portal>
-            <Card style={{ top: `${position.top}px`, left: `${position.left}px`, width: `${position.width}px` }}
-                className="fixed mt-2 max-h-80 overflow-y-auto z-[9999]">
+            <Card 
+                style={{ 
+                    '--top': `${position.top}px`,
+                    '--left': `${position.left}px`,
+                    '--width': `${position.width}px`,
+                } as React.CSSProperties}
+                className="fixed top-16 left-0 w-full mt-0 sm:absolute sm:top-[var(--top)] sm:left-[var(--left)] sm:w-[var(--width)] sm:mt-2 max-h-80 overflow-y-auto z-[9999]">
                 {isSuggestionsLoading ? (
                     <div className="p-4 text-center text-muted-foreground">Loading suggestions...</div>
                 ) : suggestions.length > 0 ? (
