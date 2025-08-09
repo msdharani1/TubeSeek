@@ -1,7 +1,7 @@
 
 # TubeSeek: An Intelligent YouTube Portal
 
-[![TubeSeek Logo](https://res.cloudinary.com/diwu3avy6/image/upload/v1716384592/logo_tube_seek_g262so.png)](https://tubeseek.dev.msdharani.com/)
+[![TubeSeek Logo](https://res.cloudinary.com/diwu3avy6/image/upload/Screenshot_from_2025-08-09_15-05-46-removebg-preview_jr2i2t?_a=DATAdtAAZAA0)](https://tubeseek.dev.msdharani.com/)
 
 **TubeSeek** is a modern, feature-rich web application built with Next.js that offers an enhanced, distraction-free interface for searching and watching YouTube videos. It serves as an intelligent portal to YouTube, prioritizing user experience with features like real-time search suggestions, playlist management, and robust user data controls, all wrapped in a sleek, customizable UI.
 
