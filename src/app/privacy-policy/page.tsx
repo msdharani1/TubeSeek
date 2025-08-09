@@ -55,6 +55,9 @@ export default function PrivacyPolicyPage() {
                   <p className="text-lg">
                     Welcome to TubeSeek. We are committed to protecting your privacy. This Privacy Policy explains our practices regarding the collection, use, and protection of your information for both registered users and guests.
                   </p>
+                  <p className="mt-4 text-slate-800 dark:text-slate-200">
+                    <strong>Please Note:</strong> This application is intended for educational and non-commercial purposes only.
+                  </p>
                   <p className="mt-4 font-medium text-slate-800 dark:text-slate-200">
                     By using TubeSeek, you acknowledge that you have read and agree to the collection and use of information in accordance with this policy.
                   </p>
