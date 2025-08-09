@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 import { db } from '@/lib/firebase';
 import { ref, get } from 'firebase/database';
 
-const URL = 'https://tubeseek-ai.web.app';
+const URL = 'https://www.tubeseek.msdharani.com';
 
 type UserSearchData = Record<string, { searches: Record<string, { query: string }> }>;
 
