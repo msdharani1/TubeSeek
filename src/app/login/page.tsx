@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -12,11 +13,13 @@ import { Logo } from '@/components/logo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RippleWaveLoader } from '@/components/ripple-wave-loader';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isPolicyAgreed, setIsPolicyAgreed] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -25,6 +28,7 @@ export default function LoginPage() {
   }, [user, loading, router]);
 
   const handleSignIn = async () => {
+    setIsSigningIn(true);
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
@@ -35,6 +39,8 @@ export default function LoginPage() {
           // auth/popup-blocked error is caused by browser settings.
           // The user needs to allow popups for this site.
       console.error("Error signing in with Google: ", error);
+    } finally {
+        setIsSigningIn(false);
     }
   };
 
@@ -76,15 +82,19 @@ export default function LoginPage() {
                 </Label>
             </div>
 
-            <Button onClick={handleSignIn} size="lg" className="mt-4" disabled={!isPolicyAgreed}>
-                 <Image 
-                    src="https://res.cloudinary.com/diwu3avy6/image/upload/icons8-google-50_hhk5el?_a=DATAdtAAZAA0" 
-                    alt="Google logo"
-                    width={24}
-                    height={24}
-                    className="mr-2"
-                 />
-                Sign in with Google
+            <Button onClick={handleSignIn} size="lg" className="mt-4" disabled={!isPolicyAgreed || isSigningIn}>
+                 {isSigningIn ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                 ) : (
+                    <Image 
+                        src="https://res.cloudinary.com/diwu3avy6/image/upload/icons8-google-50_hhk5el?_a=DATAdtAAZAA0" 
+                        alt="Google logo"
+                        width={24}
+                        height={24}
+                        className="mr-2"
+                    />
+                 )}
+                {isSigningIn ? 'Signing In...' : 'Sign in with Google'}
             </Button>
         </div>
     </main>
