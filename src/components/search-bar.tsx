@@ -20,6 +20,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -47,22 +48,27 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
       const { data } = await getSearchSuggestions(searchQuery);
       setSuggestions(data || []);
       setIsSuggestionsLoading(false);
+      setHighlightedIndex(-1); // Reset highlight when suggestions change
   }, []);
 
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-        if(query) fetchSuggestions(query);
+        if(query && showSuggestions) fetchSuggestions(query);
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [query, fetchSuggestions]);
+  }, [query, showSuggestions, fetchSuggestions]);
 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setShowSuggestions(false);
-    onSearch(query);
+    if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+        handleSuggestionClick(suggestions[highlightedIndex]);
+    } else {
+        setShowSuggestions(false);
+        onSearch(query);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -76,6 +82,22 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     setSuggestions([]);
     setShowSuggestions(false);
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex(prevIndex => 
+            prevIndex < suggestions.length - 1 ? prevIndex + 1 : 0
+        );
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex(prevIndex => 
+            prevIndex > 0 ? prevIndex - 1 : suggestions.length - 1
+        );
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full items-center relative" ref={searchContainerRef}>
@@ -94,6 +116,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
           onFocus={() => {
             if(query.length > 1) setShowSuggestions(true);
           }}
+          onKeyDown={handleKeyDown}
           placeholder="Search for videos..."
           className="w-full text-base bg-card border-2 border-border focus:border-primary pr-10 rounded-r-none"
           disabled={isLoading}
@@ -122,7 +145,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
        {showSuggestions && (query.length > 1) && (
         <Card className={cn(
-            "fixed sm:absolute top-16 sm:top-full mt-0 sm:mt-2 w-full max-h-80 overflow-y-auto z-50 left-0"
+            "fixed sm:absolute top-16 left-0 sm:top-full mt-0 sm:mt-2 w-full max-h-80 overflow-y-auto z-50"
         )}>
             {isSuggestionsLoading ? (
                  <div className="p-4 text-center text-muted-foreground">Loading suggestions...</div>
@@ -133,7 +156,10 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
                            <button
                              type="button"
                              onClick={() => handleSuggestionClick(s)}
-                             className="w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2"
+                             className={cn(
+                                 "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
+                                 i === highlightedIndex && "bg-muted/80"
+                             )}
                            >
                             <Search className="h-4 w-4 text-muted-foreground"/>
                             <span className="flex-1">{s}</span>
