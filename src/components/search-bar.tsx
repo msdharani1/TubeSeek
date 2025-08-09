@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, X } from "lucide-react";
@@ -15,6 +16,23 @@ export type SearchBarProps = {
   initialQuery?: string;
 };
 
+// A new Portal component to handle rendering outside the current DOM hierarchy
+const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!mounted || typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(children, document.body);
+};
+
+
 export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -22,10 +40,22 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLFormElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
+
+  const updatePosition = useCallback(() => {
+    if (searchContainerRef.current) {
+      const rect = searchContainerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,11 +63,15 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         setShowSuggestions(false);
       }
     };
+    
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener('resize', updatePosition);
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener('resize', updatePosition);
     };
-  }, []);
+  }, [updatePosition]);
 
   const fetchSuggestions = useCallback(async (searchQuery: string) => {
       if(searchQuery.length < 2) {
@@ -99,6 +133,11 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     }
   };
 
+  const handleFocus = () => {
+    updatePosition();
+    if(query.length > 1) setShowSuggestions(true);
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex w-full items-center relative" ref={searchContainerRef}>
       <div className="relative flex-1">
@@ -109,13 +148,12 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
             setQuery(e.target.value)
             if(e.target.value.length > 1) {
                 setShowSuggestions(true);
+                updatePosition();
             } else {
                 setShowSuggestions(false);
             }
           }}
-          onFocus={() => {
-            if(query.length > 1) setShowSuggestions(true);
-          }}
+          onFocus={handleFocus}
           onKeyDown={handleKeyDown}
           placeholder="Search for videos..."
           className="w-full text-base bg-card border-2 border-border focus:border-primary pr-10 rounded-r-none"
@@ -144,33 +182,34 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
       </Button>
 
        {showSuggestions && (query.length > 1) && (
-        <Card className={cn(
-            "fixed sm:absolute top-16 sm:top-full left-0 sm:left-auto mt-0 sm:mt-2 w-full sm:w-full max-h-80 overflow-y-auto z-[9999999999999999999999999]"
-        )}>
-            {isSuggestionsLoading ? (
-                 <div className="p-4 text-center text-muted-foreground">Loading suggestions...</div>
-            ) : suggestions.length > 0 ? (
-                <ul>
-                    {suggestions.map((s, i) => (
-                        <li key={i}>
-                           <button
-                             type="button"
-                             onClick={() => handleSuggestionClick(s)}
-                             className={cn(
-                                 "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
-                                 i === highlightedIndex && "bg-muted/80"
-                             )}
-                           >
-                            <Search className="h-4 w-4 text-muted-foreground"/>
-                            <span className="flex-1">{s}</span>
-                           </button>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                 <div className="p-4 text-center text-muted-foreground">No suggestions found.</div>
-            )}
-        </Card>
+        <Portal>
+            <Card style={{ top: `${position.top}px`, left: `${position.left}px`, width: `${position.width}px` }}
+                className="fixed mt-2 max-h-80 overflow-y-auto z-[9999]">
+                {isSuggestionsLoading ? (
+                    <div className="p-4 text-center text-muted-foreground">Loading suggestions...</div>
+                ) : suggestions.length > 0 ? (
+                    <ul>
+                        {suggestions.map((s, i) => (
+                            <li key={i}>
+                            <button
+                                type="button"
+                                onClick={() => handleSuggestionClick(s)}
+                                className={cn(
+                                    "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
+                                    i === highlightedIndex && "bg-muted/80"
+                                )}
+                            >
+                                <Search className="h-4 w-4 text-muted-foreground"/>
+                                <span className="flex-1">{s}</span>
+                            </button>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <div className="p-4 text-center text-muted-foreground">No suggestions found.</div>
+                )}
+            </Card>
+        </Portal>
       )}
     </form>
   );
