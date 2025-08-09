@@ -217,7 +217,7 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
   const { toast } = useToast();
-  const { user, refreshHistory } = useAuth();
+  const { user, refreshHistory, history } = useAuth();
   const { isMobile, state: sidebarState } = useSidebar();
   const playerRef = useRef<any>(null); // To hold the YouTube player instance
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -230,12 +230,16 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
 
   const onPlayerReady = useCallback((event: any) => {
     if (!video) return;
-    const startSeconds = 'progressSeconds' in video ? video.progressSeconds : 0;
-    if (startSeconds) {
+    
+    // Find the latest progress for the current video from global history
+    const watchedInfo = history.find(h => h.videoId === video.videoId);
+    const startSeconds = watchedInfo?.progressSeconds || 0;
+
+    if (startSeconds > 1) { // Only seek if progress is more than a second
         event.target.seekTo(startSeconds, true);
     }
     event.target.playVideo();
-  }, [video]);
+  }, [video, history]);
   
   const onPlayerStateChange = useCallback((event: any) => {
     if (isGuest) return;
@@ -270,7 +274,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
             playerVars: {
                 autoplay: 1,
                 rel: 0,
-                start: 'progressSeconds' in video && video.progressSeconds ? Math.floor(video.progressSeconds) : 0
             },
             events: {
                 'onReady': onPlayerReady,
