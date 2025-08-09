@@ -42,6 +42,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLFormElement>(null);
   const suggestionsListRef = useRef<HTMLUListElement>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
 
   useEffect(() => {
@@ -72,6 +73,9 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener('resize', updatePosition);
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, [updatePosition]);
 
@@ -90,14 +94,6 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
 
   useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-        if(query && showSuggestions) fetchSuggestions(query);
-    }, 300);
-
-    return () => clearTimeout(debounceTimer);
-  }, [query, showSuggestions, fetchSuggestions]);
-
-  useEffect(() => {
     if (suggestionsListRef.current && highlightedIndex >= 0) {
       const highlightedElement = suggestionsListRef.current.children[highlightedIndex] as HTMLLIElement;
       if (highlightedElement) {
@@ -105,6 +101,30 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
       }
     }
   }, [highlightedIndex]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+    setQuery(newQuery);
+    setHighlightedIndex(-1); // Reset on manual typing
+
+    if (newQuery.length > 1) {
+      setShowSuggestions(true);
+      updatePosition();
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      debounceTimeoutRef.current = setTimeout(() => {
+        fetchSuggestions(newQuery);
+      }, 300);
+    } else {
+      setShowSuggestions(false);
+      setSuggestions([]);
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    }
+  };
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -158,16 +178,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         <Input
           type="text"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value)
-            setHighlightedIndex(-1); // Reset on manual typing
-            if(e.target.value.length > 1) {
-                setShowSuggestions(true);
-                updatePosition();
-            } else {
-                setShowSuggestions(false);
-            }
-          }}
+          onChange={handleInputChange}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
           placeholder="Search for videos..."
