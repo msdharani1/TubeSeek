@@ -15,6 +15,25 @@ import { Flame } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { RippleWaveLoader } from "@/components/ripple-wave-loader";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Trending Videos',
+  description: 'Watch the latest and most popular trending videos from around the world. Stay up-to-date with what\'s hot on TubeSeek.',
+  keywords: ['trending videos', 'popular videos', 'viral content', 'hot videos', 'TubeSeek trending'],
+  openGraph: {
+    title: 'Trending Videos | TubeSeek',
+    description: 'Discover what\'s currently trending on TubeSeek.',
+    type: 'website',
+    url: '/trending',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Trending Videos | TubeSeek',
+    description: 'Watch the latest viral content and popular videos on TubeSeek.',
+  },
+};
+
 
 type CachedCategoryVideos = {
     timestamp: number;

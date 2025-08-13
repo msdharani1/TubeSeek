@@ -15,6 +15,24 @@ import { Newspaper } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { RippleWaveLoader } from "@/components/ripple-wave-loader";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Latest News',
+  description: 'Stay informed with the latest news from around the world. Watch breaking news and in-depth reports on TubeSeek.',
+  keywords: ['news', 'latest news', 'breaking news', 'world news', 'TubeSeek news'],
+  openGraph: {
+    title: 'Latest News | TubeSeek',
+    description: 'Watch up-to-the-minute news coverage on TubeSeek.',
+    type: 'website',
+    url: '/news',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Latest News | TubeSeek',
+    description: 'Get your daily news updates and watch reports on TubeSeek.',
+  },
+};
 
 type CachedCategoryVideos = {
     timestamp: number;

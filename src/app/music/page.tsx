@@ -15,6 +15,24 @@ import { Music as MusicIcon } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { RippleWaveLoader } from "@/components/ripple-wave-loader";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Music Videos',
+  description: 'Explore a vast collection of music videos on TubeSeek. Find your favorite artists, new releases, and timeless classics.',
+  keywords: ['music videos', 'new music', 'official videos', 'artists', 'TubeSeek music'],
+   openGraph: {
+    title: 'Music on TubeSeek',
+    description: 'Listen to your favorite music and watch official videos.',
+    type: 'website',
+    url: '/music',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Music Videos | TubeSeek',
+    description: 'Find and watch the best music videos on TubeSeek.',
+  },
+};
 
 type CachedCategoryVideos = {
     timestamp: number;

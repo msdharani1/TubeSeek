@@ -11,6 +11,22 @@ import { Button } from "@/components/ui/button";
 import { ListVideo, Frown, LogIn } from "lucide-react";
 import { PlaylistCard } from "@/components/playlist-card";
 import { useToast } from "@/hooks/use-toast";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'My Playlists',
+  description: 'Create, manage, and watch your custom video playlists. Organize your favorite content exactly how you want.',
+  keywords: ['my playlists', 'video playlists', 'custom playlists', 'TubeSeek playlists'],
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: 'My Playlists | TubeSeek',
+    description: 'View and manage your video playlists on TubeSeek.',
+  },
+};
+
 
 const defaultFavoritePlaylist: Playlist = {
     id: 'favorite-default',

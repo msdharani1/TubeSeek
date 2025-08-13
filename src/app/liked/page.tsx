@@ -14,6 +14,22 @@ import { VideoCard } from "@/components/video-card";
 import { Heart, Frown, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Liked Videos',
+  description: 'Find all the videos you have liked on TubeSeek. Your personal collection of favorite content, all in one place.',
+  keywords: ['liked videos', 'favorite videos', 'saved videos'],
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: 'Liked Videos | TubeSeek',
+    description: 'Revisit all the videos you\'ve liked on TubeSeek.',
+  },
+};
+
 
 type CachedLikedVideos = {
     timestamp: number;

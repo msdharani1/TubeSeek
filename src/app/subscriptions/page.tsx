@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,6 +12,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tv, Frown, BellRing, LogIn } from "lucide-react";
 import { RippleWaveLoader } from "@/components/ripple-wave-loader";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'My Subscriptions',
+  description: 'Manage your channel subscriptions on TubeSeek. Keep up with your favorite creators and never miss an update.',
+  keywords: ['my subscriptions', 'channel subscriptions', 'favorite creators'],
+  robots: {
+    index: false,
+    follow: false,
+  },
+   openGraph: {
+    title: 'My Subscriptions | TubeSeek',
+    description: 'Manage your channel subscriptions.',
+  },
+};
 
 type CachedSubscriptions = {
     timestamp: number;

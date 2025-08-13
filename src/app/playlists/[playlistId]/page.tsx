@@ -14,6 +14,25 @@ import { VideoCard } from "@/components/video-card";
 import { ListVideo, Frown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/hooks/use-page-title";
+import { type Metadata } from 'next';
+
+type Props = {
+  params: { playlistId: string };
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  // Since we cannot fetch user-specific data on the server, we provide a generic title.
+  // The client-side usePageTitle hook will set a more specific title.
+  return {
+    title: 'Viewing Playlist',
+    description: 'Watch videos from one of your custom playlists on TubeSeek.',
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
+}
+
 
 function PlaylistDetailPage() {
     const { user } = useAuth();

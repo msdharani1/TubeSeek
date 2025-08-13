@@ -27,6 +27,22 @@ import { useToast } from '@/hooks/use-toast';
 import { clearWatchHistory, deleteAllPlaylists, clearLikedVideos, clearSubscriptions } from '@/app/actions/user-data';
 import { SettingsCard, SettingsItem, SettingsLinkItem } from '@/components/settings-card';
 import { FeedbackDialog } from '@/components/feedback-dialog';
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Settings',
+  description: 'Manage your TubeSeek account settings, appearance, and data preferences. Clear your history, delete playlists, and more.',
+  keywords: ['settings', 'account management', 'theme', 'data privacy', 'clear history'],
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: 'Settings | TubeSeek',
+    description: 'Customize your experience and manage your data.',
+  },
+};
+
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];

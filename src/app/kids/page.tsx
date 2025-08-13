@@ -15,6 +15,24 @@ import { Baby } from "lucide-react";
 import { VideoGrid } from "@/components/video-grid";
 import { usePageTitle } from "@/hooks/use-page-title";
 import { RippleWaveLoader } from "@/components/ripple-wave-loader";
+import { type Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Kids Videos',
+  description: 'A safe and fun selection of videos for kids. Watch cartoons, nursery rhymes, and educational content on TubeSeek.',
+  keywords: ['kids videos', 'cartoons for kids', 'nursery rhymes', 'educational videos', 'TubeSeek kids'],
+  openGraph: {
+    title: 'Kids Videos | TubeSeek',
+    description: 'Find fun and safe videos for children on TubeSeek.',
+    type: 'website',
+    url: '/kids',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Kids Videos | TubeSeek',
+    description: 'Entertaining and educational videos for kids on TubeSeek.',
+  },
+};
 
 type CachedCategoryVideos = {
     timestamp: number;
