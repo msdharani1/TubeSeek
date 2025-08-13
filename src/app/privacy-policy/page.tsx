@@ -1,7 +1,24 @@
 
+import type { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Eye, Database, Users, FileText, Mail, Fingerprint, MousePointerClick } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Learn how we collect, use, and protect your information when you use TubeSeek, whether as a guest or a signed-in user. Your privacy is our priority.',
+  keywords: ['privacy policy', 'data protection', 'user data', 'cookies', 'gdpr'],
+  openGraph: {
+    title: 'Privacy Policy | TubeSeek',
+    description: 'Your privacy is our priority. Learn how we handle your data.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Privacy Policy | TubeSeek',
+    description: 'Understand how your data is used and protected on TubeSeek.',
+  }
+};
+
 
 export default function PrivacyPolicyPage() {
   const lastUpdated = new Date().toLocaleDateString('en-US', { 
