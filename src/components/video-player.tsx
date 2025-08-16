@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn, Copy, Facebook } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -16,7 +16,9 @@ import { AddToPlaylist } from "./add-to-playlist";
 import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { LoginPromptDialog } from "./login-prompt-dialog";
-import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Twitter } from "lucide-react";
 
 // Helper to parse and style the description
 const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
@@ -60,6 +62,81 @@ const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
     ));
 };
 
+function ShareDialog({ video }: { video: SearchResult }) {
+    const { toast } = useToast();
+    const videoUrl = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${video.videoId}`;
+    
+    const onCopy = () => {
+        navigator.clipboard.writeText(videoUrl).then(() => {
+            toast({ title: 'Link Copied!', description: 'The video link has been copied to your clipboard.' });
+        }).catch(err => {
+            console.error('Failed to copy link: ', err);
+            toast({ variant: 'destructive', title: 'Copy Failed', description: 'Could not copy the link.' });
+        });
+    };
+
+    const socialShares = [
+        {
+            name: "WhatsApp",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99 0-3.903-.52-5.586-1.456l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.886-.001 2.267.655 4.398 1.803 6.166l-1.225 4.485 4.574-1.194z" /></svg>,
+            url: `https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this video: ${video.title}\n${videoUrl}`)}`,
+        },
+        {
+            name: "X (Twitter)",
+            icon: <Twitter />,
+            url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(`Watch "${video.title}"`)}&via=msdharani007`,
+        },
+        {
+            name: "Facebook",
+            icon: <Facebook />,
+            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(videoUrl)}`,
+        },
+        {
+            name: "Gmail",
+            icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 4.5v15c0 .825-.675 1.5-1.5 1.5H1.5C.675 21 0 20.325 0 19.5v-15c0-.428.173-.834.46-1.125.285-.292.684-.46 1.09-.46h21c.825 0 1.5.675 1.5 1.5zm-3 1.5-7.5 6-7.5-6h15zm-15 12h15c.276 0 .5-.224.5-.5V8l-7.5 6-7.5-6v10c0 .276.224.5.5.5z"/></svg>,
+            url: `mailto:?subject=${encodeURIComponent(`Check out this video: ${video.title}`)}&body=${encodeURIComponent(`I thought you might like this video:\n${video.title}\n\n${videoUrl}`)}`,
+        },
+    ];
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                 <Button variant="outline" className={cn("hover:bg-muted/50 transition-all flex-shrink-0")}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    <span>Share</span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Share Video</DialogTitle>
+                    <DialogDescription>Share this video with your friends!</DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center space-x-2">
+                    <Input value={videoUrl} readOnly />
+                    <Button onClick={onCopy} size="icon" className="shrink-0">
+                        <Copy className="h-4 w-4" />
+                    </Button>
+                </div>
+                <div className="grid grid-cols-4 gap-4 pt-4">
+                    {socialShares.map(social => (
+                        <a 
+                            key={social.name}
+                            href={social.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-muted">
+                                {social.icon}
+                            </div>
+                            <span className="text-xs">{social.name}</span>
+                        </a>
+                    ))}
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo | PlaylistItem, onPlay: (video: SearchResult) => void }) {
     const isWatchedVideo = 'watchedAt' in video && video.watchedAt;
@@ -104,9 +181,7 @@ function SuggestionCard({ video, onPlay }: { video: SearchResult | WatchedVideo 
 }
 
 const VideoDetails = ({ 
-    video, 
-    onShare, 
-    showShareButton, 
+    video,
     showAddToPlaylistButton, 
     seekTo,
     isLiked,
@@ -117,8 +192,6 @@ const VideoDetails = ({
     isGuest
 }: { 
     video: SearchResult, 
-    onShare: () => void, 
-    showShareButton: boolean, 
     showAddToPlaylistButton: boolean, 
     seekTo: (seconds: number) => void,
     isLiked: boolean,
@@ -129,15 +202,8 @@ const VideoDetails = ({
     isGuest: boolean,
 }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-    const [isSharing, setIsSharing] = useState(false);
     const [promptOpen, setPromptOpen] = useState(false);
 
-    const handleShareClick = () => {
-        setIsSharing(true);
-        onShare();
-        setTimeout(() => setIsSharing(false), 600);
-    }
-    
     const publishedDate = formatDistanceToNowStrict(new Date(video.publishedAt), { addSuffix: true });
 
     const handleGuestAction = (e: React.MouseEvent) => {
@@ -171,12 +237,7 @@ const VideoDetails = ({
                             <ThumbsUp className={cn("mr-2 h-4 w-4", isLiked && "fill-current")} />
                             {formatCount(likeCount)}
                         </Button>
-                        {showShareButton && (
-                            <Button variant="outline" onClick={handleShareClick} className={cn("hover:bg-muted/50 transition-all flex-shrink-0", isSharing && "bg-accent/80 scale-105")}>
-                                <Share2 className={cn("mr-2 h-4 w-4 transition-transform", isSharing && "animate-ping once")} />
-                                <span className={cn("transition-transform", isSharing && "font-semibold")}>Share</span>
-                            </Button>
-                        )}
+                        <ShareDialog video={video} />
                         {showAddToPlaylistButton && <div className="flex-shrink-0"><AddToPlaylist video={video} /></div>}
                     </div>
                 </div>
@@ -216,7 +277,6 @@ type VideoPlayerProps = {
 };
 
 export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, source, playlistName }: VideoPlayerProps) {
-  const { toast } = useToast();
   const { user } = useAuth();
   const { isMobile, state: sidebarState } = useSidebar();
   const playerRef = useRef<any>(null); // To hold the YouTube player instance
@@ -337,24 +397,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     }
   };
 
-  const handleShare = () => {
-    if (!video) return;
-    const url = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${video.videoId}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast({
-        title: "Link Copied!",
-        description: "The video page link has been copied to your clipboard.",
-      });
-    }).catch(err => {
-      console.error('Failed to copy link: ', err);
-      toast({
-        variant: "destructive",
-        title: "Copy Failed",
-        description: "Could not copy the link to your clipboard.",
-      });
-    });
-  };
-
   const handleLike = async () => {
       if (!user || !video) return;
       
@@ -388,7 +430,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     return null;
   }
 
-  const showShareButton = source === 'search';
   const showAddToPlaylistButton = source !== 'playlist';
 
   const getUpNextTitle = () => {
@@ -433,8 +474,6 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
                 </div>
                  <VideoDetails 
                     video={video} 
-                    onShare={handleShare} 
-                    showShareButton={showShareButton} 
                     showAddToPlaylistButton={showAddToPlaylistButton} 
                     seekTo={seekTo}
                     isLiked={isLiked}
