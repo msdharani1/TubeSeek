@@ -65,7 +65,7 @@ export function Header() {
         {/* Center Section - Search Bar */}
         <div className="flex flex-1 justify-center sm:px-4">
           <div className="w-full max-w-2xl">
-            <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query || ''} />
+            <SearchBar onSearch={handleSearch} isLoading={false} initialQuery={query} />
           </div>
         </div>
 

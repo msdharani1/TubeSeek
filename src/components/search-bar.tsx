@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export type SearchBarProps = {
   onSearch: (query: string) => void;
   isLoading: boolean;
-  initialQuery?: string;
+  initialQuery?: string | null;
 };
 
 // A new Portal component to handle rendering outside the current DOM hierarchy
@@ -34,7 +34,7 @@ const Portal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 
 export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarProps) {
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(initialQuery || '');
   const [originalQuery, setOriginalQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
@@ -215,7 +215,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         )}
       </Button>
 
-       {showSuggestions && (query.length > 1) && (
+       {showSuggestions && query && (query.length > 1) && (
         <Portal>
             <Card 
                 style={{ 
