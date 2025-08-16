@@ -255,25 +255,26 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         return (
              <ul ref={suggestionsListRef}>
                 {recentSearches.map((s, i) => (
-                    <li key={i}>
-                    <button
-                        type="button"
-                        onMouseDown={(e) => {
-                            e.preventDefault();
-                            handleSuggestionClick(s);
-                        }}
-                        onMouseEnter={() => setHighlightedIndex(i)}
-                        className={cn(
-                            "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
-                            i === highlightedIndex && "bg-muted/80"
-                        )}
-                    >
-                        <History className="h-4 w-4 text-muted-foreground"/>
-                        <span className="flex-1">{s}</span>
+                    <li key={i} className={cn(
+                        "w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center gap-2",
+                        i === highlightedIndex && "bg-muted/80"
+                    )}>
+                        <button
+                            type="button"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSuggestionClick(s);
+                            }}
+                            onMouseEnter={() => setHighlightedIndex(i)}
+                            className="flex-1 flex items-center gap-2 text-left"
+                        >
+                            <History className="h-4 w-4 text-muted-foreground"/>
+                            <span className="flex-1">{s}</span>
+                        </button>
                          <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 text-muted-foreground hover:bg-muted/80"
+                            className="h-6 w-6 text-muted-foreground hover:bg-muted/80 shrink-0"
                             onMouseDown={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
@@ -282,7 +283,6 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
                          >
                             <X className="h-4 w-4"/>
                          </Button>
-                    </button>
                     </li>
                 ))}
             </ul>
@@ -297,7 +297,7 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
       <div className="relative flex-1">
         <Input
           type="text"
-          value={query}
+          value={query || ""}
           onChange={handleInputChange}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
@@ -343,4 +343,3 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     </form>
   );
 }
-
