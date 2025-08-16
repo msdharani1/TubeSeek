@@ -109,7 +109,7 @@ function ShareDialog({ video }: { video: SearchResult }) {
                     <span>Share</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Share Video</DialogTitle>
                     <DialogDescription>Share this video with your friends!</DialogDescription>
@@ -467,8 +467,7 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     <div className={cn(
         "fixed bottom-0 top-16 right-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-200",
         isMobile ? "left-0" : "left-0",
-        !isMobile && sidebarState === 'expanded' && "lg:left-[var(--sidebar-width)]",
-        !isMobile && sidebarState === 'collapsed' && "lg:left-[var(--sidebar-width-icon)]"
+        !isMobile && sidebarState === 'expanded' && "lg:left-[var(--sidebar-width)]"
         )}>
         <div className="bg-card shadow-xl w-full h-full flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden no-scrollbar border-t">
             
@@ -515,4 +514,3 @@ export function VideoPlayer({ video, suggestions, onPlaySuggestion, onClose, sou
     </div>
   );
 }
-
