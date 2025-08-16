@@ -142,7 +142,6 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
     setQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
-    onSearch("");
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
