@@ -69,94 +69,78 @@ export async function searchAndRefineVideos(
 ): Promise<{ data?: SearchResult[]; error?: string }> {
   try {
     let finalQuery = q;
-    let channelIdForSearch: string | undefined = undefined;
 
-    // Step 1: For regular searches, check if the query is a channel name
-    if (!isCategorySearch) {
-        const channelSearchParams = new URLSearchParams({
-          part: 'snippet',
-          q: q,
-          maxResults: '1',
-          type: 'channel',
-        });
-
-        const channelSearchResponse = await fetchWithYouTubeKeyRotation(
-          `${YOUTUBE_API_BASE_URL}/search?${channelSearchParams.toString()}`
-        );
-        const channelSearchJson = await channelSearchResponse.json();
-
-        if (channelSearchJson.items && channelSearchJson.items.length > 0) {
-            const topChannel = channelSearchJson.items[0];
-            // If the channel title is a very close match to the query, assume the user is searching for that channel.
-            if (topChannel.snippet.title.toLowerCase().includes(q.toLowerCase())) {
-                channelIdForSearch = topChannel.id.channelId;
-            }
-        }
-    } else {
-        // For category searches, prioritize language
+    // For category searches, modify query to get better, localized results.
+    if (isCategorySearch) {
         finalQuery = `Latest Tamil ${q}`;
     }
-    
-    // Step 2: Search for videos
+
     const searchParamsObj: Record<string, string> = {
       part: 'snippet',
       maxResults: '20',
       type: 'video',
+      q: finalQuery
     };
 
-    if (channelIdForSearch) {
-      searchParamsObj.channelId = channelIdForSearch;
-      // When searching a channel, it's best to show latest videos.
-      searchParamsObj.order = 'date'; 
-    } else {
-      searchParamsObj.q = finalQuery;
-      // For category search, always sort by date. For regular search, use filters.
-      searchParamsObj.order = isCategorySearch ? (filters.order || 'date') : (filters.order || 'relevance');
-
-      if (filters.videoDuration && filters.videoDuration !== 'any') {
-        searchParamsObj.videoDuration = filters.videoDuration;
-      }
-      if (filters.publishedAfter) {
-        searchParamsObj.publishedAfter = filters.publishedAfter;
-      }
+    if (filters.videoDuration && filters.videoDuration !== 'any') {
+      searchParamsObj.videoDuration = filters.videoDuration;
+    }
+    if (filters.publishedAfter) {
+      searchParamsObj.publishedAfter = filters.publishedAfter;
     }
 
-    const searchParams = new URLSearchParams(searchParamsObj);
-    let searchResponse = await fetchWithYouTubeKeyRotation(
-        `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
-    );
+    // Step 1: Perform two searches in parallel: one for relevance, one for date.
+    // This gives a mix of popular and new content.
+    const relevanceSearchParams = new URLSearchParams({ ...searchParamsObj, order: filters.order || 'relevance' });
+    const dateSearchParams = new URLSearchParams({ ...searchParamsObj, order: 'date' });
     
-    // Fallback for category search if Tamil yields no results
-    let searchJson = await searchResponse.json();
-    if (isCategorySearch && searchJson.items.length === 0) {
+    const [relevanceResponse, dateResponse] = await Promise.all([
+        fetchWithYouTubeKeyRotation(`${YOUTUBE_API_BASE_URL}/search?${relevanceSearchParams.toString()}`),
+        fetchWithYouTubeKeyRotation(`${YOUTUBE_API_BASE_URL}/search?${dateSearchParams.toString()}`)
+    ]);
+
+    let relevanceJson = await relevanceResponse.json();
+    let dateJson = await dateResponse.json();
+    
+    // Fallback logic for category searches if Tamil yields no results
+    if (isCategorySearch && relevanceJson.items.length === 0) {
         console.log("No Tamil results, falling back to English for category:", q);
-        searchParams.set('q', `Latest English ${q}`);
-        searchResponse = await fetchWithYouTubeKeyRotation(
-            `${YOUTUBE_API_BASE_URL}/search?${searchParams.toString()}`
-        );
-        searchJson = await searchResponse.json();
+        relevanceSearchParams.set('q', `Latest English ${q}`);
+        const fallbackResponse = await fetchWithYouTubeKeyRotation(`${YOUTUBE_API_BASE_URL}/search?${relevanceSearchParams.toString()}`);
+        relevanceJson = await fallbackResponse.json();
     }
 
 
-    const parsedSearch = YoutubeSearchResponseSchema.safeParse(searchJson);
+    const parsedRelevance = YoutubeSearchResponseSchema.safeParse(relevanceJson);
+    const parsedDate = YoutubeSearchResponseSchema.safeParse(dateJson);
 
-    if (!parsedSearch.success) {
-      console.error(
-        'Failed to parse YouTube search response:',
-        parsedSearch.error
-      );
+    if (!parsedRelevance.success) {
+      console.error('Failed to parse YouTube relevance search response:', parsedRelevance.error);
       return { error: 'Received invalid data from YouTube.' };
     }
+     if (!parsedDate.success) {
+      console.error('Failed to parse YouTube date search response:', parsedDate.error);
+      // We can still proceed with relevance results if date fails
+    }
 
-    const videoIds = parsedSearch.data.items.map((item) => item.id.videoId).filter(Boolean);
+    // Step 2: Combine and de-duplicate video IDs from both searches
+    const videoIdSet = new Set<string>();
+    parsedRelevance.data.items.forEach(item => item.id.videoId && videoIdSet.add(item.id.videoId));
+    if (parsedDate.success) {
+        parsedDate.data.items.forEach(item => item.id.videoId && videoIdSet.add(item.id.videoId));
+    }
+    
+    const videoIds = Array.from(videoIdSet);
+
     if (videoIds.length === 0) {
       return { data: [] };
     }
 
-    // Step 3: Get video details for the found video IDs
+    // Step 3: Get video details for the combined list of video IDs
     const videosParams = new URLSearchParams({
       part: 'snippet,contentDetails,statistics',
       id: videoIds.join(','),
+      maxResults: '40' // Fetch details for up to 40 unique videos
     });
 
     const videosResponse = await fetchWithYouTubeKeyRotation(
@@ -167,31 +151,31 @@ export async function searchAndRefineVideos(
     const parsedVideos = YoutubeVideosResponseSchema.safeParse(videosJson);
 
     if (!parsedVideos.success) {
-      console.error(
-        'Failed to parse YouTube videos response:',
-        parsedVideos.error
-      );
+      console.error('Failed to parse YouTube videos response:', parsedVideos.error);
       return { error: 'Received invalid video data from YouTube.' };
     }
 
     // Step 4: Format and return the results
-    const results: SearchResult[] = parsedVideos.data.items.map((item) => ({
-      videoId: item.id,
-      title: item.snippet.title,
-      description: item.snippet.description,
-      thumbnail: item.snippet.thumbnails.high.url,
-      duration: item.contentDetails.duration,
-      viewCount: item.statistics.viewCount || '0',
-      likeCount: item.statistics.likeCount || '0',
-      publishedAt: item.snippet.publishedAt,
-      channelId: item.snippet.channelId,
-      channelTitle: item.snippet.channelTitle,
-    }));
+    const resultsMap = new Map<string, SearchResult>();
+    parsedVideos.data.items.forEach((item) => {
+      resultsMap.set(item.id, {
+        videoId: item.id,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        thumbnail: item.snippet.thumbnails.high.url,
+        duration: item.contentDetails.duration,
+        viewCount: item.statistics.viewCount || '0',
+        likeCount: item.statistics.likeCount || '0',
+        publishedAt: item.snippet.publishedAt,
+        channelId: item.snippet.channelId,
+        channelTitle: item.snippet.channelTitle,
+      });
+    });
 
-    // Re-order results to match the search order, which is especially important for ordered searches.
-    const orderedResults = videoIds.map(id => results.find(res => res.videoId === id)).filter(Boolean) as SearchResult[];
+    // Re-order results to match the original combined order, ensuring the final list is consistent.
+    const orderedResults = videoIds.map(id => resultsMap.get(id)).filter(Boolean) as SearchResult[];
 
-    return { data: orderedResults };
+    return { data: orderedResults.slice(0, 20) }; // Return a consistent number of results
   } catch (error) {
     console.error(
       'An unexpected error occurred in searchAndRefineVideos:',
@@ -516,3 +500,5 @@ export async function getSuggestedVideos(userId: string): Promise<{ data?: Searc
         return { error: `Failed to generate suggestions: ${errorMessage}` };
     }
 }
+
+    
