@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "./ui/button";
-import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn, Copy, Facebook } from "lucide-react";
+import { ThumbsUp, Eye, X, Share2, History, ListVideo, Bell, BellRing, Heart, LogIn, Copy, Check, Facebook } from "lucide-react";
 import type { SearchResult, WatchedVideo, PlaylistItem } from "@/types/youtube";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -65,10 +65,13 @@ const formatDescription = (text: string, seekTo: (seconds: number) => void) => {
 function ShareDialog({ video }: { video: SearchResult }) {
     const { toast } = useToast();
     const videoUrl = `${window.location.origin}/search?q=${encodeURIComponent(new URLSearchParams(window.location.search).get('q') || '')}&v=${video.videoId}`;
+    const [isCopied, setIsCopied] = useState(false);
     
     const onCopy = () => {
         navigator.clipboard.writeText(videoUrl).then(() => {
             toast({ title: 'Link Copied!', description: 'The video link has been copied to your clipboard.' });
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
         }).catch(err => {
             console.error('Failed to copy link: ', err);
             toast({ variant: 'destructive', title: 'Copy Failed', description: 'Could not copy the link.' });
@@ -106,7 +109,7 @@ function ShareDialog({ video }: { video: SearchResult }) {
                     <span>Share</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="mx-4">
                 <DialogHeader>
                     <DialogTitle>Share Video</DialogTitle>
                     <DialogDescription>Share this video with your friends!</DialogDescription>
@@ -114,7 +117,7 @@ function ShareDialog({ video }: { video: SearchResult }) {
                 <div className="flex items-center space-x-2">
                     <Input value={videoUrl} readOnly />
                     <Button onClick={onCopy} size="icon" className="shrink-0">
-                        <Copy className="h-4 w-4" />
+                        {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     </Button>
                 </div>
                 <div className="grid grid-cols-4 gap-4 pt-4">
