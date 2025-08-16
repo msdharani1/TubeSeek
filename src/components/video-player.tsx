@@ -109,7 +109,7 @@ function ShareDialog({ video }: { video: SearchResult }) {
                     <span>Share</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="mx-4">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Share Video</DialogTitle>
                     <DialogDescription>Share this video with your friends!</DialogDescription>
